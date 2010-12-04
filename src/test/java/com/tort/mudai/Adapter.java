@@ -13,6 +13,8 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Adapter {
     private AdapterEventListener _adapterEventListener = new EmptyEventListener();
@@ -20,7 +22,9 @@ public class Adapter {
     private final Charset charset = Charset.forName("KOI8-R");
     private final CharsetDecoder decoder = charset.newDecoder();
     private final CharsetEncoder encoder = charset.newEncoder();
-    private ByteBuffer _outBuffer = ByteBuffer.allocate(128);
+    private ByteBuffer _outByteBuffer = ByteBuffer.allocate(128);
+    private final ByteBuffer _inByteBuffer = ByteBuffer.allocateDirect(4096);
+    private final CharBuffer _inCharBuffer = CharBuffer.allocate(4096);
 
     private void setEventListener(final AdapterEventListener adapterEventListener) {
         _adapterEventListener = adapterEventListener;
@@ -30,30 +34,41 @@ public class Adapter {
         try {
             _channel = SocketChannel.open();
             _channel.connect(new InetSocketAddress("mud.ru", 4000));
-
-            final ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4096);
-            final CharBuffer charBuffer = CharBuffer.allocate(4096);
-            while(_channel.read(byteBuffer) != -1){
-                byteBuffer.flip();
-                decoder.decode(byteBuffer, charBuffer, false);
-                charBuffer.flip();
-                _adapterEventListener.rawInput(charBuffer);
-                byteBuffer.clear();
-                charBuffer.clear();
-            }
-
-            _adapterEventListener.connectionClosed();
         } catch (IOException e) {
             _adapterEventListener.networkException(new AdapterException(e));
+        }
+
+        final ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(new Runnable() {
+            public void run() {
+                try {
+                    read();
+                } catch (IOException e) {
+                    _adapterEventListener.networkException(new AdapterException(e));
+                }
+            }
+        });
+
+        _adapterEventListener.connectionClosed();
+    }
+
+    private void read() throws IOException {
+        while (_channel.read(_inByteBuffer) != -1) {
+            _inByteBuffer.flip();
+            decoder.decode(_inByteBuffer, _inCharBuffer, false);
+            _inCharBuffer.flip();
+            _adapterEventListener.rawInput(_inCharBuffer);
+            _inByteBuffer.clear();
+            _inCharBuffer.clear();
         }
     }
 
     private void rawWrite(final CharBuffer charBuffer) {
-        encoder.encode(charBuffer, _outBuffer, false);
+        encoder.encode(charBuffer, _outByteBuffer, false);
         try {
-            _outBuffer.flip();
-            _channel.write(_outBuffer);
-            _outBuffer.clear();
+            _outByteBuffer.flip();
+            _channel.write(_outByteBuffer);
+            _outByteBuffer.clear();
         } catch (IOException e) {
             _adapterEventListener.networkException(new AdapterException(e));
         }
@@ -63,7 +78,7 @@ public class Adapter {
         Injector injector = Guice.createInjector(new MudaiModule());
         Adapter adapter = injector.getInstance(Adapter.class);
 
-        adapter.setEventListener(new AdapterEventListener(){
+        adapter.setEventListener(new AdapterEventListener() {
             public void networkException(final AdapterException e) {
                 print("network error: " + e.getMessage());
             }
@@ -85,7 +100,7 @@ public class Adapter {
         final InputStreamReader reader = new InputStreamReader(System.in);
         final CharBuffer charBuffer = CharBuffer.allocate(128);
         try {
-            while(true){
+            while (true) {
                 final int number = reader.read(charBuffer);
                 charBuffer.flip();
                 adapter.rawWrite(charBuffer);
