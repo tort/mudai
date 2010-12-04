@@ -17,14 +17,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Adapter {
-    private AdapterEventListener _adapterEventListener = new EmptyEventListener();
-    private SocketChannel _channel;
+    private static final int OUT_BUF_SIZE = 128;
+    private static final int IN_BUF_SIZE = 4096;
+
+    private final ByteBuffer _outByteBuffer = ByteBuffer.allocate(OUT_BUF_SIZE);
+    private final ByteBuffer _inByteBuffer = ByteBuffer.allocateDirect(IN_BUF_SIZE);
+    private final CharBuffer _inCharBuffer = CharBuffer.allocate(IN_BUF_SIZE);
+
     private final Charset charset = Charset.forName("KOI8-R");
     private final CharsetDecoder decoder = charset.newDecoder();
     private final CharsetEncoder encoder = charset.newEncoder();
-    private ByteBuffer _outByteBuffer = ByteBuffer.allocate(128);
-    private final ByteBuffer _inByteBuffer = ByteBuffer.allocateDirect(4096);
-    private final CharBuffer _inCharBuffer = CharBuffer.allocate(4096);
+
+    private AdapterEventListener _adapterEventListener = new EmptyEventListener();
+    private SocketChannel _channel;
 
     private void setEventListener(final AdapterEventListener adapterEventListener) {
         _adapterEventListener = adapterEventListener;
@@ -43,13 +48,12 @@ public class Adapter {
             public void run() {
                 try {
                     read();
+                    _adapterEventListener.connectionClosed();
                 } catch (IOException e) {
                     _adapterEventListener.networkException(new AdapterException(e));
                 }
             }
         });
-
-        _adapterEventListener.connectionClosed();
     }
 
     private void read() throws IOException {
@@ -85,10 +89,11 @@ public class Adapter {
 
             public void connectionClosed() {
                 print("connection closed");
+                System.exit(0);
             }
 
             public void rawInput(final CharBuffer charBuffer) {
-                System.out.println(charBuffer.toString());
+                System.out.print(charBuffer.toString());
             }
 
             private void print(final String message) {
@@ -98,7 +103,7 @@ public class Adapter {
         adapter.start();
 
         final InputStreamReader reader = new InputStreamReader(System.in);
-        final CharBuffer charBuffer = CharBuffer.allocate(128);
+        final CharBuffer charBuffer = CharBuffer.allocate(OUT_BUF_SIZE);
         try {
             while (true) {
                 final int number = reader.read(charBuffer);
