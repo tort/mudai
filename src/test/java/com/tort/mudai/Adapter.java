@@ -20,7 +20,7 @@ public class Adapter {
     private final Charset charset = Charset.forName("KOI8-R");
     private final CharsetDecoder decoder = charset.newDecoder();
     private final CharsetEncoder encoder = charset.newEncoder();
-    private ByteBuffer byteBuffer = ByteBuffer.allocate(128);
+    private ByteBuffer _outBuffer = ByteBuffer.allocate(128);
 
     private void setEventListener(final AdapterEventListener adapterEventListener) {
         _adapterEventListener = adapterEventListener;
@@ -43,6 +43,17 @@ public class Adapter {
             }
 
             _adapterEventListener.connectionClosed();
+        } catch (IOException e) {
+            _adapterEventListener.networkException(new AdapterException(e));
+        }
+    }
+
+    private void rawWrite(final CharBuffer charBuffer) {
+        encoder.encode(charBuffer, _outBuffer, false);
+        try {
+            _outBuffer.flip();
+            _channel.write(_outBuffer);
+            _outBuffer.clear();
         } catch (IOException e) {
             _adapterEventListener.networkException(new AdapterException(e));
         }
@@ -82,17 +93,6 @@ public class Adapter {
             }
         } catch (IOException e) {
             System.out.println("read keyboard input error");
-        }
-    }
-
-    private void rawWrite(final CharBuffer charBuffer) {
-        encoder.encode(charBuffer, byteBuffer, false);
-        try {
-            byteBuffer.flip();
-            _channel.write(byteBuffer);
-            byteBuffer.clear();
-        } catch (IOException e) {
-            _adapterEventListener.networkException(new AdapterException(e));
         }
     }
 }
