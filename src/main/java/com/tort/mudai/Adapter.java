@@ -19,7 +19,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Adapter {
-    private static final int OUT_BUF_SIZE = 128;
+    public static final int OUT_BUF_SIZE = 128;
     private static final int IN_BUF_SIZE = 4096;
 
     private final ByteBuffer _outByteBuffer = ByteBuffer.allocate(OUT_BUF_SIZE);
@@ -38,7 +38,7 @@ public class Adapter {
         _adapterEventListener = adapterEventListener;
     }
 
-    private void start() {
+    public void start() {
         try {
             _channel = SocketChannel.open();
             _channel.connect(new InetSocketAddress("mud.ru", 4000));
@@ -70,7 +70,7 @@ public class Adapter {
         }
     }
 
-    private void rawWrite(final CharBuffer charBuffer) {
+    public void rawWrite(final CharBuffer charBuffer) {
         encoder.encode(charBuffer, _outByteBuffer, false);
         try {
             _outByteBuffer.flip();
@@ -81,40 +81,4 @@ public class Adapter {
         }
     }
 
-    public static void main(String[] args) {
-        final AdapterEventListener listener = new AdapterEventListener() {
-            private void print(final String message) {
-                System.out.println(message);
-            }
-
-            @Override
-            public void handle(final Event event) {
-                if (event instanceof AdapterExceptionEvent) {
-                    AdapterExceptionEvent aee = (AdapterExceptionEvent) event;
-                    print("network error: " + aee.getException());
-                } else if (event instanceof ConnectionClosedEvent) {
-                    print("connection closed");
-                    System.exit(0);
-                } else if (event instanceof RawInputEvent) {
-                    RawInputEvent rie = (RawInputEvent) event;
-                    System.out.print(rie.getInCharBuffer());
-                }
-            }
-        };
-        final Adapter adapter = new Adapter(listener);
-        adapter.start();
-
-        final InputStreamReader reader = new InputStreamReader(System.in);
-        final CharBuffer charBuffer = CharBuffer.allocate(OUT_BUF_SIZE);
-        try {
-            while (true) {
-                reader.read(charBuffer);
-                charBuffer.flip();
-                adapter.rawWrite(charBuffer);
-                charBuffer.clear();
-            }
-        } catch (IOException e) {
-            System.out.println("read keyboard input error");
-        }
-    }
 }
