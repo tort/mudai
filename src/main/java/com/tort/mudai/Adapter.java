@@ -1,13 +1,13 @@
 package com.tort.mudai;
 
 import com.google.inject.Inject;
+import com.tort.mudai.command.Command;
+import com.tort.mudai.command.RawWriteCommand;
 import com.tort.mudai.event.AdapterExceptionEvent;
 import com.tort.mudai.event.ConnectionClosedEvent;
-import com.tort.mudai.event.Event;
-import com.tort.mudai.event.RawInputEvent;
+import com.tort.mudai.event.RawReadEvent;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -59,14 +59,17 @@ public class Adapter {
         });
     }
 
-    public void rawWrite(final CharBuffer charBuffer) {
-        encoder.encode(charBuffer, _outByteBuffer, false);
-        try {
-            _outByteBuffer.flip();
-            _channel.write(_outByteBuffer);
-            _outByteBuffer.clear();
-        } catch (IOException e) {
-            _adapterEventListener.handle(new AdapterExceptionEvent(e));
+    public void send(final Command command) {
+        if (command instanceof RawWriteCommand) {
+            RawWriteCommand rwc = (RawWriteCommand) command;
+            encoder.encode(rwc.getCharBuffer(), _outByteBuffer, false);
+            try {
+                _outByteBuffer.flip();
+                _channel.write(_outByteBuffer);
+                _outByteBuffer.clear();
+            } catch (IOException e) {
+                _adapterEventListener.handle(new AdapterExceptionEvent(e));
+            }
         }
     }
 
@@ -75,7 +78,7 @@ public class Adapter {
             _inByteBuffer.flip();
             decoder.decode(_inByteBuffer, _inCharBuffer, false);
             _inCharBuffer.flip();
-            _adapterEventListener.handle(new RawInputEvent(_inCharBuffer));
+            _adapterEventListener.handle(new RawReadEvent(_inCharBuffer));
             _inByteBuffer.clear();
             _inCharBuffer.clear();
         }
