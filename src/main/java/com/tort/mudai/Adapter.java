@@ -1,8 +1,12 @@
 package com.tort.mudai;
 
 import com.google.inject.Guice;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.tort.mudai.exception.AdapterException;
+import com.tort.mudai.event.AdapterExceptionEvent;
+import com.tort.mudai.event.ConnectionClosedEvent;
+import com.tort.mudai.event.Event;
+import com.tort.mudai.event.RawInputEvent;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -28,10 +32,11 @@ public class Adapter {
     private final CharsetDecoder decoder = charset.newDecoder();
     private final CharsetEncoder encoder = charset.newEncoder();
 
-    private AdapterEventListener _adapterEventListener = new EmptyEventListener();
+    private AdapterEventListener _adapterEventListener;
     private SocketChannel _channel;
 
-    private void setEventListener(final AdapterEventListener adapterEventListener) {
+    @Inject
+    public Adapter(final AdapterEventListener adapterEventListener) {
         _adapterEventListener = adapterEventListener;
     }
 
@@ -40,7 +45,7 @@ public class Adapter {
             _channel = SocketChannel.open();
             _channel.connect(new InetSocketAddress("mud.ru", 4000));
         } catch (IOException e) {
-            _adapterEventListener.networkException(new AdapterException(e));
+            _adapterEventListener.raise(new AdapterExceptionEvent(e));
         }
 
         final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -48,9 +53,9 @@ public class Adapter {
             public void run() {
                 try {
                     read();
-                    _adapterEventListener.connectionClosed();
+                    _adapterEventListener.raise(new ConnectionClosedEvent());
                 } catch (IOException e) {
-                    _adapterEventListener.networkException(new AdapterException(e));
+                    _adapterEventListener.raise(new AdapterExceptionEvent(e));
                 }
             }
         });
@@ -61,7 +66,7 @@ public class Adapter {
             _inByteBuffer.flip();
             decoder.decode(_inByteBuffer, _inCharBuffer, false);
             _inCharBuffer.flip();
-            _adapterEventListener.rawInput(_inCharBuffer);
+            _adapterEventListener.raise(new RawInputEvent(_inCharBuffer));
             _inByteBuffer.clear();
             _inCharBuffer.clear();
         }
@@ -74,32 +79,31 @@ public class Adapter {
             _channel.write(_outByteBuffer);
             _outByteBuffer.clear();
         } catch (IOException e) {
-            _adapterEventListener.networkException(new AdapterException(e));
+            _adapterEventListener.raise(new AdapterExceptionEvent(e));
         }
     }
 
     public static void main(String[] args) {
-        Injector injector = Guice.createInjector(new MudaiModule());
-        Adapter adapter = injector.getInstance(Adapter.class);
-
-        adapter.setEventListener(new AdapterEventListener() {
-            public void networkException(final AdapterException e) {
-                print("network error: " + e.getMessage());
-            }
-
-            public void connectionClosed() {
-                print("connection closed");
-                System.exit(0);
-            }
-
-            public void rawInput(final CharBuffer charBuffer) {
-                System.out.print(charBuffer.toString());
-            }
-
+        final AdapterEventListener listener = new AdapterEventListener() {
             private void print(final String message) {
                 System.out.println(message);
             }
-        });
+
+            @Override
+            public void raise(final Event event) {
+                if (event instanceof AdapterExceptionEvent) {
+                    AdapterExceptionEvent aee = (AdapterExceptionEvent) event;
+                    print("network error: " + aee.getException());
+                } else if (event instanceof ConnectionClosedEvent) {
+                    print("connection closed");
+                    System.exit(0);
+                } else if (event instanceof RawInputEvent) {
+                    RawInputEvent rie = (RawInputEvent) event;
+                    System.out.print(rie.getInCharBuffer());
+                }
+            }
+        };
+        final Adapter adapter = new Adapter(listener);
         adapter.start();
 
         final InputStreamReader reader = new InputStreamReader(System.in);
