@@ -59,17 +59,6 @@ public class Adapter {
         });
     }
 
-    private void read() throws IOException {
-        while (_channel.read(_inByteBuffer) != -1) {
-            _inByteBuffer.flip();
-            decoder.decode(_inByteBuffer, _inCharBuffer, false);
-            _inCharBuffer.flip();
-            _adapterEventListener.handle(new RawInputEvent(_inCharBuffer));
-            _inByteBuffer.clear();
-            _inCharBuffer.clear();
-        }
-    }
-
     public void rawWrite(final CharBuffer charBuffer) {
         encoder.encode(charBuffer, _outByteBuffer, false);
         try {
@@ -81,4 +70,14 @@ public class Adapter {
         }
     }
 
+    private void read() throws IOException {
+        while (_channel.read(_inByteBuffer) != -1) {
+            _inByteBuffer.flip();
+            decoder.decode(_inByteBuffer, _inCharBuffer, false);
+            _inCharBuffer.flip();
+            _adapterEventListener.handle(new RawInputEvent(_inCharBuffer));
+            _inByteBuffer.clear();
+            _inCharBuffer.clear();
+        }
+    }
 }

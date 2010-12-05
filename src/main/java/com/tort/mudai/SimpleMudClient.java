@@ -11,26 +11,7 @@ import java.nio.CharBuffer;
 
 public class SimpleMudClient {
     public static void main(String[] args) {
-        final AdapterEventListener listener = new AdapterEventListener() {
-            private void print(final String message) {
-                System.out.println(message);
-            }
-
-            @Override
-            public void handle(final Event event) {
-                if (event instanceof AdapterExceptionEvent) {
-                    AdapterExceptionEvent aee = (AdapterExceptionEvent) event;
-                    print("network error: " + aee.getException());
-                } else if (event instanceof ConnectionClosedEvent) {
-                    print("connection closed");
-                    System.exit(0);
-                } else if (event instanceof RawInputEvent) {
-                    RawInputEvent rie = (RawInputEvent) event;
-                    System.out.print(rie.getInCharBuffer());
-                }
-            }
-        };
-        final Adapter adapter = new Adapter(listener);
+        final Adapter adapter = new Adapter(new SimpleAdapterEventListener());
         adapter.start();
 
         final InputStreamReader reader = new InputStreamReader(System.in);
@@ -44,6 +25,26 @@ public class SimpleMudClient {
             }
         } catch (IOException e) {
             System.out.println("read keyboard input error");
+        }
+    }
+
+    private static class SimpleAdapterEventListener implements AdapterEventListener {
+        private void print(final String message) {
+            System.out.println(message);
+        }
+
+        @Override
+        public void handle(final Event event) {
+            if (event instanceof AdapterExceptionEvent) {
+                AdapterExceptionEvent aee = (AdapterExceptionEvent) event;
+                print("network error: " + aee.getException());
+            } else if (event instanceof ConnectionClosedEvent) {
+                print("connection closed");
+                System.exit(0);
+            } else if (event instanceof RawInputEvent) {
+                RawInputEvent rie = (RawInputEvent) event;
+                System.out.print(rie.getInCharBuffer());
+            }
         }
     }
 }
