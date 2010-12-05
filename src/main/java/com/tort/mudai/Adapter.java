@@ -1,8 +1,6 @@
 package com.tort.mudai;
 
-import com.google.inject.Guice;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.tort.mudai.event.AdapterExceptionEvent;
 import com.tort.mudai.event.ConnectionClosedEvent;
 import com.tort.mudai.event.Event;
@@ -45,7 +43,7 @@ public class Adapter {
             _channel = SocketChannel.open();
             _channel.connect(new InetSocketAddress("mud.ru", 4000));
         } catch (IOException e) {
-            _adapterEventListener.raise(new AdapterExceptionEvent(e));
+            _adapterEventListener.handle(new AdapterExceptionEvent(e));
         }
 
         final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -53,9 +51,9 @@ public class Adapter {
             public void run() {
                 try {
                     read();
-                    _adapterEventListener.raise(new ConnectionClosedEvent());
+                    _adapterEventListener.handle(new ConnectionClosedEvent());
                 } catch (IOException e) {
-                    _adapterEventListener.raise(new AdapterExceptionEvent(e));
+                    _adapterEventListener.handle(new AdapterExceptionEvent(e));
                 }
             }
         });
@@ -66,7 +64,7 @@ public class Adapter {
             _inByteBuffer.flip();
             decoder.decode(_inByteBuffer, _inCharBuffer, false);
             _inCharBuffer.flip();
-            _adapterEventListener.raise(new RawInputEvent(_inCharBuffer));
+            _adapterEventListener.handle(new RawInputEvent(_inCharBuffer));
             _inByteBuffer.clear();
             _inCharBuffer.clear();
         }
@@ -79,7 +77,7 @@ public class Adapter {
             _channel.write(_outByteBuffer);
             _outByteBuffer.clear();
         } catch (IOException e) {
-            _adapterEventListener.raise(new AdapterExceptionEvent(e));
+            _adapterEventListener.handle(new AdapterExceptionEvent(e));
         }
     }
 
@@ -90,7 +88,7 @@ public class Adapter {
             }
 
             @Override
-            public void raise(final Event event) {
+            public void handle(final Event event) {
                 if (event instanceof AdapterExceptionEvent) {
                     AdapterExceptionEvent aee = (AdapterExceptionEvent) event;
                     print("network error: " + aee.getException());
@@ -110,7 +108,7 @@ public class Adapter {
         final CharBuffer charBuffer = CharBuffer.allocate(OUT_BUF_SIZE);
         try {
             while (true) {
-                final int number = reader.read(charBuffer);
+                reader.read(charBuffer);
                 charBuffer.flip();
                 adapter.rawWrite(charBuffer);
                 charBuffer.clear();
