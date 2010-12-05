@@ -3,13 +3,13 @@ package com.tort.mudai.event;
 import java.io.IOException;
 
 public class AdapterExceptionEvent implements Event {
-    private final IOException _exception;
+    private final Exception _exception;
 
-    public AdapterExceptionEvent(final IOException e) {
+    public AdapterExceptionEvent(final Exception e) {
         _exception = e;
     }
 
-    public IOException getException() {
+    public Exception getException() {
         return _exception;
     }
 }

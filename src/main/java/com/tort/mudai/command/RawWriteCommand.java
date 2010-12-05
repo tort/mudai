@@ -3,13 +3,13 @@ package com.tort.mudai.command;
 import java.nio.CharBuffer;
 
 public class RawWriteCommand implements Command {
-    private final CharBuffer _charBuffer;
+    private final String _charBuffer;
 
-    public RawWriteCommand(final CharBuffer charBuffer) {
+    public RawWriteCommand(final String charBuffer) {
         _charBuffer = charBuffer;
     }
 
-    public CharBuffer getCharBuffer() {
+    public String getCharBuffer() {
         return _charBuffer;
     }
 }

@@ -1,5 +1,6 @@
 package com.tort.mudai;
 
+import com.tort.mudai.command.Command;
 import com.tort.mudai.command.RawWriteCommand;
 import com.tort.mudai.event.AdapterExceptionEvent;
 import com.tort.mudai.event.ConnectionClosedEvent;
@@ -9,23 +10,28 @@ import com.tort.mudai.event.RawReadEvent;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.CharBuffer;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.PriorityBlockingQueue;
 
 public class SimpleMudClient {
     public static void main(String[] args) {
-        final Adapter adapter = new Adapter(new SimpleEventListener());
+        final BlockingQueue<Command> commands = new PriorityBlockingQueue<Command>();
+        final Adapter adapter = new Adapter(new SimpleEventListener(), commands, Executors.newFixedThreadPool(2));
         adapter.start();
 
         final InputStreamReader reader = new InputStreamReader(System.in);
         final CharBuffer charBuffer = CharBuffer.allocate(Adapter.OUT_BUF_SIZE);
         try {
-            while (true) {
-                reader.read(charBuffer);
+            while (reader.read(charBuffer) != -1) {
                 charBuffer.flip();
-                adapter.send(new RawWriteCommand(charBuffer));
+                commands.put(new RawWriteCommand(charBuffer.toString()));
                 charBuffer.clear();
             }
         } catch (IOException e) {
             System.out.println("read keyboard input error");
+        } catch (InterruptedException e) {
+            System.out.println("error populating command queue");
         }
     }
 

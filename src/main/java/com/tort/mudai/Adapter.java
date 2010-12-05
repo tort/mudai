@@ -14,9 +14,8 @@ import java.nio.CharBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CharsetEncoder;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class Adapter {
     public static final int OUT_BUF_SIZE = 128;
@@ -26,16 +25,19 @@ public class Adapter {
     private final ByteBuffer _inByteBuffer = ByteBuffer.allocateDirect(IN_BUF_SIZE);
     private final CharBuffer _inCharBuffer = CharBuffer.allocate(IN_BUF_SIZE);
 
-    private final Charset charset = Charset.forName("KOI8-R");
-    private final CharsetDecoder decoder = charset.newDecoder();
-    private final CharsetEncoder encoder = charset.newEncoder();
+    private final Charset _charset = Charset.forName("KOI8-R");
+    private final CharsetDecoder _decoder = _charset.newDecoder();
 
     private AdapterEventListener _adapterEventListener;
     private SocketChannel _channel;
+    private BlockingQueue<Command> _commands;
+    private final ExecutorService _executor;
 
     @Inject
-    public Adapter(final AdapterEventListener adapterEventListener) {
+    public Adapter(final AdapterEventListener adapterEventListener, final BlockingQueue<Command> commands, final ExecutorService executor) {
         _adapterEventListener = adapterEventListener;
+        _commands = commands;
+        _executor = executor;
     }
 
     public void start() {
@@ -46,8 +48,7 @@ public class Adapter {
             _adapterEventListener.handle(new AdapterExceptionEvent(e));
         }
 
-        final ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(new Runnable() {
+        _executor.submit(new Runnable() {
             public void run() {
                 try {
                     read();
@@ -57,15 +58,32 @@ public class Adapter {
                 }
             }
         });
+
+        _executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                executeCommands();
+            }
+        });
+    }
+
+    private void executeCommands() {
+        do {
+            try {
+                send(_commands.take());
+            } catch (InterruptedException e) {
+                _adapterEventListener.handle(new AdapterExceptionEvent(e));
+            }
+        } while (true);
     }
 
     public void send(final Command command) {
         if (command instanceof RawWriteCommand) {
             RawWriteCommand rwc = (RawWriteCommand) command;
-            encoder.encode(rwc.getCharBuffer(), _outByteBuffer, false);
+            final byte[] bytes = rwc.getCharBuffer().getBytes(_charset);
             try {
                 _outByteBuffer.flip();
-                _channel.write(_outByteBuffer);
+                _channel.write(ByteBuffer.wrap(bytes));
                 _outByteBuffer.clear();
             } catch (IOException e) {
                 _adapterEventListener.handle(new AdapterExceptionEvent(e));
@@ -76,7 +94,7 @@ public class Adapter {
     private void read() throws IOException {
         while (_channel.read(_inByteBuffer) != -1) {
             _inByteBuffer.flip();
-            decoder.decode(_inByteBuffer, _inCharBuffer, false);
+            _decoder.decode(_inByteBuffer, _inCharBuffer, false);
             _inCharBuffer.flip();
             _adapterEventListener.handle(new RawReadEvent(_inCharBuffer));
             _inByteBuffer.clear();
