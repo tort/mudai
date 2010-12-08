@@ -1,7 +1,7 @@
 package com.tort.mudai;
 
-import com.google.inject.*;
-import com.tort.mudai.command.Command;
+import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;

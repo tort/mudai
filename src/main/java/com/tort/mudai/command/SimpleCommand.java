@@ -1,9 +1,9 @@
 package com.tort.mudai.command;
 
-public class LoginCommand implements Command {
+public class SimpleCommand implements Command {
     private final String _name;
 
-    public LoginCommand(final String name) {
+    public SimpleCommand(final String name) {
         _name = name;
     }
 

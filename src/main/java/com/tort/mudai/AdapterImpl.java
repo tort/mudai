@@ -2,6 +2,7 @@ package com.tort.mudai;
 
 import com.google.inject.Inject;
 import com.tort.mudai.command.Command;
+import com.tort.mudai.command.SimpleCommand;
 import com.tort.mudai.event.*;
 import com.tort.mudai.telnet.ParseResult;
 import com.tort.mudai.telnet.TelnetParser;
@@ -21,6 +22,7 @@ import java.util.concurrent.ExecutorService;
 
 public class AdapterImpl implements Adapter {
     private static final int IN_BUF_SIZE = 4096;
+    private static final String ENCODING = "0";
 
     private final ByteBuffer _outByteBuffer = ByteBuffer.allocate(OUT_BUF_SIZE);
     private final ByteBuffer _inByteBuffer = ByteBuffer.allocateDirect(IN_BUF_SIZE);
@@ -35,6 +37,8 @@ public class AdapterImpl implements Adapter {
     private final ExecutorService _executor;
     private TelnetParser _telnetParser;
     private List<MatchingEvent> _promptEvents = new ArrayList<MatchingEvent>();
+    private List<MatchingEvent> _events = new ArrayList<MatchingEvent>();
+    private List<Trigger> _triggers = new ArrayList<Trigger>();
 
     @Inject
     public AdapterImpl(final BlockingQueue commands, final ExecutorService executor, final TelnetParser telnetParser) {
@@ -43,6 +47,11 @@ public class AdapterImpl implements Adapter {
         _telnetParser = telnetParser;
 
         _promptEvents.add(new LoginPromptEvent());
+
+        _events.add(new PasswordPromptEvent());
+
+        _triggers.add(new Trigger("^\\* В связи с проблемами перевода фразы ANYKEY нажмите ENTER.*", ""));
+        _triggers.add(new Trigger("^Select one.*", ENCODING));
     }
 
     @Override
@@ -124,7 +133,7 @@ public class AdapterImpl implements Adapter {
         }
     }
 
-    private void read() throws IOException {
+    private void read() throws IOException, InterruptedException {
         while (_channel.read(_inByteBuffer) != -1) {
             _inByteBuffer.flip();
             _decoder.decode(_inByteBuffer, _inCharBuffer, false);
@@ -137,13 +146,25 @@ public class AdapterImpl implements Adapter {
         }
     }
 
-    private Collection<Event> parseInput(final CharBuffer inCharBuffer) {
+    private Collection<Event> parseInput(final CharBuffer inCharBuffer) throws InterruptedException {
         final Collection<Event> events = new ArrayList<Event>();
 
         final ParseResult parseResult = _telnetParser.parse(inCharBuffer);
 
+        for (Trigger trigger : _triggers) {
+            if(trigger.matches(parseResult.getPrompt())){
+                _commands.put(new SimpleCommand(trigger.getAction()));
+            }
+        }
+
         for (MatchingEvent event : _promptEvents) {
             if(event.matches(parseResult.getPrompt())){
+                events.add(event);
+            }
+        }
+
+        for (MatchingEvent event : _events) {
+            if(event.matches(parseResult.getText())){
                 events.add(event);
             }
         }
