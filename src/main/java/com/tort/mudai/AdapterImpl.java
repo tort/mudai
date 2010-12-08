@@ -2,7 +2,6 @@ package com.tort.mudai;
 
 import com.google.inject.Inject;
 import com.tort.mudai.command.Command;
-import com.tort.mudai.command.RawWriteCommand;
 import com.tort.mudai.event.*;
 import com.tort.mudai.telnet.ParseResult;
 import com.tort.mudai.telnet.TelnetParser;
@@ -19,7 +18,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.regex.Pattern;
 
 public class AdapterImpl implements Adapter {
     private static final int IN_BUF_SIZE = 4096;
@@ -36,12 +34,15 @@ public class AdapterImpl implements Adapter {
     private BlockingQueue<Command> _commands;
     private final ExecutorService _executor;
     private TelnetParser _telnetParser;
+    private List<MatchingEvent> _promptEvents = new ArrayList<MatchingEvent>();
 
     @Inject
     public AdapterImpl(final BlockingQueue commands, final ExecutorService executor, final TelnetParser telnetParser) {
         _commands = commands;
         _executor = executor;
         _telnetParser = telnetParser;
+
+        _promptEvents.add(new LoginPromptEvent());
     }
 
     @Override
@@ -141,18 +142,12 @@ public class AdapterImpl implements Adapter {
 
         final ParseResult parseResult = _telnetParser.parse(inCharBuffer);
 
-        if(match("^Введите имя персонажа.*", parseResult.getPrompt())){
-            events.add(new LoginPromptEvent());
+        for (MatchingEvent event : _promptEvents) {
+            if(event.matches(parseResult.getPrompt())){
+                events.add(event);
+            }
         }
 
         return events;
-    }
-
-    private boolean match(final String regex, final String text) {
-        if(text == null)
-            return false;
-
-        final boolean b = Pattern.matches(regex, text);
-        return b;
     }
 }
