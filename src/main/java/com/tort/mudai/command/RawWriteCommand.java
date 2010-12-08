@@ -1,7 +1,5 @@
 package com.tort.mudai.command;
 
-import java.nio.CharBuffer;
-
 public class RawWriteCommand implements Command {
     private final String _charBuffer;
 
@@ -9,7 +7,8 @@ public class RawWriteCommand implements Command {
         _charBuffer = charBuffer;
     }
 
-    public String getCharBuffer() {
+    @Override
+    public String render() {
         return _charBuffer;
     }
 }

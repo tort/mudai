@@ -3,10 +3,9 @@ package com.tort.mudai;
 import com.google.inject.Inject;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.RawWriteCommand;
-import com.tort.mudai.event.AdapterExceptionEvent;
-import com.tort.mudai.event.ConnectionClosedEvent;
-import com.tort.mudai.event.Event;
-import com.tort.mudai.event.RawReadEvent;
+import com.tort.mudai.event.*;
+import com.tort.mudai.telnet.ParseResult;
+import com.tort.mudai.telnet.TelnetParser;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -16,9 +15,11 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.regex.Pattern;
 
 public class AdapterImpl implements Adapter {
     private static final int IN_BUF_SIZE = 4096;
@@ -34,11 +35,13 @@ public class AdapterImpl implements Adapter {
     private SocketChannel _channel;
     private BlockingQueue<Command> _commands;
     private final ExecutorService _executor;
+    private TelnetParser _telnetParser;
 
     @Inject
-    public AdapterImpl(final BlockingQueue commands, final ExecutorService executor) {
+    public AdapterImpl(final BlockingQueue commands, final ExecutorService executor, final TelnetParser telnetParser) {
         _commands = commands;
         _executor = executor;
+        _telnetParser = telnetParser;
     }
 
     @Override
@@ -67,6 +70,8 @@ public class AdapterImpl implements Adapter {
                     notifySubscribers(new ConnectionClosedEvent());
                 } catch (IOException e) {
                     notifySubscribers(new AdapterExceptionEvent(e));
+                } catch (Throwable e){
+                    notifySubscribers(new ProgrammerErrorEvent(e));
                 }
             }
         });
@@ -74,9 +79,19 @@ public class AdapterImpl implements Adapter {
         _executor.submit(new Runnable() {
             @Override
             public void run() {
-                executeCommands();
+                try {
+                    executeCommands();
+                } catch (Throwable e) {
+                    notifySubscribers(new ProgrammerErrorEvent(e));
+                }
             }
         });
+    }
+
+    private void notifySubscribers(final Collection<Event> events) {
+        for (Event event : events) {
+            notifySubscribers(event);
+        }
     }
 
     private void notifySubscribers(final Event event) {
@@ -97,16 +112,14 @@ public class AdapterImpl implements Adapter {
 
     @Override
     public void send(final Command command) {
-        if (command instanceof RawWriteCommand) {
-            RawWriteCommand rwc = (RawWriteCommand) command;
-            final byte[] bytes = rwc.getCharBuffer().getBytes(_charset);
-            try {
-                _outByteBuffer.flip();
-                _channel.write(ByteBuffer.wrap(bytes));
-                _outByteBuffer.clear();
-            } catch (IOException e) {
-                notifySubscribers(new AdapterExceptionEvent(e));
-            }
+        final String commandText = command.render() + "\n";
+        final byte[] bytes = commandText.getBytes(_charset);
+        try {
+            _outByteBuffer.flip();
+            _channel.write(ByteBuffer.wrap(bytes));
+            _outByteBuffer.clear();
+        } catch (IOException e) {
+            notifySubscribers(new AdapterExceptionEvent(e));
         }
     }
 
@@ -115,9 +128,31 @@ public class AdapterImpl implements Adapter {
             _inByteBuffer.flip();
             _decoder.decode(_inByteBuffer, _inCharBuffer, false);
             _inCharBuffer.flip();
+
             notifySubscribers(new RawReadEvent(_inCharBuffer));
+            notifySubscribers(parseInput(_inCharBuffer));
             _inByteBuffer.clear();
             _inCharBuffer.clear();
         }
+    }
+
+    private Collection<Event> parseInput(final CharBuffer inCharBuffer) {
+        final Collection<Event> events = new ArrayList<Event>();
+
+        final ParseResult parseResult = _telnetParser.parse(inCharBuffer);
+
+        if(match("^Введите имя персонажа.*", parseResult.getPrompt())){
+            events.add(new LoginPromptEvent());
+        }
+
+        return events;
+    }
+
+    private boolean match(final String regex, final String text) {
+        if(text == null)
+            return false;
+
+        final boolean b = Pattern.matches(regex, text);
+        return b;
     }
 }

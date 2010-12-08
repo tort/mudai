@@ -5,29 +5,28 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.RawWriteCommand;
-import com.tort.mudai.event.AdapterExceptionEvent;
-import com.tort.mudai.event.ConnectionClosedEvent;
-import com.tort.mudai.event.Event;
-import com.tort.mudai.event.RawReadEvent;
+import com.tort.mudai.event.*;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.CharBuffer;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.PriorityBlockingQueue;
 
 public class SimpleMudClient {
+    private Person _person;
     private Adapter _adapter;
     private BlockingQueue<Command> _commands;
 
     @Inject
-    public SimpleMudClient(final Adapter adapter, final BlockingQueue commands) {
+    public SimpleMudClient(final Adapter adapter, final BlockingQueue commands, final Person person) {
         _adapter = adapter;
         _commands = commands;
+        _person = person;
     }
 
     public void start() {
         _adapter.subscribe(new SimpleEventListener());
+        _adapter.subscribe(_person);
         _adapter.start();
 
         final InputStreamReader reader = new InputStreamReader(System.in);
@@ -61,6 +60,9 @@ public class SimpleMudClient {
             } else if (event instanceof RawReadEvent) {
                 RawReadEvent rie = (RawReadEvent) event;
                 System.out.print(rie.getInCharBuffer());
+            } else if (event instanceof ProgrammerErrorEvent){
+                ProgrammerErrorEvent pee = (ProgrammerErrorEvent) event;
+                pee.getException().printStackTrace();
             }
         }
     }

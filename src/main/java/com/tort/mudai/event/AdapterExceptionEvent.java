@@ -1,7 +1,5 @@
 package com.tort.mudai.event;
 
-import java.io.IOException;
-
 public class AdapterExceptionEvent implements Event {
     private final Exception _exception;
 
