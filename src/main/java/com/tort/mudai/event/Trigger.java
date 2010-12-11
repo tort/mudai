@@ -1,7 +1,5 @@
 package com.tort.mudai.event;
 
-import com.tort.mudai.command.Command;
-
 import java.util.regex.Pattern;
 
 public class Trigger implements MatchingEvent {
