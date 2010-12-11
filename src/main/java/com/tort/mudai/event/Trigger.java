@@ -7,7 +7,7 @@ public class Trigger implements MatchingEvent {
     private String _action;
 
     public Trigger(final String regex, final String action) {
-        _pattern = Pattern.compile(regex, Pattern.MULTILINE | Pattern.DOTALL);
+        _pattern = PatternUtil.compile(regex);
         _action = action;
     }
 
