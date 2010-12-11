@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.SimpleCommand;
 import com.tort.mudai.event.*;
-import com.tort.mudai.telnet.ParseResult;
 import com.tort.mudai.telnet.TelnetParser;
 
 import java.io.IOException;
@@ -36,7 +35,6 @@ public class AdapterImpl implements Adapter {
     private BlockingQueue<Command> _commands;
     private final ExecutorService _executor;
     private TelnetParser _telnetParser;
-    private List<MatchingEvent> _promptEvents = new ArrayList<MatchingEvent>();
     private List<MatchingEvent> _events = new ArrayList<MatchingEvent>();
     private List<Trigger> _triggers = new ArrayList<Trigger>();
 
@@ -46,12 +44,11 @@ public class AdapterImpl implements Adapter {
         _executor = executor;
         _telnetParser = telnetParser;
 
-        _promptEvents.add(new LoginPromptEvent());
-
+        _events.add(new LoginPromptEvent());
         _events.add(new PasswordPromptEvent());
 
-        _triggers.add(new Trigger("^\\* В связи с проблемами перевода фразы ANYKEY нажмите ENTER.*", ""));
-        _triggers.add(new Trigger("^Select one.*", ENCODING));
+        _triggers.add(new Trigger(".*^\\* В связи с проблемами перевода фразы ANYKEY нажмите ENTER.*", ""));
+        _triggers.add(new Trigger(".*^Select one : $", ENCODING));
     }
 
     @Override
@@ -149,22 +146,16 @@ public class AdapterImpl implements Adapter {
     private Collection<Event> parseInput(final CharBuffer inCharBuffer) throws InterruptedException {
         final Collection<Event> events = new ArrayList<Event>();
 
-        final ParseResult parseResult = _telnetParser.parse(inCharBuffer);
+        final String parseResult = _telnetParser.parse(inCharBuffer);
 
         for (Trigger trigger : _triggers) {
-            if(trigger.matches(parseResult.getPrompt())){
+            if(trigger.matches(parseResult)){
                 _commands.put(new SimpleCommand(trigger.getAction()));
             }
         }
 
-        for (MatchingEvent event : _promptEvents) {
-            if(event.matches(parseResult.getPrompt())){
-                events.add(event);
-            }
-        }
-
         for (MatchingEvent event : _events) {
-            if(event.matches(parseResult.getText())){
+            if(event.matches(parseResult)){
                 events.add(event);
             }
         }

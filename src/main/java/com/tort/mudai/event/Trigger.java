@@ -9,7 +9,7 @@ public class Trigger implements MatchingEvent {
     private String _action;
 
     public Trigger(final String regex, final String action) {
-        _pattern = Pattern.compile(regex);
+        _pattern = Pattern.compile(regex, Pattern.MULTILINE | Pattern.DOTALL);
         _action = action;
     }
 
