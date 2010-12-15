@@ -3,30 +3,26 @@ package com.tort.mudai;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.tort.mudai.command.Command;
 import com.tort.mudai.command.RawWriteCommand;
 import com.tort.mudai.event.*;
+import com.tort.mudai.task.Person;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.CharBuffer;
-import java.util.concurrent.BlockingQueue;
 
 public class SimpleMudClient {
     private Person _person;
     private Adapter _adapter;
-    private BlockingQueue<Command> _commands;
 
     @Inject
-    public SimpleMudClient(final Adapter adapter, final BlockingQueue commands, final Person person) {
+    public SimpleMudClient(final Adapter adapter, final Person person) {
         _adapter = adapter;
-        _commands = commands;
         _person = person;
     }
 
     public void start() {
         _adapter.subscribe(new SimpleEventListener());
-        _adapter.subscribe(_person);
         _adapter.start();
 
         final InputStreamReader reader = new InputStreamReader(System.in);
@@ -34,13 +30,11 @@ public class SimpleMudClient {
         try {
             while (reader.read(charBuffer) != -1) {
                 charBuffer.flip();
-                _commands.put(new RawWriteCommand(charBuffer.toString()));
+                _adapter.submit(new RawWriteCommand(charBuffer.toString()));
                 charBuffer.clear();
             }
         } catch (IOException e) {
             System.out.println("read keyboard input error");
-        } catch (InterruptedException e) {
-            System.out.println("error populating command queue");
         }
     }
 

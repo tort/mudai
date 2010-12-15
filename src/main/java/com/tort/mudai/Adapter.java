@@ -11,5 +11,5 @@ public interface Adapter {
 
     void start();
 
-    void send(Command command);
+    void submit(Command command);
 }

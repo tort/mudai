@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 public class AdapterImpl implements Adapter {
     private static final int IN_BUF_SIZE = 4096;
@@ -37,6 +38,7 @@ public class AdapterImpl implements Adapter {
     private TelnetParser _telnetParser;
     private List<MatchingEvent> _events = new ArrayList<MatchingEvent>();
     private List<Trigger> _triggers = new ArrayList<Trigger>();
+    private Future<?> _future;
 
     @Inject
     public AdapterImpl(final BlockingQueue commands, final ExecutorService executor, final TelnetParser telnetParser) {
@@ -83,16 +85,18 @@ public class AdapterImpl implements Adapter {
             }
         });
 
-        _executor.submit(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    executeCommands();
-                } catch (Throwable e) {
-                    notifySubscribers(new ProgrammerErrorEvent(e));
+        if (_future == null || _future.isDone()) {
+            _future = _executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        executeCommands();
+                    } catch (Throwable e) {
+                        notifySubscribers(new ProgrammerErrorEvent(e));
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     private void notifySubscribers(final Collection<Event> events) {
@@ -117,8 +121,7 @@ public class AdapterImpl implements Adapter {
         } while (true);
     }
 
-    @Override
-    public void send(final Command command) {
+    private void send(final Command command) {
         final String commandText = command.render() + "\n";
         final byte[] bytes = commandText.getBytes(_charset);
         try {
@@ -127,6 +130,15 @@ public class AdapterImpl implements Adapter {
             _outByteBuffer.clear();
         } catch (IOException e) {
             notifySubscribers(new AdapterExceptionEvent(e));
+        }
+    }
+
+    @Override
+    public void submit(final Command command) {
+        try {
+            _commands.put(command);
+        } catch (InterruptedException e) {
+            System.out.println("error populating command queue");
         }
     }
 
