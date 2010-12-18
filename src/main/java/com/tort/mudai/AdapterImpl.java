@@ -3,6 +3,7 @@ package com.tort.mudai;
 import com.google.inject.Inject;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.SimpleCommand;
+import com.tort.mudai.command.StartSessionCommand;
 import com.tort.mudai.event.*;
 import com.tort.mudai.telnet.TelnetParser;
 
@@ -18,7 +19,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 
 public class AdapterImpl implements Adapter {
     private static final int IN_BUF_SIZE = 4096;
@@ -38,7 +38,7 @@ public class AdapterImpl implements Adapter {
     private TelnetParser _telnetParser;
     private List<MatchingEvent> _events = new ArrayList<MatchingEvent>();
     private List<Trigger> _triggers = new ArrayList<Trigger>();
-    private Future<?> _future;
+    public static final int OUT_BUF_SIZE = 128;
 
     @Inject
     public AdapterImpl(final BlockingQueue commands, final ExecutorService executor, final TelnetParser telnetParser) {
@@ -51,6 +51,17 @@ public class AdapterImpl implements Adapter {
 
         _triggers.add(new Trigger(".*^\\* В связи с проблемами перевода фразы ANYKEY нажмите ENTER.*", ""));
         _triggers.add(new Trigger(".*^Select one : $", ENCODING));
+
+        _executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    executeCommands();
+                } catch (Throwable e) {
+                    notifySubscribers(new ProgrammerErrorEvent(e));
+                }
+            }
+        });
     }
 
     @Override
@@ -63,8 +74,7 @@ public class AdapterImpl implements Adapter {
         _listeners.remove(listener);
     }
 
-    @Override
-    public void start() {
+    private void start() {
         try {
             _channel = SocketChannel.open();
             _channel.connect(new InetSocketAddress("mud.ru", 4000));
@@ -84,19 +94,6 @@ public class AdapterImpl implements Adapter {
                 }
             }
         });
-
-        if (_future == null || _future.isDone()) {
-            _future = _executor.submit(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        executeCommands();
-                    } catch (Throwable e) {
-                        notifySubscribers(new ProgrammerErrorEvent(e));
-                    }
-                }
-            });
-        }
     }
 
     private void notifySubscribers(final Collection<Event> events) {
@@ -114,7 +111,12 @@ public class AdapterImpl implements Adapter {
     private void executeCommands() {
         do {
             try {
-                send(_commands.take());
+                final Command command = _commands.take();
+                if(command instanceof StartSessionCommand){
+                    start();
+                }
+
+                send(command);
             } catch (InterruptedException e) {
                 notifySubscribers(new AdapterExceptionEvent(e));
             }

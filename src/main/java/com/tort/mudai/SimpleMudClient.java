@@ -13,24 +13,22 @@ import java.nio.CharBuffer;
 
 public class SimpleMudClient {
     private Person _person;
-    private Adapter _adapter;
 
     @Inject
-    public SimpleMudClient(final Adapter adapter, final Person person) {
-        _adapter = adapter;
+    public SimpleMudClient(final Person person) {
         _person = person;
     }
 
     public void start() {
-        _adapter.subscribe(new SimpleEventListener());
-        _adapter.start();
+        _person.subscribe(new SimpleEventListener());
+        _person.start();
 
         final InputStreamReader reader = new InputStreamReader(System.in);
-        final CharBuffer charBuffer = CharBuffer.allocate(Adapter.OUT_BUF_SIZE);
+        final CharBuffer charBuffer = CharBuffer.allocate(AdapterImpl.OUT_BUF_SIZE);
         try {
             while (reader.read(charBuffer) != -1) {
                 charBuffer.flip();
-                _adapter.submit(new RawWriteCommand(charBuffer.toString()));
+                _person.submit(new RawWriteCommand(charBuffer.toString()));
                 charBuffer.clear();
             }
         } catch (IOException e) {

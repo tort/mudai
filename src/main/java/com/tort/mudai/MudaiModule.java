@@ -14,5 +14,6 @@ public class MudaiModule extends AbstractModule {
         bind(Adapter.class).to(AdapterImpl.class).in(Scopes.SINGLETON);
         bind(BlockingQueue.class).to(PriorityBlockingQueue.class).in(Scopes.SINGLETON);
         bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(2));
+        bind(CommandExecutor.class).to(AdapterImpl.class).in(Scopes.SINGLETON);
     }
 }
