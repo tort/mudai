@@ -114,9 +114,9 @@ public class AdapterImpl implements Adapter {
                 final Command command = _commands.take();
                 if(command instanceof StartSessionCommand){
                     start();
+                } else {
+                    send(command);
                 }
-
-                send(command);
             } catch (InterruptedException e) {
                 notifySubscribers(new AdapterExceptionEvent(e));
             }
