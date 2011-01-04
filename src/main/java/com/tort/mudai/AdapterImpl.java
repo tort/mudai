@@ -31,7 +31,7 @@ public class AdapterImpl implements Adapter {
     private final Charset _charset = Charset.forName("KOI8-R");
     private final CharsetDecoder _decoder = _charset.newDecoder();
 
-    private List<AdapterEventListener> _listeners = new ArrayList<AdapterEventListener>();
+    private final List<AdapterEventListener> _listeners = new ArrayList<AdapterEventListener>();
     private SocketChannel _channel;
     private BlockingQueue<Command> _commands;
     private final ExecutorService _executor;
@@ -41,7 +41,7 @@ public class AdapterImpl implements Adapter {
     public static final int OUT_BUF_SIZE = 128;
 
     @Inject
-    public AdapterImpl(final BlockingQueue commands, final ExecutorService executor, final TelnetParser telnetParser) {
+    public AdapterImpl(final BlockingQueue<Command> commands, final ExecutorService executor, final TelnetParser telnetParser) {
         _commands = commands;
         _executor = executor;
         _telnetParser = telnetParser;
