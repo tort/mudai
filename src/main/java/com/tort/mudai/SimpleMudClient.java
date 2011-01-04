@@ -13,6 +13,7 @@ import java.nio.CharBuffer;
 
 public class SimpleMudClient {
     private Person _person;
+    private static final String FIND_PATH_COMMAND = "/путь";
 
     @Inject
     public SimpleMudClient(final Person person) {
@@ -28,8 +29,14 @@ public class SimpleMudClient {
         try {
             while (reader.read(charBuffer) != -1) {
                 charBuffer.flip();
-                _person.submit(new RawWriteCommand(charBuffer.toString()));
-                charBuffer.clear();
+                final String command = charBuffer.toString();
+                if(command.startsWith(FIND_PATH_COMMAND)){
+                    final String path = _person.getPathTo(command.substring(FIND_PATH_COMMAND.length() + 1, command.length() - 1));
+                    System.out.println("PATH: " + path);
+                } else {
+                    _person.submit(new RawWriteCommand(command));
+                    charBuffer.clear();
+                }
             }
         } catch (IOException e) {
             System.out.println("read keyboard input error");

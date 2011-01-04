@@ -28,8 +28,9 @@ public class AdapterImpl implements Adapter {
     private SocketChannel _channel;
     private BlockingQueue<Command> _commands;
     private final ExecutorService _executor;
-    private List<MatchingEvent> _events = new ArrayList<MatchingEvent>();
-    private List<Trigger> _triggers = new ArrayList<Trigger>();
+    private TelnetParser _telnetParser;
+    private List<EventTrigger> _eventTriggers = new ArrayList<EventTrigger>();
+    private List<SimpleTrigger> _simpleTriggers = new ArrayList<SimpleTrigger>();
     public static final int OUT_BUF_SIZE = 128;
     private TelnetReader _telnetReader;
 
@@ -38,11 +39,13 @@ public class AdapterImpl implements Adapter {
         _commands = commands;
         _executor = executor;
 
-        _events.add(new LoginPromptEvent());
-        _events.add(new PasswordPromptEvent());
+        _eventTriggers.add(new LoginPromptTrigger());
+        _eventTriggers.add(new PasswordPromptTrigger());
+        _eventTriggers.add(new LookAroundTrigger());
+        _eventTriggers.add(new MoveTrigger());
 
-        _triggers.add(new Trigger(".*^\\* В связи с проблемами перевода фразы ANYKEY нажмите ENTER.*", ""));
-        _triggers.add(new Trigger(".*^Select one : $", ENCODING));
+        _simpleTriggers.add(new SimpleTrigger(".*^\\* В связи с проблемами перевода фразы ANYKEY нажмите ENTER.*", ""));
+        _simpleTriggers.add(new SimpleTrigger(".*^Select one : $", ENCODING));
 
         _executor.submit(new Runnable() {
             @Override
@@ -148,15 +151,17 @@ public class AdapterImpl implements Adapter {
     private Collection<Event> parseInput(final String input) throws InterruptedException {
         final Collection<Event> events = new ArrayList<Event>();
 
-        for (Trigger trigger : _triggers) {
+        final String parseResult = _telnetParser.parse(inCharBuffer);
+
+        for (SimpleTrigger trigger : _simpleTriggers) {
             if(trigger.matches(input)){
                 _commands.put(new SimpleCommand(trigger.getAction()));
             }
         }
 
-        for (MatchingEvent event : _events) {
-            if(event.matches(input)){
-                events.add(event);
+        for (EventTrigger trigger : _eventTriggers) {
+            if(trigger.matches(parseResult)){
+                events.add(trigger.createEvent(input));
             }
         }
 

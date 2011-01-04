@@ -4,10 +4,7 @@ import com.google.inject.Inject;
 import com.tort.mudai.*;
 import com.tort.mudai.command.SimpleCommand;
 import com.tort.mudai.command.StartSessionCommand;
-import com.tort.mudai.event.AdapterExceptionEvent;
-import com.tort.mudai.event.Event;
-import com.tort.mudai.event.LoginPromptEvent;
-import com.tort.mudai.event.PasswordPromptEvent;
+import com.tort.mudai.event.*;
 
 import java.util.HashMap;
 import java.util.Map;
