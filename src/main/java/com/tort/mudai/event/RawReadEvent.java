@@ -3,13 +3,13 @@ package com.tort.mudai.event;
 import java.nio.CharBuffer;
 
 public class RawReadEvent implements Event {
-    private final CharBuffer _inCharBuffer;
+    private final String _inCharBuffer;
 
-    public RawReadEvent(final CharBuffer inCharBuffer) {
+    public RawReadEvent(final String inCharBuffer) {
         _inCharBuffer = inCharBuffer;
     }
 
-    public CharBuffer getInCharBuffer() {
+    public String getInCharBuffer() {
         return _inCharBuffer;
     }
 }

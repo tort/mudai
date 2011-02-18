@@ -5,15 +5,14 @@ import com.tort.mudai.command.Command;
 import com.tort.mudai.command.SimpleCommand;
 import com.tort.mudai.command.StartSessionCommand;
 import com.tort.mudai.event.*;
-import com.tort.mudai.telnet.TelnetParser;
+import com.tort.mudai.telnet.ChannelReader;
+import com.tort.mudai.telnet.TelnetReader;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -21,30 +20,23 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 
 public class AdapterImpl implements Adapter {
-    private static final int IN_BUF_SIZE = 4096;
     private static final String ENCODING = "0";
 
     private final ByteBuffer _outByteBuffer = ByteBuffer.allocate(OUT_BUF_SIZE);
-    private final ByteBuffer _inByteBuffer = ByteBuffer.allocateDirect(IN_BUF_SIZE);
-    private final CharBuffer _inCharBuffer = CharBuffer.allocate(IN_BUF_SIZE);
-
     private final Charset _charset = Charset.forName("KOI8-R");
-    private final CharsetDecoder _decoder = _charset.newDecoder();
-
     private final List<AdapterEventListener> _listeners = new ArrayList<AdapterEventListener>();
     private SocketChannel _channel;
     private BlockingQueue<Command> _commands;
     private final ExecutorService _executor;
-    private TelnetParser _telnetParser;
     private List<MatchingEvent> _events = new ArrayList<MatchingEvent>();
     private List<Trigger> _triggers = new ArrayList<Trigger>();
     public static final int OUT_BUF_SIZE = 128;
+    private TelnetReader _telnetReader;
 
     @Inject
-    public AdapterImpl(final BlockingQueue<Command> commands, final ExecutorService executor, final TelnetParser telnetParser) {
+    public AdapterImpl(final BlockingQueue<Command> commands, final ExecutorService executor) {
         _commands = commands;
         _executor = executor;
-        _telnetParser = telnetParser;
 
         _events.add(new LoginPromptEvent());
         _events.add(new PasswordPromptEvent());
@@ -78,6 +70,8 @@ public class AdapterImpl implements Adapter {
         try {
             _channel = SocketChannel.open();
             _channel.connect(new InetSocketAddress("mud.ru", 4000));
+            ChannelReader channelReader = new ChannelReader(_channel, _charset);
+            _telnetReader = new TelnetReader(channelReader);
         } catch (IOException e) {
             notifySubscribers(new AdapterExceptionEvent(e));
         }
@@ -85,11 +79,17 @@ public class AdapterImpl implements Adapter {
         _executor.submit(new Runnable() {
             public void run() {
                 try {
-                    read();
+                    String[] message;
+                    while ((message = _telnetReader.read()) != null) {
+                        for (String ga_block : message) {
+                            notifySubscribers(new RawReadEvent(ga_block));
+                            notifySubscribers(parseInput(ga_block));
+                        }
+                    }
                     notifySubscribers(new ConnectionClosedEvent());
                 } catch (IOException e) {
                     notifySubscribers(new AdapterExceptionEvent(e));
-                } catch (Throwable e){
+                } catch (Throwable e) {
                     notifySubscribers(new ProgrammerErrorEvent(e));
                 }
             }
@@ -109,6 +109,7 @@ public class AdapterImpl implements Adapter {
     }
 
     private void executeCommands() {
+        //noinspection InfiniteLoopStatement
         do {
             try {
                 final Command command = _commands.take();
@@ -144,32 +145,17 @@ public class AdapterImpl implements Adapter {
         }
     }
 
-    private void read() throws IOException, InterruptedException {
-        while (_channel.read(_inByteBuffer) != -1) {
-            _inByteBuffer.flip();
-            _decoder.decode(_inByteBuffer, _inCharBuffer, false);
-            _inCharBuffer.flip();
-
-            notifySubscribers(new RawReadEvent(_inCharBuffer));
-            notifySubscribers(parseInput(_inCharBuffer));
-            _inByteBuffer.clear();
-            _inCharBuffer.clear();
-        }
-    }
-
-    private Collection<Event> parseInput(final CharBuffer inCharBuffer) throws InterruptedException {
+    private Collection<Event> parseInput(final String input) throws InterruptedException {
         final Collection<Event> events = new ArrayList<Event>();
 
-        final String parseResult = _telnetParser.parse(inCharBuffer);
-
         for (Trigger trigger : _triggers) {
-            if(trigger.matches(parseResult)){
+            if(trigger.matches(input)){
                 _commands.put(new SimpleCommand(trigger.getAction()));
             }
         }
 
         for (MatchingEvent event : _events) {
-            if(event.matches(parseResult)){
+            if(event.matches(input)){
                 events.add(event);
             }
         }
