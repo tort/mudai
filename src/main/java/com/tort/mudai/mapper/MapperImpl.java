@@ -8,9 +8,7 @@ import com.tort.mudai.event.MoveEvent;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.alg.DijkstraShortestPath;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @SuppressWarnings({"UnusedDeclaration"})
 public class MapperImpl implements Mapper {
@@ -41,6 +39,9 @@ public class MapperImpl implements Mapper {
     @Override
     public String getPathTo(final String locationTitle) {
         final Location target = _locations.get(locationTitle);
+        if(target == null)
+            return "";
+
         final DijkstraShortestPath<Location, Direction> _algorythm = new DijkstraShortestPath<Location, Direction>(_graph, _current, target);
         final List<Direction> directions = _algorythm.getPathEdgeList();
 
@@ -50,6 +51,14 @@ public class MapperImpl implements Mapper {
         }
 
         return result.toString();
+    }
+
+    @Override
+    public List<String> knownLocations() {
+        final List<String> result = new ArrayList();
+        result.addAll(_locations.keySet());
+
+        return result;
     }
 
     @Override

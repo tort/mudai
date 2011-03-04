@@ -28,7 +28,6 @@ public class AdapterImpl implements Adapter {
     private SocketChannel _channel;
     private BlockingQueue<Command> _commands;
     private final ExecutorService _executor;
-    private TelnetParser _telnetParser;
     private List<EventTrigger> _eventTriggers = new ArrayList<EventTrigger>();
     private List<SimpleTrigger> _simpleTriggers = new ArrayList<SimpleTrigger>();
     public static final int OUT_BUF_SIZE = 128;
@@ -151,8 +150,6 @@ public class AdapterImpl implements Adapter {
     private Collection<Event> parseInput(final String input) throws InterruptedException {
         final Collection<Event> events = new ArrayList<Event>();
 
-        final String parseResult = _telnetParser.parse(inCharBuffer);
-
         for (SimpleTrigger trigger : _simpleTriggers) {
             if(trigger.matches(input)){
                 _commands.put(new SimpleCommand(trigger.getAction()));
@@ -160,7 +157,7 @@ public class AdapterImpl implements Adapter {
         }
 
         for (EventTrigger trigger : _eventTriggers) {
-            if(trigger.matches(parseResult)){
+            if(trigger.matches(input)){
                 events.add(trigger.createEvent(input));
             }
         }

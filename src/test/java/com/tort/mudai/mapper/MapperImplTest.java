@@ -6,6 +6,7 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 @Test
 public class MapperImplTest {
@@ -27,5 +28,15 @@ public class MapperImplTest {
 
         final DijkstraShortestPath<Location, String> _algorythm = new DijkstraShortestPath<Location, String>(_graph, loc1, loc3);
         assertEquals(_algorythm.getPathEdgeList().size(), 2);
+    }
+
+    public void getPathToUnknownRoom(){
+        final DirectedGraph<Location, Direction> graph = new DefaultDirectedGraph(String.class);
+        final Persister persister = new MockPersister();
+        final MapperImpl mapper = new MapperImpl(graph, persister);
+
+        final String pathTo = mapper.getPathTo("unknown");
+
+        assertTrue(pathTo.isEmpty());
     }
 }

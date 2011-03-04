@@ -7,7 +7,11 @@ import com.tort.mudai.AdapterEventListener;
 import com.tort.mudai.CommandExecutor;
 import com.tort.mudai.EventSource;
 import com.tort.mudai.command.Command;
+import com.tort.mudai.mapper.Location;
 import com.tort.mudai.mapper.Mapper;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Person implements CommandExecutor, EventSource {
     private final Provider<SessionTask> _sessionProvider;
@@ -50,5 +54,9 @@ public class Person implements CommandExecutor, EventSource {
 
     public String getPathTo(final String location) {
         return _mapper.getPathTo(location);
+    }
+
+    public List<String> locationTitles() {
+        return _mapper.knownLocations();
     }
 }
