@@ -10,12 +10,12 @@ import com.tort.mudai.task.Person;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.CharBuffer;
-import java.util.List;
 
 public class SimpleMudClient {
     private Person _person;
     private static final String FIND_PATH_COMMAND = "/путь";
     private static final String LIST_LOCATIONS_COMMAND = "/лист";
+    private static final String TRAVEL_COMMAND = "/го";
 
     @Inject
     public SimpleMudClient(final Person person) {
@@ -33,12 +33,14 @@ public class SimpleMudClient {
                 charBuffer.flip();
                 final String command = charBuffer.toString();
                 if(command.startsWith(FIND_PATH_COMMAND)){
-                    final String path = _person.getPathTo(command.substring(FIND_PATH_COMMAND.length() + 1, command.length() - 1));
+                    final String path = _person.pathTo(command.substring(FIND_PATH_COMMAND.length() + 1, command.length() - 1));
                     System.out.println("PATH: " + path);
                 } else if(command.startsWith(LIST_LOCATIONS_COMMAND)) {
                     for (String location : _person.locationTitles()) {
                         System.out.println("LOCATION: " + location);
                     }
+                } else if(command.startsWith(TRAVEL_COMMAND)) {
+                    _person.travel(command.substring(TRAVEL_COMMAND.length() + 1, command.length() - 1));
                 } else {
                     _person.submit(new RawWriteCommand(command));
                 }

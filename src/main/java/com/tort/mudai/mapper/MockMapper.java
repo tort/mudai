@@ -2,12 +2,19 @@ package com.tort.mudai.mapper;
 
 import com.tort.mudai.event.Event;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MockMapper implements Mapper {
     @Override
-    public String getPathTo(final String location) {
-        return "свсссзсвю";
+    public List<Direction> pathTo(final String location) {
+        final List<Direction> result = new ArrayList();
+        
+        for (char c : "свсссзсвю".toCharArray()) {
+            result.add(new Direction(String.valueOf(c)));
+        }
+
+        return result;
     }
 
     @Override

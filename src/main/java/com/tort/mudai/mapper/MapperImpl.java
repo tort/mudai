@@ -37,20 +37,15 @@ public class MapperImpl implements Mapper {
     }
 
     @Override
-    public String getPathTo(final String locationTitle) {
+    public List<Direction> pathTo(final String locationTitle) {
         final Location target = _locations.get(locationTitle);
-        if(target == null)
-            return "";
+        if (target == null)
+            return null;
 
         final DijkstraShortestPath<Location, Direction> _algorythm = new DijkstraShortestPath<Location, Direction>(_graph, _current, target);
         final List<Direction> directions = _algorythm.getPathEdgeList();
 
-        StringBuilder result = new StringBuilder();
-        for (Direction direction : directions) {
-            result.append(direction.getName());
-        }
-
-        return result.toString();
+        return directions;
     }
 
     @Override

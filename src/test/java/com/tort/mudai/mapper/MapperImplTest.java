@@ -5,7 +5,10 @@ import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.testng.annotations.Test;
 
+import java.util.List;
+
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 @Test
@@ -35,8 +38,8 @@ public class MapperImplTest {
         final Persister persister = new MockPersister();
         final MapperImpl mapper = new MapperImpl(graph, persister);
 
-        final String pathTo = mapper.getPathTo("unknown");
+        final List<Direction> pathTo = mapper.pathTo("unknown");
 
-        assertTrue(pathTo.isEmpty());
+        assertNull(pathTo);
     }
 }

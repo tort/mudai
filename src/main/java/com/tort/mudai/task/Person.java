@@ -7,10 +7,9 @@ import com.tort.mudai.AdapterEventListener;
 import com.tort.mudai.CommandExecutor;
 import com.tort.mudai.EventSource;
 import com.tort.mudai.command.Command;
-import com.tort.mudai.mapper.Location;
+import com.tort.mudai.mapper.Direction;
 import com.tort.mudai.mapper.Mapper;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class Person implements CommandExecutor, EventSource {
@@ -52,11 +51,24 @@ public class Person implements CommandExecutor, EventSource {
         _adapter.unsubscribe(listener);
     }
 
-    public String getPathTo(final String location) {
-        return _mapper.getPathTo(location);
+    public String pathTo(final String location) {
+        final List<Direction> directions = _mapper.pathTo(location);
+
+        StringBuilder result = new StringBuilder();
+        for (Direction direction : directions) {
+            result.append(direction.getName());
+        }
+
+        return result.toString();
     }
 
     public List<String> locationTitles() {
         return _mapper.knownLocations();
+    }
+
+    public void travel(final String to) {
+        final List<Direction> path = _mapper.pathTo(to);
+
+        _adapter.subscribe(new TravelTask(_adapter, path));
     }
 }
