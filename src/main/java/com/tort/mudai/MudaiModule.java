@@ -24,6 +24,6 @@ public class MudaiModule extends AbstractModule {
         bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(2));
         bind(Mapper.class).to(MapperImpl.class);
         bind(new TypeLiteral<DirectedGraph<Location, Direction>>(){}).toInstance(new DefaultDirectedGraph(Direction.class));
-        bind(Persister.class).to(MockPersister.class);
+        bind(Persister.class).to(Db4oPersister.class).in(Scopes.SINGLETON);
     }
 }

@@ -49,7 +49,7 @@ public class TravelTask implements AdapterEventListener {
         @Override
         public void handle(final MoveEvent event) throws InterruptedException {
             if (_path.isEmpty()){
-                _adapter.unsubscribe((AdapterEventListener) this);
+                _adapter.unsubscribe(TravelTask.this);
 
                 return;
             }

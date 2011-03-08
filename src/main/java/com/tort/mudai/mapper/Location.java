@@ -1,9 +1,12 @@
 package com.tort.mudai.mapper;
 
+import com.db4o.collections.ActivatableHashMap;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 @Entity
 public class Location {
@@ -25,5 +28,9 @@ public class Location {
 
     public void addDirection(final String direction, final Location location) {
         _directions.put(direction, location);
+    }
+
+    public Set<String> getDirections() {
+        return _directions.keySet();
     }
 }

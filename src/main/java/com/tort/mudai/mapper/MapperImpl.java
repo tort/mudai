@@ -1,5 +1,6 @@
 package com.tort.mudai.mapper;
 
+import com.db4o.ObjectSet;
 import com.google.inject.Inject;
 import com.tort.mudai.Handler;
 import com.tort.mudai.event.Event;
@@ -17,7 +18,6 @@ public class MapperImpl implements Mapper {
     private LocationHelper _locationHelper;
     private Map<Class, Handler> _events = new HashMap<Class, Handler>();
     private Persister _persister;
-    private Map<String, Location> _locations = new HashMap<String, Location>();
     private Map<String, String> _directions = new HashMap<String, String>();
 
     @Inject
@@ -34,11 +34,24 @@ public class MapperImpl implements Mapper {
 
         _events.put(LookAroundEvent.class, new LookAroundEventHandler());
         _events.put(MoveEvent.class, new MoveEventHandler());
+
+        final List<Location> locations = _persister.enlistLocations();
+
+        for (Location location : locations) {
+            _graph.addVertex(location);
+        }
+
+        for (Location location : locations) {
+            final Set<String> directions = location.getDirections();
+            for (String direction : directions) {
+                _graph.addEdge(location, location.getByDirection(direction), new Direction(direction));
+            }
+        }
     }
 
     @Override
     public List<Direction> pathTo(final String locationTitle) {
-        final Location target = _locations.get(locationTitle);
+        final Location target = _persister.loadLocation(locationTitle);
         if (target == null)
             return null;
 
@@ -51,7 +64,12 @@ public class MapperImpl implements Mapper {
     @Override
     public List<String> knownLocations() {
         final List<String> result = new ArrayList();
-        result.addAll(_locations.keySet());
+
+        final List<Location> locations = _persister.enlistLocations();
+        for (Location location : locations) {
+            result.add(location.getTitle());
+            _persister.persistLocation(location);
+        }
 
         return result;
     }
@@ -74,15 +92,17 @@ public class MapperImpl implements Mapper {
         public void handle(final LookAroundEvent event) throws InterruptedException {
             if (_current == null) {
                 final String title = event.getLocationTitle();
-                _current = new Location();
-                _current.setTitle(title);
-                _persister.persist(_current);
-                _graph.addVertex(_current);
-                _locations.put(title, _current);
+                _current = _persister.loadLocation(title);
+                if (_current == null) {
+                    _current = new Location();
+                    _current.setTitle(title);
+                    _persister.persistLocation(_current);
+                    _graph.addVertex(_current);
+                }
             } else {
                 if (_current.getTitle() == null) {
                     _current.setTitle(event.getLocationTitle());
-                    _locations.put(_current.getTitle(), _current);
+                    _persister.persistLocation(_current);
                 }
             }
         }
@@ -101,6 +121,8 @@ public class MapperImpl implements Mapper {
                 _graph.addVertex(newLocation);
                 _graph.addEdge(_current, newLocation, new Direction(direction));
                 _graph.addEdge(newLocation, _current, new Direction(oppositeDirection));
+                _persister.persistLocation(newLocation);
+                _persister.persistLocation(_current);
                 _current = newLocation;
                 System.out.println("NEW ROOM");
             } else {

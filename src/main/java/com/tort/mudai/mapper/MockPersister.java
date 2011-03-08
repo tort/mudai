@@ -1,8 +1,20 @@
 package com.tort.mudai.mapper;
 
+import java.util.List;
+
 public class MockPersister implements Persister {
     @Override
-    public void persist(final Location location) {
+    public void persistLocation(final Location location) {
         System.out.println("PERSISTING " + location.getTitle());
+    }
+
+    @Override
+    public Location loadLocation(final String title) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public List<Location> enlistLocations() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }
