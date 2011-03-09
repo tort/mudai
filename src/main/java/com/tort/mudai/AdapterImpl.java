@@ -40,8 +40,8 @@ public class AdapterImpl implements Adapter {
 
         _eventTriggers.add(new LoginPromptTrigger());
         _eventTriggers.add(new PasswordPromptTrigger());
-        _eventTriggers.add(new LookAroundTrigger());
         _eventTriggers.add(new MoveTrigger());
+        _eventTriggers.add(new LookAroundTrigger());
 
         _simpleTriggers.add(new SimpleTrigger(".*^\\* В связи с проблемами перевода фразы ANYKEY нажмите ENTER.*", ""));
         _simpleTriggers.add(new SimpleTrigger(".*^Select one : $", ENCODING));

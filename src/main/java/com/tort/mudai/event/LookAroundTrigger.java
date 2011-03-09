@@ -4,7 +4,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class LookAroundTrigger implements EventTrigger {
-    private final Pattern _pattern = PatternUtil.compile("^(?:Вы поплелись на (?:север|юг|запад|восток)\\.)?\u001B\\[1\\;36m(.*)\u001B\\[0\\;37m$\\s\\s\\s.*");
+    private final Pattern _pattern = PatternUtil.compile("^(?:Вы поплелись на (?:север|юг|запад|восток)\\.\r\n)?\u001B\\[1\\;36m(.*)\u001B\\[0\\;37m$\\s\\s\\s.*");
 
     @Override
     public boolean matches(final String text) {
