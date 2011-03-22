@@ -3,7 +3,9 @@ package com.tort.mudai.task;
 import com.tort.mudai.Adapter;
 import com.tort.mudai.AdapterEventListener;
 import com.tort.mudai.Handler;
+import com.tort.mudai.command.Command;
 import com.tort.mudai.command.SimpleCommand;
+import com.tort.mudai.command.UnsubscribeCommand;
 import com.tort.mudai.event.Event;
 import com.tort.mudai.event.MoveEvent;
 import com.tort.mudai.mapper.Direction;
@@ -49,7 +51,7 @@ public class TravelTask implements AdapterEventListener {
         @Override
         public void handle(final MoveEvent event) throws InterruptedException {
             if (_path.isEmpty()){
-                _adapter.unsubscribe(TravelTask.this);
+                _adapter.submit(new UnsubscribeCommand(TravelTask.this));
 
                 return;
             }
