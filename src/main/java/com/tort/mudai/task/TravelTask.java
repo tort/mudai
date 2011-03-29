@@ -9,6 +9,7 @@ import com.tort.mudai.command.UnsubscribeCommand;
 import com.tort.mudai.event.Event;
 import com.tort.mudai.event.MoveEvent;
 import com.tort.mudai.mapper.Direction;
+import com.tort.mudai.mapper.Mapper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -18,13 +19,24 @@ public class TravelTask implements AdapterEventListener {
     private Map<Class, Handler> _events = new HashMap<Class, Handler>();
     private final List<Direction> _path;
     private final Adapter _adapter;
+    private final String _to;
+    private final Mapper _mapper;
 
-    public TravelTask(final Adapter adapter, final List<Direction> path) {
+    public TravelTask(final Adapter adapter, final String to, final Mapper mapper) {
+        if(mapper == null)
+            throw new IllegalArgumentException("mapper is null");
+
+        if(to == null)
+            throw new IllegalArgumentException("to is null");
+
+        final List<Direction> path = mapper.pathTo(to);
         if (path == null)
             throw new IllegalArgumentException("path is null");
 
-        _adapter = adapter;
+        _to = to;
         _path = path;
+        _adapter = adapter;
+        _mapper = mapper;
 
         _events.put(MoveEvent.class, new MoveEventHandler());
 
@@ -59,8 +71,7 @@ public class TravelTask implements AdapterEventListener {
             _path.remove(0);
 
             if (!_path.isEmpty()) {
-                final Direction command = _path.get(0);
-                _adapter.submit(new SimpleCommand(command.getName()));
+                goNext(_path.get(0));
             }
         }
     }

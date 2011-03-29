@@ -67,8 +67,6 @@ public class Person implements CommandExecutor, EventSource {
     }
 
     public void travel(final String to) {
-        final List<Direction> path = _mapper.pathTo(to);
-
-        _adapter.subscribe(new TravelTask(_adapter, path));
+        _adapter.subscribe(new TravelTask(_adapter, to, _mapper));
     }
 }
