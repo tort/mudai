@@ -62,6 +62,7 @@ public class TravelTask implements AdapterEventListener {
     private class MoveEventHandler implements Handler<MoveEvent> {
         @Override
         public void handle(final MoveEvent event) throws InterruptedException {
+            //TODO check current location has same title as planned, abort task otherwise
             if (_path.isEmpty()){
                 _adapter.submit(new UnsubscribeCommand(TravelTask.this));
 
