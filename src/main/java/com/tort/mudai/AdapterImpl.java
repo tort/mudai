@@ -50,8 +50,8 @@ public class AdapterImpl implements Adapter {
         _eventTriggers.add(new MoveTrigger());
         _eventTriggers.add(new LookAroundTrigger());
 
-        _simpleTriggers.add(new SimpleTrigger(".*^\\* В связи с проблемами перевода фразы ANYKEY нажмите ENTER.*", ""));
-        _simpleTriggers.add(new SimpleTrigger(".*^Select one : $", ENCODING));
+        _simpleTriggers.add(new SimpleTrigger(".*^\\* В связи с проблемами перевода фразы ANYKEY нажмите ENTER.*", new String[]{"", "смотр"}));
+        _simpleTriggers.add(new SimpleTrigger(".*^Select one : $", new String[]{ENCODING}));
 
         _executor.submit(new Runnable() {
             @Override
@@ -170,7 +170,10 @@ public class AdapterImpl implements Adapter {
 
         for (SimpleTrigger trigger : _simpleTriggers) {
             if(trigger.matches(input)){
-                _commands.put(new SimpleCommand(trigger.getAction()));
+                final String[] actions = trigger.getAction();
+                for (String action : actions) {
+                    _commands.put(new SimpleCommand(action));
+                }
             }
         }
 
