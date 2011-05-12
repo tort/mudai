@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class SessionTask implements AdapterEventListener {
+public class SessionTask implements Task {
     private final PersonProperties _properties;
     private Map<Class, Handler> _eventMap = new HashMap<Class, Handler>();
     private CommandExecutor _executor;

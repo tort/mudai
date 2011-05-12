@@ -1,10 +1,10 @@
 package com.tort.mudai;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.SimpleCommand;
 import com.tort.mudai.command.StartSessionCommand;
-import com.tort.mudai.command.UnsubscribeCommand;
 import com.tort.mudai.event.*;
 import com.tort.mudai.telnet.ChannelReader;
 import com.tort.mudai.telnet.TelnetReader;
@@ -19,19 +19,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class AdapterImpl implements Adapter {
     private static final String ENCODING = "0";
 
     private final ByteBuffer _outByteBuffer = ByteBuffer.allocate(OUT_BUF_SIZE);
     private final Charset _charset = Charset.forName("KOI8-R");
-    private final List<AdapterEventListener> _listeners = new ArrayList<AdapterEventListener>();
-    private final ReentrantReadWriteLock _listenersReadWriteLock = new ReentrantReadWriteLock();
-    private final Lock _listenersReadLock = _listenersReadWriteLock.readLock();
-    private final Lock _listenersWriteLock = _listenersReadWriteLock.writeLock();
     private SocketChannel _channel;
     private BlockingQueue<Command> _commands;
     private final ExecutorService _executor;
@@ -39,11 +32,13 @@ public class AdapterImpl implements Adapter {
     private List<SimpleTrigger> _simpleTriggers = new ArrayList<SimpleTrigger>();
     public static final int OUT_BUF_SIZE = 128;
     private TelnetReader _telnetReader;
+    private AdapterEventListener _listener;
 
     @Inject
-    public AdapterImpl(final BlockingQueue<Command> commands, final ExecutorService executor) {
+    protected AdapterImpl(final BlockingQueue<Command> commands, final ExecutorService executor, @Named("person") AdapterEventListener listener) {
         _commands = commands;
         _executor = executor;
+        _listener = listener;
 
         _eventTriggers.add(new LoginPromptTrigger());
         _eventTriggers.add(new PasswordPromptTrigger());
@@ -63,20 +58,6 @@ public class AdapterImpl implements Adapter {
                 }
             }
         });
-    }
-
-    @Override
-    public void subscribe(AdapterEventListener listener){
-        _listenersWriteLock.lock();
-        _listeners.add(listener);
-        _listenersWriteLock.unlock();
-    }
-
-    @Override
-    public void unsubscribe(AdapterEventListener listener){
-        _listenersWriteLock.lock();
-        _listeners.remove(listener);
-        _listenersWriteLock.unlock();
     }
 
     private void start() {
@@ -116,11 +97,7 @@ public class AdapterImpl implements Adapter {
     }
 
     private void notifySubscribers(final Event event) {
-        _listenersReadLock.lock();
-        for (AdapterEventListener listener : _listeners) {
-            listener.handle(event);
-        }
-        _listenersReadLock.unlock();
+        _listener.handle(event);
     }
 
     private void executeCommands() {
@@ -128,13 +105,8 @@ public class AdapterImpl implements Adapter {
         do {
             try {
                 final Command command = _commands.take();
-                if(command instanceof StartSessionCommand){
+                if (command instanceof StartSessionCommand) {
                     start();
-                } else if(command instanceof UnsubscribeCommand) {
-                    UnsubscribeCommand unsubscribeCommand = (UnsubscribeCommand) command;
-                    _listenersWriteLock.lock();
-                    _listeners.remove(unsubscribeCommand.getTask());
-                    _listenersWriteLock.unlock();
                 } else {
                     send(command);
                 }
@@ -169,7 +141,7 @@ public class AdapterImpl implements Adapter {
         final Collection<Event> events = new ArrayList<Event>();
 
         for (SimpleTrigger trigger : _simpleTriggers) {
-            if(trigger.matches(input)){
+            if (trigger.matches(input)) {
                 final String[] actions = trigger.getAction();
                 for (String action : actions) {
                     _commands.put(new SimpleCommand(action));
@@ -178,7 +150,7 @@ public class AdapterImpl implements Adapter {
         }
 
         for (EventTrigger trigger : _eventTriggers) {
-            if(trigger.matches(input)){
+            if (trigger.matches(input)) {
                 events.add(trigger.createEvent(input));
             }
         }

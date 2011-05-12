@@ -2,6 +2,7 @@ package com.tort.mudai.task;
 
 import com.tort.mudai.Adapter;
 import com.tort.mudai.AdapterEventListener;
+import com.tort.mudai.CommandExecutor;
 import com.tort.mudai.Handler;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.SimpleCommand;
@@ -15,14 +16,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TravelTask implements AdapterEventListener {
+public class TravelTask implements Task {
     private Map<Class, Handler> _events = new HashMap<Class, Handler>();
     private final List<Direction> _path;
-    private final Adapter _adapter;
+    private final CommandExecutor _adapter;
     private final String _to;
     private final Mapper _mapper;
 
-    public TravelTask(final Adapter adapter, final String to, final Mapper mapper) {
+    public TravelTask(final CommandExecutor adapter, final String to, final Mapper mapper) {
         if(mapper == null)
             throw new IllegalArgumentException("mapper is null");
 
@@ -64,7 +65,6 @@ public class TravelTask implements AdapterEventListener {
         public void handle(final MoveEvent event) throws InterruptedException {
             //TODO check current location has same title as planned, abort task otherwise
             if (_path.isEmpty()){
-                _adapter.submit(new UnsubscribeCommand(TravelTask.this));
 
                 return;
             }

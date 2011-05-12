@@ -3,8 +3,10 @@ package com.tort.mudai;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.mapper.*;
+import com.tort.mudai.task.Person;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
@@ -16,6 +18,8 @@ import java.util.concurrent.PriorityBlockingQueue;
 public class MudaiModule extends AbstractModule {
     @Override
     protected void configure() {
+        bind(AdapterEventListener.class).annotatedWith(Names.named("person")).to(Person.class).in(Scopes.SINGLETON);
+        bind(Person.class).in(Scopes.SINGLETON);
         bind(Adapter.class).to(AdapterImpl.class);
         bind(CommandExecutor.class).to(AdapterImpl.class);
         bind(AdapterImpl.class).in(Scopes.SINGLETON);

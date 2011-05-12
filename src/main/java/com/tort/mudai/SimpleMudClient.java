@@ -6,6 +6,7 @@ import com.google.inject.Injector;
 import com.tort.mudai.command.RawWriteCommand;
 import com.tort.mudai.event.*;
 import com.tort.mudai.task.Person;
+import com.tort.mudai.task.Task;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -18,7 +19,7 @@ public class SimpleMudClient {
     private static final String TRAVEL_COMMAND = "/го";
 
     @Inject
-    public SimpleMudClient(final Person person) {
+    protected SimpleMudClient(final Person person) {
         _person = person;
     }
 
@@ -52,7 +53,7 @@ public class SimpleMudClient {
         }
     }
 
-    private static class SimpleEventListener implements AdapterEventListener {
+    private static class SimpleEventListener implements Task {
         private void print(final String message) {
             System.out.println(message);
         }
