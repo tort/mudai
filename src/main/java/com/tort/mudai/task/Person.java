@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.tort.mudai.Adapter;
 import com.tort.mudai.CommandExecutor;
-import com.tort.mudai.command.Command;
 import com.tort.mudai.event.Event;
 import com.tort.mudai.mapper.Direction;
 import com.tort.mudai.mapper.Mapper;
