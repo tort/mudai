@@ -11,16 +11,20 @@ import com.tort.mudai.task.Task;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.CharBuffer;
+import java.util.concurrent.ExecutorCompletionService;
 
 public class SimpleMudClient {
-    private Person _person;
     private static final String FIND_PATH_COMMAND = "/путь";
     private static final String LIST_LOCATIONS_COMMAND = "/лист";
     private static final String TRAVEL_COMMAND = "/го";
 
+    private Person _person;
+    private CommandExecutor _commandExecutor;
+
     @Inject
-    protected SimpleMudClient(final Person person) {
+    protected SimpleMudClient(final Person person, final CommandExecutor commandExecutor) {
         _person = person;
+        _commandExecutor = commandExecutor;
     }
 
     public void start() {
@@ -33,19 +37,19 @@ public class SimpleMudClient {
             while (reader.read(charBuffer) != -1) {
                 charBuffer.flip();
                 final String command = charBuffer.toString();
-                if(command.startsWith(FIND_PATH_COMMAND)){
+                if (command.startsWith(FIND_PATH_COMMAND)) {
                     final String path = _person.pathTo(command.substring(FIND_PATH_COMMAND.length() + 1, command.length() - 1));
                     System.out.println("PATH: " + path);
-                } else if(command.startsWith(LIST_LOCATIONS_COMMAND)) {
+                } else if (command.startsWith(LIST_LOCATIONS_COMMAND)) {
                     for (String location : _person.locationTitles()) {
                         System.out.println("LOCATION: " + location);
                     }
-                } else if(command.startsWith(TRAVEL_COMMAND)) {
+                } else if (command.startsWith(TRAVEL_COMMAND)) {
                     _person.travel(command.substring(TRAVEL_COMMAND.length() + 1, command.length() - 1));
                 } else {
-                    _person.submit(new RawWriteCommand(command));
+                    _commandExecutor.submit(new RawWriteCommand(command));
                 }
-                
+
                 charBuffer.clear();
             }
         } catch (IOException e) {
@@ -69,7 +73,7 @@ public class SimpleMudClient {
             } else if (event instanceof RawReadEvent) {
                 RawReadEvent rie = (RawReadEvent) event;
                 System.out.print(rie.getInCharBuffer());
-            } else if (event instanceof ProgrammerErrorEvent){
+            } else if (event instanceof ProgrammerErrorEvent) {
                 ProgrammerErrorEvent pee = (ProgrammerErrorEvent) event;
                 pee.getException().printStackTrace();
             }

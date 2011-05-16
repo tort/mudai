@@ -12,7 +12,7 @@ import com.tort.mudai.mapper.Mapper;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Person implements CommandExecutor, Task {
+public class Person implements Task {
     private final Provider<SessionTask> _sessionProvider;
     private final CommandExecutor _adapter;
 
@@ -36,11 +36,6 @@ public class Person implements CommandExecutor, Task {
 
         _tasks.add(_mapper);
         _tasks.add(_sessionTask);
-    }
-
-    @Override
-    public void submit(final Command command) {
-        _adapter.submit(command);
     }
 
     public String pathTo(final String location) {
