@@ -60,6 +60,11 @@ public class TravelTask implements Task {
         }
     }
 
+    @Override
+    public Command pulse() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
     private class MoveEventHandler implements Handler<MoveEvent> {
         @Override
         public void handle(final MoveEvent event) throws InterruptedException {

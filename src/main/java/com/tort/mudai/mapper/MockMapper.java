@@ -1,5 +1,6 @@
 package com.tort.mudai.mapper;
 
+import com.tort.mudai.command.Command;
 import com.tort.mudai.event.Event;
 
 import java.util.ArrayList;
@@ -25,5 +26,10 @@ public class MockMapper implements Mapper {
     @Override
     public void handle(final Event e) {
         //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public Command pulse() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }

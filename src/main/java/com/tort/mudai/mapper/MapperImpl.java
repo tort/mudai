@@ -3,6 +3,7 @@ package com.tort.mudai.mapper;
 import com.db4o.ObjectSet;
 import com.google.inject.Inject;
 import com.tort.mudai.Handler;
+import com.tort.mudai.command.Command;
 import com.tort.mudai.event.Event;
 import com.tort.mudai.event.LookAroundEvent;
 import com.tort.mudai.event.MoveEvent;
@@ -85,6 +86,11 @@ public class MapperImpl implements Mapper {
         } catch (InterruptedException e) {
             System.out.println("error handling " + event.getClass().getName() + "\n" + e.getMessage());
         }
+    }
+
+    @Override
+    public Command pulse() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     private class LookAroundEventHandler implements Handler<LookAroundEvent> {

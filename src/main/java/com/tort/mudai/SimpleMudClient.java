@@ -3,6 +3,7 @@ package com.tort.mudai;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.tort.mudai.command.Command;
 import com.tort.mudai.command.RawWriteCommand;
 import com.tort.mudai.event.*;
 import com.tort.mudai.task.Person;
@@ -77,6 +78,11 @@ public class SimpleMudClient {
                 ProgrammerErrorEvent pee = (ProgrammerErrorEvent) event;
                 pee.getException().printStackTrace();
             }
+        }
+
+        @Override
+        public Command pulse() {
+            return null;  //To change body of implemented methods use File | Settings | File Templates.
         }
     }
 

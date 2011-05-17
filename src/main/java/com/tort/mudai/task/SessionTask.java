@@ -2,6 +2,7 @@ package com.tort.mudai.task;
 
 import com.google.inject.Inject;
 import com.tort.mudai.*;
+import com.tort.mudai.command.Command;
 import com.tort.mudai.command.SimpleCommand;
 import com.tort.mudai.command.StartSessionCommand;
 import com.tort.mudai.event.*;
@@ -15,6 +16,7 @@ public class SessionTask implements Task {
     private final PersonProperties _properties;
     private Map<Class, Handler> _eventMap = new HashMap<Class, Handler>();
     private CommandExecutor _executor;
+    private Command _command;
 
     @Inject
     public SessionTask(final PersonProperties properties, final CommandExecutor executor) {
@@ -25,7 +27,7 @@ public class SessionTask implements Task {
         _eventMap.put(PasswordPromptEvent.class, new PasswordPromptHandler());
         _eventMap.put(AdapterExceptionEvent.class, new AdapterExceptionHandler());
 
-        Executors.newSingleThreadScheduledExecutor().schedule(new Runnable(){
+        Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {
             @Override
             public void run() {
                 System.out.println("CONNECTING");
@@ -38,7 +40,7 @@ public class SessionTask implements Task {
     public void handle(final Event event) {
         try {
             final Handler handler = _eventMap.get(event.getClass());
-            if (handler != null){
+            if (handler != null) {
                 handler.handle(event);
             }
         } catch (InterruptedException e) {
@@ -46,11 +48,16 @@ public class SessionTask implements Task {
         }
     }
 
+    @Override
+    public Command pulse() {
+        return _command;
+    }
+
     public class LoginPromptHandler implements Handler {
         @Override
         public void handle(final Event e) throws InterruptedException {
             System.out.println(_properties.getLogin());
-            _executor.submit(new SimpleCommand(_properties.getLogin()));
+            _command = new SimpleCommand(_properties.getLogin());
         }
     }
 
@@ -58,7 +65,7 @@ public class SessionTask implements Task {
         @Override
         public void handle(final Event e) throws InterruptedException {
             System.out.println(_properties.getPassword());
-            _executor.submit(new SimpleCommand(_properties.getPassword()));
+            _command = new SimpleCommand(_properties.getPassword());
         }
     }
 
@@ -66,11 +73,11 @@ public class SessionTask implements Task {
         @Override
         public void handle(final Event e) throws InterruptedException {
             System.out.println("CONNECTION DROPPED");
-            Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new Runnable(){
+            Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
                     System.out.println("RECONNECTING");
-                    _executor.submit(new StartSessionCommand());
+                    _command = new StartSessionCommand();
                 }
             }, 5, 10, TimeUnit.SECONDS);
         }

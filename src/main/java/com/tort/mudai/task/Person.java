@@ -24,10 +24,11 @@ public class Person implements Task {
     private static final Command EMPTY_COMMAND = null;
 
     @Inject
-    protected Person(final Provider<SessionTask> sessionProvider, final CommandExecutor commandExecutor, final Mapper mapper) {
+    protected Person(final Provider<SessionTask> sessionProvider, final CommandExecutor commandExecutor, final Mapper mapper, final ScheduledExecutorService executor) {
         _sessionProvider = sessionProvider;
         _commandExecutor = commandExecutor;
         _mapper = mapper;
+        _executor = executor;
     }
 
     public void subscribe(Task task) {
