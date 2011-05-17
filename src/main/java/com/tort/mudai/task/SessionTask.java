@@ -50,7 +50,10 @@ public class SessionTask implements Task {
 
     @Override
     public Command pulse() {
-        return _command;
+        final Command command = _command;
+        _command = null;
+
+        return command;
     }
 
     public class LoginPromptHandler implements Handler {
