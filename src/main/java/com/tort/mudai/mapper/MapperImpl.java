@@ -1,23 +1,44 @@
 package com.tort.mudai.mapper;
 
-import com.db4o.ObjectSet;
 import com.google.inject.Inject;
 import com.tort.mudai.Handler;
-import com.tort.mudai.event.Event;
 import com.tort.mudai.event.LookAroundEvent;
 import com.tort.mudai.event.MoveEvent;
+import com.tort.mudai.task.Task;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.alg.DijkstraShortestPath;
 
 import java.util.*;
 
 @SuppressWarnings({"UnusedDeclaration"})
-public class MapperImpl implements Mapper {
+public class MapperImpl extends Task implements Mapper {
     private DirectedGraph<Location, Direction> _graph;
     private Location _current;
     private LocationHelper _locationHelper;
     private Map<Class, Handler> _events = new HashMap<Class, Handler>();
     private Persister _persister;
+
+    @Override
+    public void move(String direction) {
+        final String oppositeDirection = getOppositeDirection(direction);
+        Location location = _current.getByDirection(direction );
+        if (location == null) {
+            final Location newLocation = new Location();
+            _current.addDirection(direction , newLocation);
+            newLocation.addDirection(oppositeDirection, _current);
+            _graph.addVertex(newLocation);
+            _graph.addEdge(_current, newLocation, new Direction(direction ));
+            _graph.addEdge(newLocation, _current, new Direction(oppositeDirection));
+            _persister.persistLocation(newLocation);
+            _persister.persistLocation(_current);
+            _current = newLocation;
+            System.out.println("NEW ROOM");
+        } else {
+            System.out.println("ROOM: " + location.getTitle());
+            _current = location;
+        }
+    }
+
     private Map<String, String> _directions = new HashMap<String, String>();
 
     @Inject
@@ -31,9 +52,6 @@ public class MapperImpl implements Mapper {
         _directions.put("юг", "север");
         _directions.put("вверх", "вниз");
         _directions.put("вниз", "вверх");
-
-        _events.put(LookAroundEvent.class, new LookAroundEventHandler());
-        _events.put(MoveEvent.class, new MoveEventHandler());
 
         final List<Location> locations = _persister.enlistLocations();
 
@@ -74,19 +92,6 @@ public class MapperImpl implements Mapper {
         return result;
     }
 
-    @Override
-    public void handle(final Event event) {
-        final Handler handler = _events.get(event.getClass());
-        if (handler == null)
-            return;
-
-        try {
-            handler.handle(event);
-        } catch (InterruptedException e) {
-            System.out.println("error handling " + event.getClass().getName() + "\n" + e.getMessage());
-        }
-    }
-
     private class LookAroundEventHandler implements Handler<LookAroundEvent> {
         @Override
         public void handle(final LookAroundEvent event) throws InterruptedException {
@@ -108,31 +113,7 @@ public class MapperImpl implements Mapper {
         }
     }
 
-    private class MoveEventHandler implements Handler<MoveEvent> {
-        @Override
-        public void handle(final MoveEvent event) throws InterruptedException {
-            final String direction = event.getDirection();
-            final String oppositeDirection = getOppositeDirection(direction);
-            Location location = _current.getByDirection(direction);
-            if (location == null) {
-                final Location newLocation = new Location();
-                _current.addDirection(direction, newLocation);
-                newLocation.addDirection(oppositeDirection, _current);
-                _graph.addVertex(newLocation);
-                _graph.addEdge(_current, newLocation, new Direction(direction));
-                _graph.addEdge(newLocation, _current, new Direction(oppositeDirection));
-                _persister.persistLocation(newLocation);
-                _persister.persistLocation(_current);
-                _current = newLocation;
-                System.out.println("NEW ROOM");
-            } else {
-                System.out.println("ROOM: " + location.getTitle());
-                _current = location;
-            }
-        }
-
-        private String getOppositeDirection(final String direction) {
-            return _directions.get(direction);
-        }
+    private String getOppositeDirection(final String direction) {
+        return _directions.get(direction);
     }
 }

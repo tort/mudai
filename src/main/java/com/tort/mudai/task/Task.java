@@ -1,5 +1,7 @@
 package com.tort.mudai.task;
 
 public class Task {
-    void move(String direction) {};
+    public void move(String direction) {
+        throw new NotImplementedException();
+    };
 }

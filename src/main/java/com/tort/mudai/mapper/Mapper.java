@@ -5,8 +5,7 @@ import com.tort.mudai.task.Task;
 
 import java.util.List;
 
-public interface Mapper extends Task {
+public interface Mapper {
     List<Direction> pathTo(String location);
-
     List<String> knownLocations();
 }
