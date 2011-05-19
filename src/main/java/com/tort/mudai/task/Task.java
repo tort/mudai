@@ -20,4 +20,16 @@ public class Task {
     public void programmerError(Throwable exception) {
         throw new NotImplementedException();
     }
+
+    public void lookAround(String locationTitle){
+        throw new NotImplementedException();
+    }
+
+    public void loginPrompt(){
+        throw new NotImplementedException();
+    }
+
+    public void passwordPrompt(){
+        throw new NotImplementedException();
+    }
 }

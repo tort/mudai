@@ -1,9 +1,6 @@
 package com.tort.mudai.mapper;
 
 import com.google.inject.Inject;
-import com.tort.mudai.Handler;
-import com.tort.mudai.event.LookAroundEvent;
-import com.tort.mudai.event.MoveEvent;
 import com.tort.mudai.task.Task;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.alg.DijkstraShortestPath;
@@ -15,8 +12,8 @@ public class MapperImpl extends Task implements Mapper {
     private DirectedGraph<Location, Direction> _graph;
     private Location _current;
     private LocationHelper _locationHelper;
-    private Map<Class, Handler> _events = new HashMap<Class, Handler>();
     private Persister _persister;
+    private Map<String, String> _directions = new HashMap<String, String>();
 
     @Override
     public void move(String direction) {
@@ -39,7 +36,24 @@ public class MapperImpl extends Task implements Mapper {
         }
     }
 
-    private Map<String, String> _directions = new HashMap<String, String>();
+    @Override
+    public void lookAround(String locationTitle) {
+        if (_current == null) {
+            final String title = locationTitle;
+            _current = _persister.loadLocation(title);
+            if (_current == null) {
+                _current = new Location();
+                _current.setTitle(title);
+                _persister.persistLocation(_current);
+                _graph.addVertex(_current);
+            }
+        } else {
+            if (_current.getTitle() == null) {
+                _current.setTitle(locationTitle);
+                _persister.persistLocation(_current);
+            }
+        }
+    }
 
     @Inject
     public MapperImpl(final DirectedGraph<Location, Direction> graph, final Persister persister) {
@@ -90,27 +104,6 @@ public class MapperImpl extends Task implements Mapper {
         }
 
         return result;
-    }
-
-    private class LookAroundEventHandler implements Handler<LookAroundEvent> {
-        @Override
-        public void handle(final LookAroundEvent event) throws InterruptedException {
-            if (_current == null) {
-                final String title = event.getLocationTitle();
-                _current = _persister.loadLocation(title);
-                if (_current == null) {
-                    _current = new Location();
-                    _current.setTitle(title);
-                    _persister.persistLocation(_current);
-                    _graph.addVertex(_current);
-                }
-            } else {
-                if (_current.getTitle() == null) {
-                    _current.setTitle(event.getLocationTitle());
-                    _persister.persistLocation(_current);
-                }
-            }
-        }
     }
 
     private String getOppositeDirection(final String direction) {
