@@ -15,7 +15,7 @@ public class PasswordPromptTrigger implements EventTrigger {
     }
 
     @Override
-    public Event createEvent(final String text) {
+    public void fireEvent(final String text) {
         return new PasswordPromptEvent();
     }
 }

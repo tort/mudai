@@ -1,9 +1,9 @@
 package com.tort.mudai.event;
 
+import com.tort.mudai.Handler;
 import com.tort.mudai.task.EventDistributor;
 import com.tort.mudai.task.Task;
 
-import java.util.List;
 import java.util.regex.Pattern;
 
 public class LoginPromptTrigger implements EventTrigger {
@@ -16,17 +16,19 @@ public class LoginPromptTrigger implements EventTrigger {
 
     @Override
     public boolean matches(String text) {
-        if(text == null)
+        if (text == null)
             return false;
 
         return _pattern.matcher(text).matches();
     }
 
     @Override
-    public Event createEvent(final String text) {
-        List<Task> targets = _eventDistributor.getTargets();
-        for (Task target : targets) {
-            target.loginPrompt();
-        }
+    public void fireEvent(final String text) {
+        _eventDistributor.invoke(new Handler<LoginPromptEvent>() {
+            @Override
+            public void handle(Task task) {
+                task.loginPrompt();
+            }
+        });
     }
 }

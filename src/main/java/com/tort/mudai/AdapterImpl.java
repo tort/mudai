@@ -6,6 +6,7 @@ import com.tort.mudai.command.Command;
 import com.tort.mudai.command.SimpleCommand;
 import com.tort.mudai.command.StartSessionCommand;
 import com.tort.mudai.event.*;
+import com.tort.mudai.task.EventDistributor;
 import com.tort.mudai.telnet.ChannelReader;
 import com.tort.mudai.telnet.TelnetReader;
 
@@ -15,7 +16,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -33,17 +33,21 @@ public class AdapterImpl implements Adapter {
     public static final int OUT_BUF_SIZE = 128;
     private TelnetReader _telnetReader;
     private AdapterEventListener _listener;
+    private EventDistributor _eventDistributor;
 
     @Inject
-    protected AdapterImpl(final BlockingQueue<Command> commands, final ExecutorService executor, @Named("person") AdapterEventListener listener) {
+    protected AdapterImpl(final BlockingQueue<Command> commands,
+                          final ExecutorService executor,
+                          @Named("person") AdapterEventListener listener,
+                          EventDistributor eventDistributor) {
         _commands = commands;
         _executor = executor;
         _listener = listener;
 
-        _eventTriggers.add(new LoginPromptTrigger(_eventDistributor));
-        _eventTriggers.add(new PasswordPromptTrigger());
-        _eventTriggers.add(new MoveTrigger());
-        _eventTriggers.add(new LookAroundTrigger());
+        _eventTriggers.add(new LoginPromptTrigger(eventDistributor));
+        _eventTriggers.add(new PasswordPromptTrigger(eventDistributor));
+        _eventTriggers.add(new MoveTrigger(eventDistributor));
+        _eventTriggers.add(new LookAroundTrigger(eventDistributor));
 
         _simpleTriggers.add(new SimpleTrigger(".*^\\* В связи с проблемами перевода фразы ANYKEY нажмите ENTER.*", new String[]{"", "смотр"}));
         _simpleTriggers.add(new SimpleTrigger(".*^Select one : $", new String[]{ENCODING}));
@@ -54,7 +58,7 @@ public class AdapterImpl implements Adapter {
                 try {
                     executeCommands();
                 } catch (Throwable e) {
-                    notifySubscribers(new ProgrammerErrorEvent(e));
+                    _eventDistributor.getTargets()
                 }
             }
         });
@@ -67,7 +71,7 @@ public class AdapterImpl implements Adapter {
             ChannelReader channelReader = new ChannelReader(_channel, _charset);
             _telnetReader = new TelnetReader(channelReader);
         } catch (IOException e) {
-            notifySubscribers(new AdapterExceptionEvent(e));
+            _listener.handle(new AdapterExceptionEvent(e));
         }
 
         _executor.submit(new Runnable() {
@@ -76,28 +80,18 @@ public class AdapterImpl implements Adapter {
                     String[] message;
                     while ((message = _telnetReader.read()) != null) {
                         for (String ga_block : message) {
-                            notifySubscribers(new RawReadEvent(ga_block));
-                            notifySubscribers(parseInput(ga_block));
+                            _listener.handle(new RawReadEvent(ga_block));
+                            parseAndFire(ga_block);
                         }
                     }
-                    notifySubscribers(new ConnectionClosedEvent());
+                    _listener.handle(new ConnectionClosedEvent());
                 } catch (IOException e) {
-                    notifySubscribers(new AdapterExceptionEvent(e));
+                    _listener.handle(new AdapterExceptionEvent(e));
                 } catch (Throwable e) {
-                    notifySubscribers(new ProgrammerErrorEvent(e));
+                    _listener.handle(new ProgrammerErrorEvent(e));
                 }
             }
         });
-    }
-
-    private void notifySubscribers(final Collection<Event> events) {
-        for (Event event : events) {
-            notifySubscribers(event);
-        }
-    }
-
-    private void notifySubscribers(final Event event) {
-        _listener.handle(event);
     }
 
     private void executeCommands() {
@@ -111,7 +105,7 @@ public class AdapterImpl implements Adapter {
                     send(command);
                 }
             } catch (InterruptedException e) {
-                notifySubscribers(new AdapterExceptionEvent(e));
+                _listener.handle(new AdapterExceptionEvent(e));
             }
         } while (true);
     }
@@ -124,7 +118,7 @@ public class AdapterImpl implements Adapter {
             _channel.write(ByteBuffer.wrap(bytes));
             _outByteBuffer.clear();
         } catch (IOException e) {
-            notifySubscribers(new AdapterExceptionEvent(e));
+            _listener.handle(new AdapterExceptionEvent(e));
         }
     }
 
@@ -137,9 +131,7 @@ public class AdapterImpl implements Adapter {
         }
     }
 
-    private Collection<Event> parseInput(final String input) throws InterruptedException {
-        final Collection<Event> events = new ArrayList<Event>();
-
+    private void parseAndFire(final String input) throws InterruptedException {
         for (SimpleTrigger trigger : _simpleTriggers) {
             if (trigger.matches(input)) {
                 final String[] actions = trigger.getAction();
@@ -151,10 +143,8 @@ public class AdapterImpl implements Adapter {
 
         for (EventTrigger trigger : _eventTriggers) {
             if (trigger.matches(input)) {
-                events.add(trigger.createEvent(input));
+                trigger.fireEvent(input);
             }
         }
-
-        return events;
     }
 }

@@ -18,14 +18,12 @@ public class EventDistributor {
         _events.put(ConnectionClosedEvent.class, new ConnectionClosedEventHandler());
         _events.put(RawReadEvent.class, new RawReadEventHandler());
         _events.put(ProgrammerErrorEvent.class, new ProgrammerErrorEventHandler());
-        _events.put(LoginPromptEvent.class, new LoginPromptEventHandler());
         _events.put(PasswordPromptEvent.class, new PasswordPromptEventHandler());
     }
 
-    public void invoke(Event e) {
-        Handler handler = _events.get(e);
+    public void invoke(Handler handler) {
         for (Task task : _tasks) {
-            handler.handle(task, e);
+            handler.handle(task);
         }
     }
 
@@ -68,12 +66,6 @@ public class EventDistributor {
         }
     }
 
-    private class LoginPromptEventHandler implements Handler<LoginPromptEvent> {
-        @Override
-        public void handle(Task task, LoginPromptEvent event) {
-            task.loginPrompt();
-        }
-    }
 
     private class PasswordPromptEventHandler implements Handler<PasswordPromptEvent> {
         @Override

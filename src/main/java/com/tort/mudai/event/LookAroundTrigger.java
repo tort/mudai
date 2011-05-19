@@ -14,7 +14,7 @@ public class LookAroundTrigger implements EventTrigger {
     }
 
     @Override
-    public Event createEvent(final String text) {
+    public void fireEvent(final String text) {
         final Matcher matcher = _pattern.matcher(text);
         matcher.find();
 
