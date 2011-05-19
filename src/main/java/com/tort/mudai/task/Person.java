@@ -2,6 +2,7 @@ package com.tort.mudai.task;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import com.tort.mudai.Adapter;
 import com.tort.mudai.AdapterEventListener;
 import com.tort.mudai.CommandExecutor;
@@ -10,6 +11,7 @@ import com.tort.mudai.command.Command;
 import com.tort.mudai.event.Event;
 import com.tort.mudai.event.MoveEvent;
 import com.tort.mudai.mapper.Direction;
+import com.tort.mudai.mapper.Mapper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,18 +20,23 @@ import java.util.Map;
 
 public class Person implements CommandExecutor, AdapterEventListener {
     private final Provider<SessionTask> _sessionProvider;
+    private final Provider<Task> _mapperTaskProvider;
     private final CommandExecutor _adapter;
 
-    private SessionTask _sessionTask;
     private Mapper _mapper;
     private List<Task> _tasks = new ArrayList<Task>();
     private final EventDistributor eventDistributor = new EventDistributor();
 
     @Inject
-    protected Person(final Provider<SessionTask> sessionProvider, final Adapter adapter, final Mapper mapper) {
+    protected Person(final Provider<SessionTask> sessionProvider,
+                     @Named("mapperTask") final Provider<Task> mapperTask,
+                     final Adapter adapter,
+                     final Mapper mapper) {
+
         _sessionProvider = sessionProvider;
         _adapter = adapter;
         _mapper = mapper;
+        _mapperTaskProvider = mapperTask;
     }
 
     public void subscribe(Task task){
@@ -37,10 +44,8 @@ public class Person implements CommandExecutor, AdapterEventListener {
     }
 
     public void start(){
-        _sessionTask = _sessionProvider.get();
-
-        _tasks.add(_mapper);
-        _tasks.add(_sessionTask);
+        _tasks.add(_mapperTaskProvider.get());
+        _tasks.add(_sessionProvider.get());
     }
 
     @Override
