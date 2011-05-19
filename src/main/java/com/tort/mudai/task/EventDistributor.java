@@ -3,12 +3,14 @@ package com.tort.mudai.task;
 import com.tort.mudai.Handler;
 import com.tort.mudai.event.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 class EventDistributor {
     private Map<Class, Handler> _events = new HashMap<Class, Handler>();
+    private List<Task> _tasks = new ArrayList<Task>();
 
     public EventDistributor() {
         _events.put(MoveEvent.class, new MoveEventHandler());
@@ -20,11 +22,15 @@ class EventDistributor {
         _events.put(PasswordPromptEvent.class, new PasswordPromptEventHandler());
     }
 
-    public void invoke(Event e, List<Task> tasks) {
+    public void invoke(Event e) {
         Handler handler = _events.get(e);
-        for (Task task : tasks) {
+        for (Task task : _tasks) {
             handler.handle(task, e);
         }
+    }
+
+    public void subscribe(Task task) {
+        _tasks.add(task);
     }
 
     private class MoveEventHandler implements Handler<MoveEvent> {

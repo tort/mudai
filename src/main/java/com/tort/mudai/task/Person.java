@@ -11,7 +11,6 @@ import com.tort.mudai.event.Event;
 import com.tort.mudai.mapper.Direction;
 import com.tort.mudai.mapper.Mapper;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class Person implements CommandExecutor, AdapterEventListener {
@@ -20,7 +19,6 @@ public class Person implements CommandExecutor, AdapterEventListener {
     private final CommandExecutor _adapter;
 
     private Mapper _mapper;
-    private List<Task> _tasks = new ArrayList<Task>();
     private final EventDistributor _eventDistributor = new EventDistributor();
 
     @Inject
@@ -36,12 +34,12 @@ public class Person implements CommandExecutor, AdapterEventListener {
     }
 
     public void subscribe(Task task) {
-        _tasks.add(task);
+        _eventDistributor.subscribe(task);
     }
 
     public void start() {
-        _tasks.add(_mapperTaskProvider.get());
-        _tasks.add(_sessionProvider.get());
+        _eventDistributor.subscribe(_mapperTaskProvider.get());
+        _eventDistributor.subscribe(_sessionProvider.get());
     }
 
     @Override
@@ -65,12 +63,12 @@ public class Person implements CommandExecutor, AdapterEventListener {
     }
 
     public void travel(final String to) {
-        _tasks.add(new TravelTask(_adapter, to, _mapper));
+        _eventDistributor.subscribe(new TravelTask(_adapter, to, _mapper));
     }
 
     @Override
     public void handle(final Event e) {
-        _eventDistributor.invoke(e, _tasks);
+        _eventDistributor.invoke(e);
     }
 
 }
