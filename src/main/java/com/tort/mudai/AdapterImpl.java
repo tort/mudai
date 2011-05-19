@@ -40,7 +40,7 @@ public class AdapterImpl implements Adapter {
         _executor = executor;
         _listener = listener;
 
-        _eventTriggers.add(new LoginPromptTrigger());
+        _eventTriggers.add(new LoginPromptTrigger(_eventDistributor));
         _eventTriggers.add(new PasswordPromptTrigger());
         _eventTriggers.add(new MoveTrigger());
         _eventTriggers.add(new LookAroundTrigger());

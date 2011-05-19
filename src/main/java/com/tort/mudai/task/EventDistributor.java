@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class EventDistributor {
+public class EventDistributor {
     private Map<Class, Handler> _events = new HashMap<Class, Handler>();
     private List<Task> _tasks = new ArrayList<Task>();
 
@@ -80,5 +80,9 @@ class EventDistributor {
         public void handle(Task task, PasswordPromptEvent event) {
             task.passwordPrompt();
         }
+    }
+
+    public List<Task> getTargets() {
+        return _tasks;
     }
 }
