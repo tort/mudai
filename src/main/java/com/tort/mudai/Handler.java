@@ -1,7 +1,8 @@
 package com.tort.mudai;
 
 import com.tort.mudai.event.Event;
+import com.tort.mudai.task.Task;
 
-public interface Handler<T extends Event> {
-    void handle(T event) throws InterruptedException;
+public interface Handler<E extends Event> {
+    void handle(Task task, E event) throws InterruptedException;
 }
