@@ -53,26 +53,30 @@ public class SimpleMudClient {
         }
     }
 
-    private static class SimpleEventListener implements Task {
+    private static class SimpleEventListener extends Task {
         private void print(final String message) {
             System.out.println(message);
         }
 
         @Override
-        public void handle(final Event event) {
-            if (event instanceof AdapterExceptionEvent) {
-                AdapterExceptionEvent aee = (AdapterExceptionEvent) event;
-                print("network error: " + aee.getException());
-            } else if (event instanceof ConnectionClosedEvent) {
-                print("connection closed");
-                System.exit(0);
-            } else if (event instanceof RawReadEvent) {
-                RawReadEvent rie = (RawReadEvent) event;
-                System.out.print(rie.getInCharBuffer());
-            } else if (event instanceof ProgrammerErrorEvent){
-                ProgrammerErrorEvent pee = (ProgrammerErrorEvent) event;
-                pee.getException().printStackTrace();
-            }
+        public void adapterException(Exception e) {
+            print("network error: " + e);
+        }
+
+        @Override
+        public void connectionClosed() {
+            print("connection closed");
+            System.exit(0);
+        }
+
+        @Override
+        public void rawRead(String buffer) {
+            System.out.print(buffer);
+        }
+
+        @Override
+        public void programmerError(Throwable exception) {
+            exception.printStackTrace();
         }
     }
 

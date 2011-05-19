@@ -3,5 +3,21 @@ package com.tort.mudai.task;
 public class Task {
     public void move(String direction) {
         throw new NotImplementedException();
-    };
+    }
+
+    public void adapterException(Exception e){
+        throw new NotImplementedException();
+    }
+
+    public void connectionClosed(){
+        throw new NotImplementedException();
+    }
+
+    public void rawRead(String buffer){
+        throw new NotImplementedException();
+    }
+
+    public void programmerError(Throwable exception) {
+        throw new NotImplementedException();
+    }
 }
