@@ -4,19 +4,22 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.tort.mudai.Adapter;
-import com.tort.mudai.AdapterEventListener;
 import com.tort.mudai.CommandExecutor;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.event.Event;
 import com.tort.mudai.mapper.Direction;
 import com.tort.mudai.mapper.Mapper;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-public class Person implements CommandExecutor, AdapterEventListener {
+public class Person implements Task {
     private final Provider<SessionTask> _sessionProvider;
+    private final CommandExecutor _commandExecutor;
     private final Provider<Task> _mapperTaskProvider;
-    private final CommandExecutor _adapter;
+    private ScheduledExecutorService _executor;
 
     private Mapper _mapper;
     private final EventDistributor _eventDistributor = new EventDistributor();
@@ -27,10 +30,14 @@ public class Person implements CommandExecutor, AdapterEventListener {
                      final Adapter adapter,
                      final Mapper mapper) {
 
+    private List<Task> _tasks = new ArrayList<Task>();
+    private static final Command EMPTY_COMMAND = null;
+
         _sessionProvider = sessionProvider;
-        _adapter = adapter;
+        _commandExecutor = commandExecutor;
         _mapper = mapper;
         _mapperTaskProvider = mapperTask;
+        _executor = executor;
     }
 
     public void subscribe(Task task) {
@@ -40,11 +47,13 @@ public class Person implements CommandExecutor, AdapterEventListener {
     public void start() {
         _eventDistributor.subscribe(_mapperTaskProvider.get());
         _eventDistributor.subscribe(_sessionProvider.get());
-    }
 
-    @Override
-    public void submit(final Command command) {
-        _adapter.submit(command);
+        _executor.scheduleAtFixedRate(new Runnable(){
+            @Override
+            public void run() {
+                pulse();
+            }
+        }, 1, 1, TimeUnit.SECONDS);
     }
 
     public String pathTo(final String location) {
@@ -71,4 +80,17 @@ public class Person implements CommandExecutor, AdapterEventListener {
         _eventDistributor.invoke(e);
     }
 
+    @Override
+    public Command pulse() {
+        for (Task task : _tasks) {
+            Command command = task.pulse();
+            if(command != EMPTY_COMMAND){
+                _commandExecutor.submit(command);
+
+                return command;
+            }
+        }
+
+        return EMPTY_COMMAND;
+    }
 }

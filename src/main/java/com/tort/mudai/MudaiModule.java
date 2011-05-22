@@ -10,10 +10,7 @@ import com.tort.mudai.task.Person;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.*;
 
 public class MudaiModule extends AbstractModule {
     @Override
@@ -25,7 +22,8 @@ public class MudaiModule extends AbstractModule {
         bind(AdapterImpl.class).in(Scopes.SINGLETON);
         
         bind(new TypeLiteral<BlockingQueue<Command>>(){}).to(new TypeLiteral<PriorityBlockingQueue<Command>>(){}).in(Scopes.SINGLETON);
-        bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(2));
+        bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(5));
+        bind(ScheduledExecutorService.class).toInstance(Executors.newSingleThreadScheduledExecutor());
         bind(Mapper.class).to(MapperImpl.class);
         bind(new TypeLiteral<DirectedGraph<Location, Direction>>(){}).toInstance(new DefaultDirectedGraph(Direction.class));
         bind(Persister.class).to(Db4oPersister.class).in(Scopes.SINGLETON);

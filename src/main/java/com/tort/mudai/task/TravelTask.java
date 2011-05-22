@@ -40,7 +40,6 @@ public class TravelTask extends Task {
     public void move(String direction) {
         //TODO check current location has same title as planned, abort task otherwise
         if (_path.isEmpty()) {
-
             return;
         }
 
