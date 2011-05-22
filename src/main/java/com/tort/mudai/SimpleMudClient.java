@@ -5,14 +5,12 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.RawWriteCommand;
-import com.tort.mudai.event.*;
+import com.tort.mudai.task.AbstractTask;
 import com.tort.mudai.task.Person;
-import com.tort.mudai.task.Task;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.CharBuffer;
-import java.util.concurrent.ExecutorCompletionService;
 
 public class SimpleMudClient {
     private static final String FIND_PATH_COMMAND = "/путь";
@@ -58,7 +56,7 @@ public class SimpleMudClient {
         }
     }
 
-    private static class SimpleEventListener extends Task {
+    private static class SimpleEventListener extends AbstractTask {
         private void print(final String message) {
             System.out.println(message);
         }

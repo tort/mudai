@@ -10,71 +10,54 @@ import java.util.Map;
 
 public class EventDistributor {
     private Map<Class, Handler> _events = new HashMap<Class, Handler>();
-    private List<Task> _tasks = new ArrayList<Task>();
-
-    public EventDistributor() {
-        _events.put(MoveEvent.class, new MoveEventHandler());
-        _events.put(AdapterExceptionEvent.class, new AdapterExceptionEventHandler());
-        _events.put(ConnectionClosedEvent.class, new ConnectionClosedEventHandler());
-        _events.put(RawReadEvent.class, new RawReadEventHandler());
-        _events.put(ProgrammerErrorEvent.class, new ProgrammerErrorEventHandler());
-        _events.put(PasswordPromptEvent.class, new PasswordPromptEventHandler());
-    }
+    private List<AbstractTask> _tasks = new ArrayList<AbstractTask>();
 
     public void invoke(Handler handler) {
-        for (Task task : _tasks) {
+        for (AbstractTask task : _tasks) {
             handler.handle(task);
         }
     }
 
-    public void subscribe(Task task) {
+    public void subscribe(AbstractTask task) {
         _tasks.add(task);
     }
 
-    private class MoveEventHandler implements Handler<MoveEvent> {
-        @Override
-        public void handle(Task task, MoveEvent event) {
-            task.move(event.getDirection());
-        }
+    public void programmerError(final Throwable e){
+        invoke(new Handler<ProgrammerErrorEvent>() {
+            @Override
+            public void handle(AbstractTask task) {
+                task.programmerError(e);
+            }
+        });
     }
 
-    private class AdapterExceptionEventHandler implements Handler<AdapterExceptionEvent> {
-        @Override
-        public void handle(Task task, AdapterExceptionEvent event) {
-            task.adapterException(event.getException());
-        }
+    public void adapterException(final Exception e){
+        invoke(new Handler<AdapterExceptionEvent>() {
+            public void handle(AbstractTask task) {
+                task.adapterException(e);
+            }
+        });
     }
 
-    private class ConnectionClosedEventHandler implements Handler {
-        @Override
-        public void handle(Task task, Event event) {
-            task.connectionClosed();
-        }
+    public void connectionClose(){
+        invoke(new Handler() {
+            @Override
+            public void handle(AbstractTask task) {
+                task.connectionClosed();
+            }
+        });
     }
 
-    private class RawReadEventHandler implements Handler<RawReadEvent> {
-        @Override
-        public void handle(Task task, RawReadEvent event) {
-            task.rawRead(event.getInCharBuffer());
-        }
-    }
-
-    private class ProgrammerErrorEventHandler implements Handler<ProgrammerErrorEvent> {
-        @Override
-        public void handle(Task task, ProgrammerErrorEvent event) {
-            task.programmerError(event.getException());
-        }
-    }
-
-
-    private class PasswordPromptEventHandler implements Handler<PasswordPromptEvent> {
-        @Override
-        public void handle(Task task, PasswordPromptEvent event) {
-            task.passwordPrompt();
-        }
-    }
-
-    public List<Task> getTargets() {
+    public List<AbstractTask> getTargets() {
         return _tasks;
+    }
+
+    public void rawReadEvent(final String ga_block) {
+        invoke(new Handler<RawReadEvent>(){
+            @Override
+            public void handle(final AbstractTask task) {
+                task.rawRead(ga_block);
+            }
+        });
     }
 }

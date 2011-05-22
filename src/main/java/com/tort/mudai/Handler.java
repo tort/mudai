@@ -1,8 +1,8 @@
 package com.tort.mudai;
 
 import com.tort.mudai.event.Event;
-import com.tort.mudai.task.Task;
+import com.tort.mudai.task.AbstractTask;
 
 public interface Handler<E extends Event> {
-    void handle(Task task);
+    void handle(AbstractTask task);
 }

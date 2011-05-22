@@ -22,9 +22,4 @@ public class MockMapper implements Mapper {
     public List<String> knownLocations() {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
-
-    @Override
-    public Command pulse() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
 }

@@ -1,8 +1,8 @@
 package com.tort.mudai.event;
 
 import com.tort.mudai.Handler;
+import com.tort.mudai.task.AbstractTask;
 import com.tort.mudai.task.EventDistributor;
-import com.tort.mudai.task.Task;
 
 import java.util.regex.Pattern;
 
@@ -26,7 +26,7 @@ public class LoginPromptTrigger implements EventTrigger {
     public void fireEvent(final String text) {
         _eventDistributor.invoke(new Handler<LoginPromptEvent>() {
             @Override
-            public void handle(Task task) {
+            public void handle(AbstractTask task) {
                 task.loginPrompt();
             }
         });

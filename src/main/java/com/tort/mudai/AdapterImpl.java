@@ -1,7 +1,6 @@
 package com.tort.mudai;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.SimpleCommand;
 import com.tort.mudai.command.StartSessionCommand;
@@ -32,17 +31,15 @@ public class AdapterImpl implements Adapter {
     private List<SimpleTrigger> _simpleTriggers = new ArrayList<SimpleTrigger>();
     public static final int OUT_BUF_SIZE = 128;
     private TelnetReader _telnetReader;
-    private AdapterEventListener _listener;
     private EventDistributor _eventDistributor;
 
     @Inject
     protected AdapterImpl(final BlockingQueue<Command> commands,
                           final ExecutorService executor,
-                          @Named("person") AdapterEventListener listener,
-                          EventDistributor eventDistributor) {
+                          final EventDistributor eventDistributor) {
         _commands = commands;
         _executor = executor;
-        _listener = listener;
+        _eventDistributor = eventDistributor;
 
         _eventTriggers.add(new LoginPromptTrigger(eventDistributor));
         _eventTriggers.add(new PasswordPromptTrigger(eventDistributor));
@@ -58,7 +55,7 @@ public class AdapterImpl implements Adapter {
                 try {
                     executeCommands();
                 } catch (Throwable e) {
-                    _eventDistributor.getTargets()
+                    _eventDistributor.programmerError(e);
                 }
             }
         });
@@ -71,7 +68,7 @@ public class AdapterImpl implements Adapter {
             ChannelReader channelReader = new ChannelReader(_channel, _charset);
             _telnetReader = new TelnetReader(channelReader);
         } catch (IOException e) {
-            _listener.handle(new AdapterExceptionEvent(e));
+            _eventDistributor.adapterException(e);
         }
 
         _executor.submit(new Runnable() {
@@ -80,15 +77,15 @@ public class AdapterImpl implements Adapter {
                     String[] message;
                     while ((message = _telnetReader.read()) != null) {
                         for (String ga_block : message) {
-                            _listener.handle(new RawReadEvent(ga_block));
+                            _eventDistributor.rawReadEvent(ga_block);
                             parseAndFire(ga_block);
                         }
                     }
-                    _listener.handle(new ConnectionClosedEvent());
+                    _eventDistributor.connectionClose();
                 } catch (IOException e) {
-                    _listener.handle(new AdapterExceptionEvent(e));
+                    _eventDistributor.adapterException(e);
                 } catch (Throwable e) {
-                    _listener.handle(new ProgrammerErrorEvent(e));
+                    _eventDistributor.programmerError(e);
                 }
             }
         });
@@ -105,7 +102,7 @@ public class AdapterImpl implements Adapter {
                     send(command);
                 }
             } catch (InterruptedException e) {
-                _listener.handle(new AdapterExceptionEvent(e));
+                _eventDistributor.adapterException(e);
             }
         } while (true);
     }
@@ -118,7 +115,7 @@ public class AdapterImpl implements Adapter {
             _channel.write(ByteBuffer.wrap(bytes));
             _outByteBuffer.clear();
         } catch (IOException e) {
-            _listener.handle(new AdapterExceptionEvent(e));
+            _eventDistributor.adapterException(e);
         }
     }
 

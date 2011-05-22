@@ -2,14 +2,14 @@ package com.tort.mudai.mapper;
 
 import com.google.inject.Inject;
 import com.tort.mudai.command.Command;
-import com.tort.mudai.task.Task;
+import com.tort.mudai.task.AbstractTask;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.alg.DijkstraShortestPath;
 
 import java.util.*;
 
 @SuppressWarnings({"UnusedDeclaration"})
-public class MapperImpl extends Task implements Mapper {
+public class MapperImpl extends AbstractTask implements Mapper {
     private DirectedGraph<Location, Direction> _graph;
     private Location _current;
     private LocationHelper _locationHelper;
