@@ -24,7 +24,7 @@ public class Person extends AbstractTask {
     private final EventDistributor _eventDistributor;
 
     @Inject
-    protected Person(final Provider<SessionTask> sessionProvider,
+    private Person(final Provider<SessionTask> sessionProvider,
                      @Named("mapperTask") final Provider<AbstractTask> mapperTask,
                      final Mapper mapper,
                      final ScheduledExecutorService executor,

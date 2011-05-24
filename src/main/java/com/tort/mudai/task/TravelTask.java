@@ -12,6 +12,7 @@ public class TravelTask extends AbstractTask {
     private final List<Direction> _path;
     private final String _to;
     private final Mapper _mapper;
+    private Command _command;
 
     public TravelTask(String to, final Mapper mapper) {
         if (mapper == null)
@@ -32,6 +33,7 @@ public class TravelTask extends AbstractTask {
     }
 
     private void goNext(final Direction direction) {
+        _command = new SimpleCommand(direction.getName());
     }
 
     @Override
@@ -50,6 +52,9 @@ public class TravelTask extends AbstractTask {
 
     @Override
     public Command pulse() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        final Command command = _command;
+        _command = null;
+        
+        return command;
     }
 }
