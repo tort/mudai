@@ -19,6 +19,7 @@ public class SimpleMudClient {
 
     private Person _person;
     private CommandExecutor _commandExecutor;
+    private static final String MARK_WATER_SOURCE_COMMAND = "/вода";
 
     @Inject
     protected SimpleMudClient(final Person person, final CommandExecutor commandExecutor) {
@@ -45,6 +46,8 @@ public class SimpleMudClient {
                     }
                 } else if (command.startsWith(TRAVEL_COMMAND)) {
                     _person.travel(command.substring(TRAVEL_COMMAND.length() + 1, command.length() - 1));
+                } else if (command.startsWith(MARK_WATER_SOURCE_COMMAND)) {
+                    _person.markWaterSource(command.substring(MARK_WATER_SOURCE_COMMAND.length() + 1, command.length() - 1));
                 } else {
                     _commandExecutor.submit(new RawWriteCommand(command));
                 }

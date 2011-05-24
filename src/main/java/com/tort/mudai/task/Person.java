@@ -6,6 +6,7 @@ import com.google.inject.name.Named;
 import com.tort.mudai.CommandExecutor;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.mapper.Direction;
+import com.tort.mudai.mapper.Location;
 import com.tort.mudai.mapper.Mapper;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class Person extends AbstractTask {
 
     private final Provider<SessionTask> _sessionProvider;
     private final Provider<AbstractTask> _mapperTaskProvider;
+    private final Provider<ProvisionTask> _provisionTask;
     private final CommandExecutor _commandExecutor;
     private ScheduledExecutorService _pulseExecutor;
 
@@ -25,11 +27,12 @@ public class Person extends AbstractTask {
 
     @Inject
     private Person(final Provider<SessionTask> sessionProvider,
-                     @Named("mapperTask") final Provider<AbstractTask> mapperTask,
-                     final Mapper mapper,
-                     final ScheduledExecutorService executor,
-                     final CommandExecutor commandExecutor,
-                     final EventDistributor eventDistributor) {
+                   @Named("mapperTask") final Provider<AbstractTask> mapperTask,
+                   final Mapper mapper,
+                   final ScheduledExecutorService executor,
+                   final CommandExecutor commandExecutor,
+                   final EventDistributor eventDistributor,
+                   final Provider<ProvisionTask> provisionTask) {
 
         _sessionProvider = sessionProvider;
         _commandExecutor = commandExecutor;
@@ -37,6 +40,7 @@ public class Person extends AbstractTask {
         _mapperTaskProvider = mapperTask;
         _pulseExecutor = executor;
         _eventDistributor = eventDistributor;
+        _provisionTask = provisionTask;
     }
 
     public void subscribe(AbstractTask task) {
@@ -46,6 +50,7 @@ public class Person extends AbstractTask {
     public void start() {
         _eventDistributor.subscribe(_mapperTaskProvider.get());
         _eventDistributor.subscribe(_sessionProvider.get());
+        _eventDistributor.subscribe(_provisionTask.get());
 
         _pulseExecutor.scheduleAtFixedRate(new Runnable(){
             @Override
@@ -86,5 +91,10 @@ public class Person extends AbstractTask {
         }
 
         return EMPTY_COMMAND;
+    }
+
+    public void markWaterSource(final String waterSource) {
+        final Location location = _mapper.currentLocation();
+        location.setWaterSource(waterSource);
     }
 }

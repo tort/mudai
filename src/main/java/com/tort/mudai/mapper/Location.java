@@ -9,6 +9,7 @@ import java.util.Set;
 public class Location {
     private String _title;
     private Map<String, Location> _directions = new HashMap<String, Location>();
+    private String _waterSource;
 
     public String getTitle() {
         return _title;
@@ -28,5 +29,13 @@ public class Location {
 
     public Set<String> getDirections() {
         return _directions.keySet();
+    }
+
+    public String getWaterSource() {
+        return _waterSource;
+    }
+
+    public void setWaterSource(final String waterSource) {
+        _waterSource = waterSource;
     }
 }

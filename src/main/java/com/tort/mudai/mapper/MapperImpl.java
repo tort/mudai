@@ -11,7 +11,7 @@ import java.util.*;
 @SuppressWarnings({"UnusedDeclaration"})
 public class MapperImpl extends AbstractTask implements Mapper {
     private DirectedGraph<Location, Direction> _graph;
-    private Location _current;
+    private volatile Location _current;
     private LocationHelper _locationHelper;
     private Persister _persister;
     private Map<String, String> _directions = new HashMap<String, String>();
@@ -114,5 +114,10 @@ public class MapperImpl extends AbstractTask implements Mapper {
 
     private String getOppositeDirection(final String direction) {
         return _directions.get(direction);
+    }
+
+    @Override
+    public Location currentLocation() {
+        return _current;
     }
 }
