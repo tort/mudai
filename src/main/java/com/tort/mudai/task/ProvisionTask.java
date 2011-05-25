@@ -32,4 +32,9 @@ public class ProvisionTask extends AbstractTask {
 
         return command;
     }
+
+    @Override
+    public Status status() {
+        return Status.RUNNING;
+    }
 }

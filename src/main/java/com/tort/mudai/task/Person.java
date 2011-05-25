@@ -52,7 +52,7 @@ public class Person extends AbstractTask {
         _eventDistributor.subscribe(_sessionProvider.get());
         _eventDistributor.subscribe(_provisionTask.get());
 
-        _pulseExecutor.scheduleAtFixedRate(new Runnable(){
+        _pulseExecutor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
                 pulse();
@@ -82,15 +82,27 @@ public class Person extends AbstractTask {
     @Override
     public Command pulse() {
         for (Task task : _eventDistributor.getTargets()) {
+
             Command command = task.pulse();
-            if(command != EMPTY_COMMAND){
+            if (command != EMPTY_COMMAND) {
                 _commandExecutor.submit(command);
 
                 return command;
             }
         }
 
+        for (Task task : _eventDistributor.getTargets()) {
+            if (task.status() == Status.TERMINATED) {
+                _eventDistributor.unsubscribe(task);
+            }
+        }
+
         return EMPTY_COMMAND;
+    }
+
+    @Override
+    public Status status() {
+        return Status.RUNNING;
     }
 
     public void markWaterSource(final String waterSource) {

@@ -60,4 +60,8 @@ public class EventDistributor {
             }
         });
     }
+
+    public void unsubscribe(final Task task) {
+        _tasks.remove(task);
+    }
 }

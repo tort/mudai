@@ -7,6 +7,7 @@ import com.tort.mudai.command.Command;
 import com.tort.mudai.command.RawWriteCommand;
 import com.tort.mudai.task.AbstractTask;
 import com.tort.mudai.task.Person;
+import com.tort.mudai.task.Task;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -88,6 +89,11 @@ public class SimpleMudClient {
         @Override
         public Command pulse() {
             return null;  //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public Status status() {
+            return Status.RUNNING;
         }
     }
 

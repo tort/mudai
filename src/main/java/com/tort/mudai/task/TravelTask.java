@@ -13,6 +13,7 @@ public class TravelTask extends AbstractTask {
     private final String _to;
     private final Mapper _mapper;
     private Command _command;
+    private Status _status = Status.RUNNING;
 
     public TravelTask(String to, final Mapper mapper) {
         if (mapper == null)
@@ -40,6 +41,7 @@ public class TravelTask extends AbstractTask {
     public void move(String direction) {
         //TODO check current location has same title as planned, abort task otherwise
         if (_path.isEmpty()) {
+            terminate();
             return;
         }
 
@@ -50,11 +52,20 @@ public class TravelTask extends AbstractTask {
         }
     }
 
+    private void terminate() {
+        _status = Status.TERMINATED;
+    }
+
     @Override
     public Command pulse() {
         final Command command = _command;
         _command = null;
         
         return command;
+    }
+
+    @Override
+    public Status status() {
+        return _status;
     }
 }

@@ -3,6 +3,7 @@ package com.tort.mudai.mapper;
 import com.google.inject.Inject;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.task.AbstractTask;
+import com.tort.mudai.task.Task;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.alg.DijkstraShortestPath;
 
@@ -110,6 +111,11 @@ public class MapperImpl extends AbstractTask implements Mapper {
     @Override
     public Command pulse() {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public Status status() {
+        return Status.RUNNING;
     }
 
     private String getOppositeDirection(final String direction) {

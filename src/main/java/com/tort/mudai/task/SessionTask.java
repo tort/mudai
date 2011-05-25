@@ -50,6 +50,11 @@ public class SessionTask extends AbstractTask {
     }
 
     @Override
+    public Status status() {
+        return Status.RUNNING;
+    }
+
+    @Override
     public void adapterException(Exception e) {
         System.out.println("CONNECTION DROPPED");
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new Runnable() {
