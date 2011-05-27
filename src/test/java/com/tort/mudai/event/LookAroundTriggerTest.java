@@ -22,6 +22,16 @@ public class LookAroundTriggerTest {
             "\u001B[0;37m\n" +
             "\u001B[0;32m28H\u001B[0;37m \u001B[0;32m85M\u001B[0;37m 1499о Зауч:0 Вых:ВЗ> ЪЫ";
 
+    private String locationWithoutAnyone = "\u001B[1;36mБазарная площадь\u001B[0;37m\n" +
+            "   Центр городища, получивший свое название по поводу проводимых на нем\n" +
+            "празднеств и гуляний. Немноголюдная в будни, она оправдывает его по осени,\n" +
+            "после сбора урожая, когда весь рабочий да и гулящий люд не только с городища,\n" +
+            "да и с окрестных слобод и селений собирается сюда людей посмотреть, себя \n" +
+            "показать, потешить буйно головушку зеленым вином да завозными побасенками.\n" +
+            "\n" +
+            "\u001B[1;33m\u001B[1;31m\u001B[0;37m\n" +
+            "\u001B[0;32m28H\u001B[0;37m \u001B[0;32m88M\u001B[0;37m 1499о Зауч:0 Вых:СВЮЗ> ЪЫ";
+
     public void testObjects() {
         Matcher matcher = LookAroundTrigger.PATTERN.matcher(text);
         matcher.find();
@@ -30,6 +40,12 @@ public class LookAroundTriggerTest {
         String[] objects = group.split("\n");
 
         assertEquals(objects.length, 4);
+    }
+
+    public void matchLocationWithoutAnyone(){
+        boolean matches = new LookAroundTrigger(null).matches(locationWithoutAnyone);
+
+        assertTrue(matches);
     }
 
     public void testMatch() {
