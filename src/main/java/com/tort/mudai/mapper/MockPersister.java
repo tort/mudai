@@ -1,5 +1,7 @@
 package com.tort.mudai.mapper;
 
+import com.db4o.ObjectSet;
+
 import java.util.List;
 
 public class MockPersister implements Persister {
@@ -15,6 +17,16 @@ public class MockPersister implements Persister {
 
     @Override
     public List<Location> enlistLocations() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public Mob findOrCreateMob(String mobLongName) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public ObjectSet<Mob> enlistMobs() {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }

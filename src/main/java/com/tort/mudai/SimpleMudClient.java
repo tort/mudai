@@ -19,11 +19,12 @@ public class SimpleMudClient {
     private static final String FIND_PATH_COMMAND = "/путь";
     private static final String LIST_LOCATIONS_COMMAND = "/лист";
     private static final String TRAVEL_COMMAND = "/го";
+    private static final String ENLIST_MOBS_COMMAND = "/моб";
+    private static final String MARK_WATER_SOURCE_COMMAND = "/вода";
 
     private Person _person;
     private CommandExecutor _commandExecutor;
     private Persister _persister;
-    private static final String MARK_WATER_SOURCE_COMMAND = "/вода";
 
     @Inject
     protected SimpleMudClient(final Person person, final CommandExecutor commandExecutor, Persister persister) {
@@ -49,7 +50,7 @@ public class SimpleMudClient {
                     for (String location : _person.locationTitles()) {
                         System.out.println("LOCATION: " + location);
                     }
-                } else if(command.startsWith("/моб")) {
+                } else if(command.startsWith(ENLIST_MOBS_COMMAND)) {
                     ObjectSet<Mob> mobs = _persister.enlistMobs();
                     for (Mob mob : mobs) {
                         System.out.println("MOB: " + mob.getLongName());

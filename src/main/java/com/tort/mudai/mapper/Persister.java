@@ -11,6 +11,11 @@ public interface Persister {
 
     List<Location> enlistLocations();
 
+    /**
+     * find mob by long name, or create new
+     * @param mobLongName
+     * @return mob, found or created
+     */
     Mob findOrCreateMob(String mobLongName);
 
     ObjectSet<Mob> enlistMobs();
