@@ -36,10 +36,14 @@ public class LookAroundTriggerTest {
         Matcher matcher = LookAroundTrigger.PATTERN.matcher(text);
         matcher.find();
 
-        String group = matcher.group(2);
-        String[] objects = group.split("\n");
+        String objectsGroup = matcher.group(2);
+        String[] objects = objectsGroup.split("\n");
 
-        assertEquals(objects.length, 4);
+        String mobsGroup = matcher.group(3);
+        String[] mobs = mobsGroup.split("\n");
+
+        assertEquals(objects.length, 3);
+        assertEquals(mobs.length, 1);
     }
 
     public void matchLocationWithoutAnyone(){

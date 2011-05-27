@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 public class LookAroundTrigger implements EventTrigger {
     public static final Pattern PATTERN = PatternUtil.compile("^(?:Вы поплелись на (?:север|юг|запад|восток)\\.\n)?" +
-            "\u001B\\[1\\;36m(.*)\u001B\\[0\\;37m$\\s\\s\\s.*\n\n\u001B\\[1\\;33m(.*)\n?\u001B\\[0\\;37m\n\u001B\\[0\\;32m[^\n]*$");
+            "\u001B\\[1\\;36m(.*)\u001B\\[0\\;37m$\\s\\s\\s.*\n\n\u001B\\[1\\;33m(?:(.*)\n)?\u001B\\[1\\;31m(?:(.*)\n)?\u001B\\[0\\;37m\n\u001B\\[0\\;32m[^\n]*$");
 
     private final EventDistributor _eventDistributor;
 
@@ -43,5 +43,11 @@ public class LookAroundTrigger implements EventTrigger {
                 task.lookAround(roomSnapshot);
             }
         });
+    }
+
+    private class MobsHelper {
+        public void mobs(String objects) {
+
+        }
     }
 }
