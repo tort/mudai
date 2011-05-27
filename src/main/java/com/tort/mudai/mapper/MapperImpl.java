@@ -40,6 +40,18 @@ public class MapperImpl extends AbstractTask implements Mapper {
 
     @Override
     public void lookAround(RoomSnapshot roomSnapshot) {
+        updateMap(roomSnapshot);
+        updateMobs(roomSnapshot);
+    }
+
+    private void updateMobs(RoomSnapshot roomSnapshot) {
+        for (String mobLongName : roomSnapshot.getMobs()) {
+            Mob mob = _persister.findMob(mobLongName);
+            mob.updateHabitationArea(_current);
+        }
+    }
+
+    private void updateMap(RoomSnapshot roomSnapshot) {
         String locationTitle = roomSnapshot.getLocationTitle();
         if (_current == null) {
             final String title = locationTitle;

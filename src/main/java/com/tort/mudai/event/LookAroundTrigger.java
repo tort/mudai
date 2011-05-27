@@ -31,11 +31,16 @@ public class LookAroundTrigger implements EventTrigger {
         matcher.find();
 
         final String locationTitle = matcher.group(1);
-        final String objects = matcher.group(2);
+        final String objectsGroup = matcher.group(2);
+        String[] objects = objectsGroup.split("\n");
+
+        String mobsGroup = matcher.group(3);
+        String[] mobs = mobsGroup.split("\n");
 
         final RoomSnapshot roomSnapshot = new RoomSnapshot();
         roomSnapshot.setLocationTitle(locationTitle);
         roomSnapshot.setObjectsPresent(objects);
+        roomSnapshot.setMobs(mobs);
 
         _eventDistributor.invoke(new Handler<LookAroundEvent>(){
             @Override

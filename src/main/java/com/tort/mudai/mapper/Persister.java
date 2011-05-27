@@ -10,4 +10,6 @@ public interface Persister {
     Location loadLocation(String title);
 
     List<Location> enlistLocations();
+
+    Mob findMob(String mobLongName);
 }
