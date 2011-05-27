@@ -1,6 +1,7 @@
 package com.tort.mudai.mapper;
 
 import com.google.inject.Inject;
+import com.tort.mudai.RoomSnapshot;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.task.AbstractTask;
 import org.jgrapht.DirectedGraph;
@@ -38,7 +39,8 @@ public class MapperImpl extends AbstractTask implements Mapper {
     }
 
     @Override
-    public void lookAround(String locationTitle) {
+    public void lookAround(RoomSnapshot roomSnapshot) {
+        String locationTitle = roomSnapshot.getLocationTitle();
         if (_current == null) {
             final String title = locationTitle;
             _current = _persister.loadLocation(title);

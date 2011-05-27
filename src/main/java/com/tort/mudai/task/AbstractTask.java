@@ -1,5 +1,7 @@
 package com.tort.mudai.task;
 
+import com.tort.mudai.RoomSnapshot;
+
 public abstract class AbstractTask implements Task {
     public void move(String direction) {
 //        throw new NotImplementedException();
@@ -21,7 +23,7 @@ public abstract class AbstractTask implements Task {
 //        throw new NotImplementedException();
     }
 
-    public void lookAround(String locationTitle){
+    public void lookAround(RoomSnapshot locationTitle){
 //        throw new NotImplementedException();
     }
 
