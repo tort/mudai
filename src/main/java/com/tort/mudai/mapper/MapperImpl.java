@@ -1,5 +1,6 @@
 package com.tort.mudai.mapper;
 
+import com.db4o.ObjectSet;
 import com.google.inject.Inject;
 import com.tort.mudai.RoomSnapshot;
 import com.tort.mudai.command.Command;
@@ -46,7 +47,7 @@ public class MapperImpl extends AbstractTask implements Mapper {
 
     private void updateMobs(RoomSnapshot roomSnapshot) {
         for (String mobLongName : roomSnapshot.getMobs()) {
-            Mob mob = _persister.findMob(mobLongName);
+            Mob mob = _persister.findOrCreateMob(mobLongName);
             mob.updateHabitationArea(_current);
         }
     }
@@ -133,5 +134,10 @@ public class MapperImpl extends AbstractTask implements Mapper {
     @Override
     public Location currentLocation() {
         return _current;
+    }
+
+    @Override
+    public ObjectSet<Mob> knownMobs() {
+        return _persister.enlistMobs();
     }
 }

@@ -11,5 +11,7 @@ public interface Persister {
 
     List<Location> enlistLocations();
 
-    Mob findMob(String mobLongName);
+    Mob findOrCreateMob(String mobLongName);
+
+    ObjectSet<Mob> enlistMobs();
 }

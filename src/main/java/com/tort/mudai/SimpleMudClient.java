@@ -1,10 +1,13 @@
 package com.tort.mudai;
 
+import com.db4o.ObjectSet;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.RawWriteCommand;
+import com.tort.mudai.mapper.Mob;
+import com.tort.mudai.mapper.Persister;
 import com.tort.mudai.task.AbstractTask;
 import com.tort.mudai.task.Person;
 
@@ -19,12 +22,14 @@ public class SimpleMudClient {
 
     private Person _person;
     private CommandExecutor _commandExecutor;
+    private Persister _persister;
     private static final String MARK_WATER_SOURCE_COMMAND = "/вода";
 
     @Inject
-    protected SimpleMudClient(final Person person, final CommandExecutor commandExecutor) {
+    protected SimpleMudClient(final Person person, final CommandExecutor commandExecutor, Persister persister) {
         _person = person;
         _commandExecutor = commandExecutor;
+        _persister = persister;
     }
 
     public void start() {
@@ -43,6 +48,11 @@ public class SimpleMudClient {
                 } else if (command.startsWith(LIST_LOCATIONS_COMMAND)) {
                     for (String location : _person.locationTitles()) {
                         System.out.println("LOCATION: " + location);
+                    }
+                } else if(command.startsWith("/моб")) {
+                    ObjectSet<Mob> mobs = _persister.enlistMobs();
+                    for (Mob mob : mobs) {
+                        System.out.println("MOB: " + mob.getLongName());
                     }
                 } else if (command.startsWith(TRAVEL_COMMAND)) {
                     _person.travel(command.substring(TRAVEL_COMMAND.length() + 1, command.length() - 1));

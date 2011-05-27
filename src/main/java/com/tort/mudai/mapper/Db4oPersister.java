@@ -48,7 +48,7 @@ public class Db4oPersister implements Persister {
     }
 
     @Override
-    public Mob findMob(final String mobLongName) {
+    public Mob findOrCreateMob(final String mobLongName) {
         ObjectSet<Mob> query = _db.query(new Predicate<Mob>() {
             @Override
             public boolean match(Mob mob) {
@@ -66,5 +66,10 @@ public class Db4oPersister implements Persister {
         }
 
         return query.get(0);
+    }
+
+    @Override
+    public ObjectSet<Mob> enlistMobs() {
+        return _db.query(Mob.class);
     }
 }
