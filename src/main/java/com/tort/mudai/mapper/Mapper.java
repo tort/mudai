@@ -7,7 +7,5 @@ import java.util.Set;
 
 public interface Mapper {
     List<Direction> pathTo(String location);
-    List<String> knownLocations();
     Location currentLocation();
-    ObjectSet<Mob> knownMobs();
 }

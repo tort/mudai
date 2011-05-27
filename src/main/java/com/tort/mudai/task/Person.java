@@ -73,10 +73,6 @@ public class Person extends AbstractTask {
         return result.toString();
     }
 
-    public List<String> locationTitles() {
-        return _mapper.knownLocations();
-    }
-
     public void travel(final String to) {
         _eventDistributor.subscribe(new TravelTask(to, _mapper));
     }

@@ -1,8 +1,5 @@
 package com.tort.mudai.mapper;
 
-import com.tort.mudai.command.Command;
-import com.tort.mudai.event.Event;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,11 +13,6 @@ public class MockMapper implements Mapper {
         }
 
         return result;
-    }
-
-    @Override
-    public List<String> knownLocations() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override

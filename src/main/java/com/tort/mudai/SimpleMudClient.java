@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.RawWriteCommand;
+import com.tort.mudai.mapper.Location;
 import com.tort.mudai.mapper.Mob;
 import com.tort.mudai.mapper.Persister;
 import com.tort.mudai.task.AbstractTask;
@@ -47,8 +48,8 @@ public class SimpleMudClient {
                     final String path = _person.pathTo(command.substring(FIND_PATH_COMMAND.length() + 1, command.length() - 1));
                     System.out.println("PATH: " + path);
                 } else if (command.startsWith(LIST_LOCATIONS_COMMAND)) {
-                    for (String location : _person.locationTitles()) {
-                        System.out.println("LOCATION: " + location);
+                    for (Location location : _persister.enlistLocations()) {
+                        System.out.println("LOCATION: " + location.getTitle());
                     }
                 } else if(command.startsWith(ENLIST_MOBS_COMMAND)) {
                     ObjectSet<Mob> mobs = _persister.enlistMobs();
