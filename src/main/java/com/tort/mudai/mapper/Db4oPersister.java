@@ -5,7 +5,6 @@ import com.db4o.ObjectContainer;
 import com.db4o.ObjectSet;
 import com.db4o.config.EmbeddedConfiguration;
 import com.db4o.query.Predicate;
-import org.jgrapht.DirectedGraph;
 
 import java.util.List;
 
@@ -46,5 +45,31 @@ public class Db4oPersister implements Persister {
     @Override
     public List<Location> enlistLocations() {
         return _db.queryByExample(Location.class);
+    }
+
+    @Override
+    public Mob findOrCreateMob(final String mobLongName) {
+        ObjectSet<Mob> query = _db.query(new Predicate<Mob>() {
+            @Override
+            public boolean match(Mob mob) {
+                return mob.getLongName().equals(mobLongName);
+            }
+        });
+
+        if(query.size() > 1)
+            throw new IllegalStateException("two mobs with same long name found");
+
+        if(query.size() < 1){
+            Mob mob = new Mob();
+            mob.setName(mobLongName);
+            _db.store(mob);
+        }
+
+        return query.get(0);
+    }
+
+    @Override
+    public ObjectSet<Mob> enlistMobs() {
+        return _db.query(Mob.class);
     }
 }

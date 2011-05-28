@@ -10,25 +10,15 @@ import java.util.List;
 
 public class TravelTask extends AbstractTask {
     private final List<Direction> _path;
-    private final String _to;
-    private final Mapper _mapper;
     private Command _command;
     private Status _status = Status.RUNNING;
 
     public TravelTask(String to, final Mapper mapper) {
-        if (mapper == null)
-            throw new IllegalArgumentException("mapper is null");
-
-        if (to == null)
-            throw new IllegalArgumentException("to is null");
-
         final List<Direction> path = mapper.pathTo(to);
         if (path == null)
             throw new IllegalArgumentException("path is null");
 
-        _to = to;
         _path = path;
-        _mapper = mapper;
 
         goNext(_path.get(0));
     }

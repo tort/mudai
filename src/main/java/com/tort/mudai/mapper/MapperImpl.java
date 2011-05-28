@@ -1,6 +1,7 @@
 package com.tort.mudai.mapper;
 
 import com.google.inject.Inject;
+import com.tort.mudai.RoomSnapshot;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.task.AbstractTask;
 import com.tort.mudai.task.Task;
@@ -39,7 +40,20 @@ public class MapperImpl extends AbstractTask implements Mapper {
     }
 
     @Override
-    public void lookAround(String locationTitle) {
+    public void lookAround(RoomSnapshot roomSnapshot) {
+        updateMap(roomSnapshot);
+        updateMobs(roomSnapshot);
+    }
+
+    private void updateMobs(RoomSnapshot roomSnapshot) {
+        for (String mobLongName : roomSnapshot.getMobs()) {
+            Mob mob = _persister.findOrCreateMob(mobLongName);
+            mob.updateHabitationArea(_current);
+        }
+    }
+
+    private void updateMap(RoomSnapshot roomSnapshot) {
+        String locationTitle = roomSnapshot.getLocationTitle();
         if (_current == null) {
             final String title = locationTitle;
             _current = _persister.loadLocation(title);
@@ -96,19 +110,6 @@ public class MapperImpl extends AbstractTask implements Mapper {
     }
 
     @Override
-    public List<String> knownLocations() {
-        final List<String> result = new ArrayList();
-
-        final List<Location> locations = _persister.enlistLocations();
-        for (Location location : locations) {
-            result.add(location.getTitle());
-            _persister.persistLocation(location);
-        }
-
-        return result;
-    }
-
-    @Override
     public Command pulse() {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
@@ -126,4 +127,5 @@ public class MapperImpl extends AbstractTask implements Mapper {
     public Location currentLocation() {
         return _current;
     }
+
 }

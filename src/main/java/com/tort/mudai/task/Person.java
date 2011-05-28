@@ -8,8 +8,10 @@ import com.tort.mudai.command.Command;
 import com.tort.mudai.mapper.Direction;
 import com.tort.mudai.mapper.Location;
 import com.tort.mudai.mapper.Mapper;
+import com.tort.mudai.mapper.Mob;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -69,10 +71,6 @@ public class Person extends AbstractTask {
         }
 
         return result.toString();
-    }
-
-    public List<String> locationTitles() {
-        return _mapper.knownLocations();
     }
 
     public void travel(final String to) {
