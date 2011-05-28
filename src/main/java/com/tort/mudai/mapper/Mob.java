@@ -1,10 +1,11 @@
 package com.tort.mudai.mapper;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public class Mob {
     private String _name;
-    private Set<Location> _habitationArea;
+    private Set<Location> _habitationArea = new HashSet<Location>();
 
     public Mob() {
     }

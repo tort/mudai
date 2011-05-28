@@ -59,7 +59,11 @@ public class Db4oPersister implements Persister {
         if(query.size() > 1)
             throw new IllegalStateException("two mobs with same long name found");
 
-        Mob mob = query.get(0);
+        Mob mob = null;
+        
+        if(query.size() == 1){
+            mob = query.get(0);
+        }
 
         if(query.size() < 1){
             mob = new Mob();
