@@ -38,14 +38,17 @@ public class LookAroundTrigger implements EventTrigger {
         String[] objects = objectsGroup.split("\n");
 
         String mobsGroup = matcher.group(3);
-        String[] mobs = mobsGroup.split("\n");
+        String[] mobs = new String[]{};
+        if (mobsGroup != null) {
+            mobs = mobsGroup.split("\n");
+        }
 
         final RoomSnapshot roomSnapshot = new RoomSnapshot();
         roomSnapshot.setLocationTitle(locationTitle);
         roomSnapshot.setObjectsPresent(objects);
         roomSnapshot.setMobs(mobs);
 
-        _eventDistributor.invoke(new Handler<LookAroundEvent>(){
+        _eventDistributor.invoke(new Handler<LookAroundEvent>() {
             @Override
             public void handle(final AbstractTask task) {
                 task.lookAround(roomSnapshot);
