@@ -35,7 +35,10 @@ public class LookAroundTrigger implements EventTrigger {
 
         final String locationTitle = matcher.group(1);
         final String objectsGroup = matcher.group(2);
-        String[] objects = objectsGroup.split("\n");
+        String[] objects = new String[]{};
+        if(objectsGroup != null){
+            objects = objectsGroup.split("\n");
+        }
 
         String mobsGroup = matcher.group(3);
         String[] mobs = new String[]{};
