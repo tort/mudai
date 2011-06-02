@@ -9,11 +9,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class LookAroundTrigger implements EventTrigger {
-    public static final Pattern PATTERN = PatternUtil.compile("^(?:Вы поплелись на (?:север|юг|запад|восток)\\.\r{0,}\n){0,}" +
-            "\u001B\\[1\\;36m(.*)\u001B\\[0\\;37m$\\s\\s\\s.*\r{0,}\n\r{0,}\n" +
-            "\u001B\\[1\\;33m(?:(.*)\r{0,}\n)?" +
-            "\u001B\\[1\\;31m(?:(.*)\r{0,}\n)?" +
-            "\u001B\\[0\\;37m\r{0,}\n\u001B\\[0\\;32m[^\n]*$");
+    public static final Pattern PATTERN = PatternUtil.compile("^(?:Вы поплелись на (?:север|юг|запад|восток)\\.\r?\n)?" +
+            "\u001B\\[1\\;36m(.*)\u001B\\[0\\;37m$\\s\\s\\s.*\r?\n\r?\n" +
+            "\u001B\\[1\\;33m(?:(.*)\r?\n)?" +
+            "\u001B\\[1\\;31m(?:(.*)\r?\n)?" +
+            "\u001B\\[0\\;37m\r?\n?\u001B\\[0\\;32m[^\n]*$");
 
     private final EventDistributor _eventDistributor;
 
