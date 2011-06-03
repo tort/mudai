@@ -9,7 +9,6 @@ import java.util.List;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
 
 @Test
 public class MapperImplTest {
@@ -36,7 +35,7 @@ public class MapperImplTest {
     public void getPathToUnknownRoom(){
         final DirectedGraph<Location, Direction> graph = new DefaultDirectedGraph(String.class);
         final Persister persister = new MockPersister();
-        final MapperImpl mapper = new MapperImpl(graph, persister);
+        final MapperImpl mapper = new MapperImpl(graph, persister, null);
 
         final List<Direction> pathTo = mapper.pathTo("unknown");
 

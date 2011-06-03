@@ -1,6 +1,12 @@
 package com.tort.mudai;
 
-import com.google.inject.*;
+import com.db4o.Db4oEmbedded;
+import com.db4o.EmbeddedObjectContainer;
+import com.db4o.ObjectContainer;
+import com.db4o.config.EmbeddedConfiguration;
+import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.mapper.*;
@@ -25,11 +31,16 @@ public class MudaiModule extends AbstractModule {
 
         bind(Person.class).in(Scopes.SINGLETON);
         bind(EventDistributor.class).in(Scopes.SINGLETON);
-        
+
         bind(new TypeLiteral<BlockingQueue<Command>>(){}).to(new TypeLiteral<PriorityBlockingQueue<Command>>(){}).in(Scopes.SINGLETON);
         bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(5));
         bind(ScheduledExecutorService.class).toInstance(Executors.newSingleThreadScheduledExecutor());
         bind(new TypeLiteral<DirectedGraph<Location, Direction>>(){}).toInstance(new DefaultDirectedGraph(Direction.class));
         bind(Persister.class).to(Db4oPersister.class).in(Scopes.SINGLETON);
+
+        final EmbeddedConfiguration configuration = Db4oEmbedded.newConfiguration();
+        configuration.common().objectClass(Location.class).cascadeOnUpdate(true);
+        final EmbeddedObjectContainer db = Db4oEmbedded.openFile(configuration, "mapper.db");
+        bind(ObjectContainer.class).toInstance(db);
     }
 }

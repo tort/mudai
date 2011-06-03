@@ -1,14 +1,17 @@
 package com.tort.mudai.mapper;
 
+import com.db4o.ObjectContainer;
 import com.google.inject.Inject;
 import com.tort.mudai.RoomSnapshot;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.task.AbstractTask;
-import com.tort.mudai.task.Task;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.alg.DijkstraShortestPath;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @SuppressWarnings({"UnusedDeclaration"})
 public class MapperImpl extends AbstractTask implements Mapper {
@@ -17,6 +20,7 @@ public class MapperImpl extends AbstractTask implements Mapper {
     private LocationHelper _locationHelper;
     private Persister _persister;
     private Map<String, String> _directions = new HashMap<String, String>();
+    private final ObjectContainer _db;
 
     @Override
     public void move(String direction) {
@@ -72,9 +76,10 @@ public class MapperImpl extends AbstractTask implements Mapper {
     }
 
     @Inject
-    public MapperImpl(final DirectedGraph<Location, Direction> graph, final Persister persister) {
+    public MapperImpl(final DirectedGraph<Location, Direction> graph, final Persister persister, final ObjectContainer db) {
         _graph = graph;
         _persister = persister;
+        _db = db;
 
         _directions.put("запад", "восток");
         _directions.put("восток", "запад");
@@ -126,6 +131,14 @@ public class MapperImpl extends AbstractTask implements Mapper {
     @Override
     public Location currentLocation() {
         return _current;
+    }
+
+    @Override
+    public void markWaterSource(final String waterSource) {
+        final Location location = currentLocation();
+        location.setWaterSource(waterSource);
+        _db.store(location);
+        _db.commit();
     }
 
 }

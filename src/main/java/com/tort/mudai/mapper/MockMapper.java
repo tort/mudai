@@ -19,4 +19,9 @@ public class MockMapper implements Mapper {
     public Location currentLocation() {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
+
+    @Override
+    public void markWaterSource(final String waterSource) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
 }

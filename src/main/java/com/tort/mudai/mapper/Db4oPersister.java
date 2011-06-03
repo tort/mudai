@@ -1,20 +1,18 @@
 package com.tort.mudai.mapper;
 
-import com.db4o.Db4oEmbedded;
 import com.db4o.ObjectContainer;
 import com.db4o.ObjectSet;
-import com.db4o.config.EmbeddedConfiguration;
 import com.db4o.query.Predicate;
+import com.google.inject.Inject;
 
 import java.util.List;
 
 public class Db4oPersister implements Persister {
     private final ObjectContainer _db;
 
-    public Db4oPersister() {
-        final EmbeddedConfiguration configuration = Db4oEmbedded.newConfiguration();
-        configuration.common().objectClass(Location.class).cascadeOnUpdate(true);
-        _db = Db4oEmbedded.openFile(configuration, "mapper.db");
+    @Inject
+    public Db4oPersister(final ObjectContainer db) {
+        _db = db;
     }
 
     @Override
