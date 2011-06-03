@@ -34,4 +34,7 @@ public abstract class AbstractTask implements Task {
     public void passwordPrompt(){
 //        throw new NotImplementedException();
     }
+
+    public void feelThirst() {
+    }
 }
