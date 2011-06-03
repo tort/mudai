@@ -1,6 +1,8 @@
 package com.tort.mudai.mapper;
 
 import com.db4o.ObjectContainer;
+import com.db4o.ObjectSet;
+import com.db4o.query.Predicate;
 import com.google.inject.Inject;
 import com.tort.mudai.RoomSnapshot;
 import com.tort.mudai.command.Command;
@@ -108,6 +110,10 @@ public class MapperImpl extends AbstractTask implements Mapper {
         if (target == null)
             return null;
 
+        return pathTo(target);
+    }
+
+    private List<Direction> pathTo(final Location target) {
         final DijkstraShortestPath<Location, Direction> _algorythm = new DijkstraShortestPath<Location, Direction>(_graph, _current, target);
         final List<Direction> directions = _algorythm.getPathEdgeList();
 
@@ -139,6 +145,19 @@ public class MapperImpl extends AbstractTask implements Mapper {
         location.setWaterSource(waterSource);
         _db.store(location);
         _db.commit();
+    }
+
+    @Override
+    public List<Direction> pathToNearestWaterSource() {
+        final ObjectSet<Location> locations = _db.query(new Predicate<Location>() {
+            @Override
+            public boolean match(final Location location) {
+                return location.getWaterSource() != null;
+            }
+        });
+
+        final List<Direction> directions = pathTo(locations.get(0));
+        return directions;
     }
 
 }

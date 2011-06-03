@@ -3,12 +3,15 @@ package com.tort.mudai.task;
 import com.google.inject.Inject;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.SimpleCommand;
-import com.tort.mudai.mapper.Location;
+import com.tort.mudai.mapper.Direction;
 import com.tort.mudai.mapper.Mapper;
+
+import java.util.List;
 
 public class ProvisionTask extends AbstractTask {
     private final Mapper _mapper;
     private Command _command;
+    private List<Direction> _path;
 
     @Inject
     public ProvisionTask(final Mapper mapper) {
@@ -17,12 +20,27 @@ public class ProvisionTask extends AbstractTask {
 
     @Override
     public void move(final String direction) {
-        final Location location = _mapper.currentLocation();
+        goNext();
+    }
 
-        String waterSource = location.getWaterSource();
-        if(waterSource != null){
-            _command = new SimpleCommand("пить " + waterSource);
+    @Override
+    public void feelThirst() {
+        if (_path == null) {
+            _path = _mapper.pathToNearestWaterSource();
+            goNext();
         }
+    }
+
+    private void goNext() {
+        if(_path.isEmpty()){
+            _command = new SimpleCommand("пить " + _mapper.currentLocation().getWaterSource());
+            return;
+        }
+
+        final String direction = _path.get(0).getName();
+        _path.remove(0);
+
+        _command = new SimpleCommand(direction);
     }
 
     @Override

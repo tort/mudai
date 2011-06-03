@@ -6,4 +6,5 @@ public interface Mapper {
     List<Direction> pathTo(String location);
     Location currentLocation();
     void markWaterSource(String waterSource);
+    List<Direction> pathToNearestWaterSource();
 }

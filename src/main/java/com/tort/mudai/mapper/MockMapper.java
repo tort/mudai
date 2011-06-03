@@ -24,4 +24,9 @@ public class MockMapper implements Mapper {
     public void markWaterSource(final String waterSource) {
         //To change body of implemented methods use File | Settings | File Templates.
     }
+
+    @Override
+    public List<Direction> pathToNearestWaterSource() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 }
