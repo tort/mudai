@@ -6,12 +6,16 @@ import com.tort.mudai.command.SimpleCommand;
 import com.tort.mudai.mapper.Direction;
 import com.tort.mudai.mapper.Mapper;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 public class ProvisionTask extends AbstractTask {
     private final Mapper _mapper;
     private Command _command;
     private List<Direction> _path;
+    private final static int THIRST_INTERVAL = 12;
+    private final static int HUNGER_INTERVAL = 21;
 
     @Inject
     public ProvisionTask(final Mapper mapper) {
@@ -20,15 +24,16 @@ public class ProvisionTask extends AbstractTask {
 
     @Override
     public void move(final String direction) {
-        goNext();
     }
 
     @Override
     public void feelThirst() {
-        if (_path == null) {
-            _path = _mapper.pathToNearestWaterSource();
-            goNext();
-        }
+        System.out.println("FEEL THIRST: " + new SimpleDateFormat().format(new Date()));
+    }
+
+    @Override
+    public void feelHunger(){
+        System.out.println("FEEL HUNGER: " + new SimpleDateFormat().format(new Date()));
     }
 
     private void goNext() {

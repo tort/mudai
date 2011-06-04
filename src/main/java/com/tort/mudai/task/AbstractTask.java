@@ -37,4 +37,7 @@ public abstract class AbstractTask implements Task {
 
     public void feelThirst() {
     }
+
+    public void feelHunger() {
+    }
 }
