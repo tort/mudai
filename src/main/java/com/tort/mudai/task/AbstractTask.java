@@ -40,4 +40,13 @@ public abstract class AbstractTask implements Task {
 
     public void feelHunger() {
     }
+
+    public void inventory(final String[] items) {
+    }
+
+    public void waterContainerAlmostEmpty() {
+    }
+
+    public void waterContainerFull() {
+    }
 }

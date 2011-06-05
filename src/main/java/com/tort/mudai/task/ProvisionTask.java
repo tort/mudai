@@ -1,55 +1,38 @@
 package com.tort.mudai.task;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.tort.mudai.command.Command;
-import com.tort.mudai.command.SimpleCommand;
-import com.tort.mudai.mapper.Direction;
-import com.tort.mudai.mapper.Mapper;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
+import com.tort.mudai.command.ExamineItemCommand;
+import com.tort.mudai.command.InventoryCommand;
 
 public class ProvisionTask extends AbstractTask {
-    private final Mapper _mapper;
-    private Command _command;
-    private List<Direction> _path;
-    private final static int THIRST_INTERVAL = 12;
-    private final static int HUNGER_INTERVAL = 21;
+    private volatile Command _command;
+    private final EventDistributor _eventDistributor;
+    private final Provider<GoAndBuyWaterContainerTask> _goAndByWaterContainerTaskProvider;
+    private final String _waterContainer;
+    private GoAndBuyWaterContainerTask _buyWaterTask;
 
     @Inject
-    public ProvisionTask(final Mapper mapper) {
-        _mapper = mapper;
-    }
+    public ProvisionTask(final EventDistributor eventDistributor, final Provider<GoAndBuyWaterContainerTask> goAndByWaterContainerTaskProvider, final String waterContainer) {
+        _eventDistributor = eventDistributor;
+        _goAndByWaterContainerTaskProvider = goAndByWaterContainerTaskProvider;
+        _waterContainer = waterContainer;
+        _command = new InventoryCommand();
 
-    @Override
-    public void move(final String direction) {
-    }
-
-    @Override
-    public void feelThirst() {
-        System.out.println("FEEL THIRST: " + new SimpleDateFormat().format(new Date()));
-    }
-
-    @Override
-    public void feelHunger(){
-        System.out.println("FEEL HUNGER: " + new SimpleDateFormat().format(new Date()));
-    }
-
-    private void goNext() {
-        if(_path.isEmpty()){
-            _command = new SimpleCommand("пить " + _mapper.currentLocation().getWaterSource());
-            return;
-        }
-
-        final String direction = _path.get(0).getName();
-        _path.remove(0);
-
-        _command = new SimpleCommand(direction);
+        System.out.println("PROVISION_TASK: started");
     }
 
     @Override
     public Command pulse() {
+        if(_buyWaterTask != null){
+            if(_buyWaterTask.status() == Status.TERMINATED){
+                _buyWaterTask = null;
+                return new ExamineItemCommand(_waterContainer);
+            }
+            return _buyWaterTask.pulse();
+        }
+
         final Command command = _command;
         _command = null;
 
@@ -57,7 +40,19 @@ public class ProvisionTask extends AbstractTask {
     }
 
     @Override
+    public void inventory(String[] items) {
+        for (String item : items) {
+            if(item.equals(_waterContainer)){
+
+            }
+        }
+
+        _buyWaterTask = _goAndByWaterContainerTaskProvider.get();
+        _eventDistributor.subscribe(_buyWaterTask);
+    }
+
+    @Override
     public Status status() {
-        return Status.RUNNING;
+        return Task.Status.RUNNING;
     }
 }

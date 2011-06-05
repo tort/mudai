@@ -76,6 +76,7 @@ public class Person extends AbstractTask {
 
     @Override
     public Command pulse() {
+        //TODO send pulses only to tasks of person itself
         for (Task task : _eventDistributor.getTargets()) {
 
             Command command = task.pulse();

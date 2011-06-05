@@ -12,6 +12,7 @@ import com.tort.mudai.command.Command;
 import com.tort.mudai.mapper.*;
 import com.tort.mudai.task.AbstractTask;
 import com.tort.mudai.task.EventDistributor;
+import com.tort.mudai.task.GoAndBuyWaterContainerTask;
 import com.tort.mudai.task.Person;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;

@@ -47,6 +47,7 @@ public class AdapterImpl implements Adapter {
         _eventTriggers.add(new LookAroundTrigger(eventDistributor));
         _eventTriggers.add(new FeelThirstTrigger(eventDistributor));
         _eventTriggers.add(new FeelHungerTrigger(eventDistributor));
+        _eventTriggers.add(new InventoryTrigger(eventDistributor));
 
         _simpleTriggers.add(new SimpleTrigger(".*^\\* В связи с проблемами перевода фразы ANYKEY нажмите ENTER.*", new String[]{"", "смотр"}));
         _simpleTriggers.add(new SimpleTrigger(".*^Select one : $", new String[]{ENCODING}));

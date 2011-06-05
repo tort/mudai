@@ -7,10 +7,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class EventDistributor {
     private Map<Class, Handler> _events = new HashMap<Class, Handler>();
-    private List<AbstractTask> _tasks = new ArrayList<AbstractTask>();
+    private volatile List<AbstractTask> _tasks = new CopyOnWriteArrayList<AbstractTask>();
 
     public void invoke(Handler handler) {
         for (AbstractTask task : _tasks) {
