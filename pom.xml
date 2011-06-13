@@ -58,6 +58,13 @@
         </dependency>
 
         <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>5.10</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>jgrapht</groupId>
             <artifactId>jgrapht</artifactId>
             <version>0.7.3</version>
