@@ -8,7 +8,7 @@ import com.tort.mudai.command.Command;
 import com.tort.mudai.mapper.Direction;
 import com.tort.mudai.mapper.Mapper;
 
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -23,6 +23,7 @@ public class Person extends AbstractTask {
 
     private Mapper _mapper;
     private final EventDistributor _eventDistributor;
+    private final List<Task> _pulseTargets = new ArrayList();
 
     @Inject
     private Person(final Provider<SessionTask> sessionProvider,
@@ -47,9 +48,17 @@ public class Person extends AbstractTask {
     }
 
     public void start() {
-        _eventDistributor.subscribe(_mapperTaskProvider.get());
-        _eventDistributor.subscribe(_sessionProvider.get());
-        _eventDistributor.subscribe(_provisionTask.get());
+        final SessionTask sessionTask = _sessionProvider.get();
+        final AbstractTask mapperTask = _mapperTaskProvider.get();
+        final ProvisionTask provisionTask = _provisionTask.get();
+
+        _eventDistributor.subscribe(sessionTask);
+        _eventDistributor.subscribe(mapperTask);
+        _eventDistributor.subscribe(provisionTask);
+
+        _pulseTargets.add(sessionTask);
+        _pulseTargets.add(mapperTask);
+        _pulseTargets.add(provisionTask);
 
         _pulseExecutor.scheduleAtFixedRate(new Runnable() {
             @Override
@@ -76,19 +85,20 @@ public class Person extends AbstractTask {
 
     @Override
     public Command pulse() {
-        //TODO send pulses only to tasks of person itself
-        for (Task task : _eventDistributor.getTargets()) {
-
+        for (Task task : _pulseTargets) {
             Command command = task.pulse();
             if (command != EMPTY_COMMAND) {
                 _commandExecutor.submit(command);
 
                 return command;
             }
+            
+            if(task.isInit())
+                break;
         }
 
         for (Task task : _eventDistributor.getTargets()) {
-            if (task.status() == Status.TERMINATED) {
+            if (task.isTerminated()) {
                 _eventDistributor.unsubscribe(task);
             }
         }

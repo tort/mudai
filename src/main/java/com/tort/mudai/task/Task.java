@@ -7,7 +7,13 @@ public interface Task {
 
     Status status();
 
+    boolean isInit();
+
+    boolean isTerminated();
+
     public enum Status{
-        RUNNING, TERMINATED
+        INIT,
+        RUNNING,
+        TERMINATED
     }
 }

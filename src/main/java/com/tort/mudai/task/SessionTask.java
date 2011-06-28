@@ -39,6 +39,8 @@ public class SessionTask extends AbstractTask {
     public void passwordPrompt() {
         System.out.println(_properties.getPassword());
         _command = new SimpleCommand(_properties.getPassword());
+
+        _status = Status.RUNNING;
     }
 
     @Override
@@ -47,11 +49,6 @@ public class SessionTask extends AbstractTask {
         _command = null;
 
         return command;
-    }
-
-    @Override
-    public Status status() {
-        return Status.RUNNING;
     }
 
     @Override

@@ -75,6 +75,8 @@ public class MapperImpl extends AbstractTask implements Mapper {
                 _persister.persistLocation(_current);
             }
         }
+
+        _status = Status.RUNNING;
     }
 
     @Inject
