@@ -7,7 +7,7 @@ public interface Task {
 
     Status status();
 
-    boolean isInit();
+    boolean isInitializing();
 
     boolean isTerminated();
 

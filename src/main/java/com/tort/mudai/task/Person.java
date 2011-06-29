@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class Person extends AbstractTask {
+public class Person extends StatedTask {
     private static final Command EMPTY_COMMAND = null;
 
     private final Provider<SessionTask> _sessionProvider;
@@ -93,7 +93,7 @@ public class Person extends AbstractTask {
                 return command;
             }
             
-            if(task.isInit())
+            if(task.isInitializing())
                 break;
         }
 

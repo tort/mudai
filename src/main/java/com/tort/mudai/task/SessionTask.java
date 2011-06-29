@@ -10,7 +10,7 @@ import com.tort.mudai.command.StartSessionCommand;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class SessionTask extends AbstractTask {
+public class SessionTask extends StatedTask {
     private final PersonProperties _properties;
     private CommandExecutor _executor;
     private Command _command;
@@ -40,7 +40,7 @@ public class SessionTask extends AbstractTask {
         System.out.println(_properties.getPassword());
         _command = new SimpleCommand(_properties.getPassword());
 
-        _status = Status.RUNNING;
+        run();
     }
 
     @Override

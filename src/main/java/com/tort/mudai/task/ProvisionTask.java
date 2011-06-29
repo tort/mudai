@@ -6,7 +6,7 @@ import com.tort.mudai.command.Command;
 import com.tort.mudai.command.ExamineItemCommand;
 import com.tort.mudai.command.InventoryCommand;
 
-public class ProvisionTask extends AbstractTask {
+public class ProvisionTask extends StatedTask {
     private volatile Command _command;
     private final EventDistributor _eventDistributor;
     private final Provider<GoAndBuyWaterContainerTask> _goAndByWaterContainerTaskProvider;
@@ -19,14 +19,12 @@ public class ProvisionTask extends AbstractTask {
         _goAndByWaterContainerTaskProvider = goAndByWaterContainerTaskProvider;
         _waterContainer = waterContainer;
         _command = new InventoryCommand();
-
-        System.out.println("PROVISION_TASK: started");
     }
 
     @Override
     public Command pulse() {
         if(_buyWaterTask != null){
-            if(_buyWaterTask.status() == Status.TERMINATED){
+            if(_buyWaterTask.isTerminated()){
                 _buyWaterTask = null;
                 return new ExamineItemCommand(_waterContainer);
             }

@@ -10,7 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-public class GoAndFillWaterContainerTask extends AbstractTask {
+public class GoAndFillWaterContainerTask extends StatedTask {
     private final Mapper _mapper;
     private Command _command;
     private List<Direction> _path;

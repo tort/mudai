@@ -6,7 +6,7 @@ import com.db4o.query.Predicate;
 import com.google.inject.Inject;
 import com.tort.mudai.RoomSnapshot;
 import com.tort.mudai.command.Command;
-import com.tort.mudai.task.AbstractTask;
+import com.tort.mudai.task.StatedTask;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.alg.DijkstraShortestPath;
 
@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Set;
 
 @SuppressWarnings({"UnusedDeclaration"})
-public class MapperImpl extends AbstractTask implements Mapper {
+public class MapperImpl extends StatedTask implements Mapper {
     private DirectedGraph<Location, Direction> _graph;
     private volatile Location _current;
     private LocationHelper _locationHelper;
@@ -61,11 +61,10 @@ public class MapperImpl extends AbstractTask implements Mapper {
     private void updateMap(RoomSnapshot roomSnapshot) {
         String locationTitle = roomSnapshot.getLocationTitle();
         if (_current == null) {
-            final String title = locationTitle;
-            _current = _persister.loadLocation(title);
+            _current = _persister.loadLocation(locationTitle);
             if (_current == null) {
                 _current = new Location();
-                _current.setTitle(title);
+                _current.setTitle(locationTitle);
                 _persister.persistLocation(_current);
                 _graph.addVertex(_current);
             }
@@ -76,7 +75,7 @@ public class MapperImpl extends AbstractTask implements Mapper {
             }
         }
 
-        _status = Status.RUNNING;
+        run();
     }
 
     @Inject

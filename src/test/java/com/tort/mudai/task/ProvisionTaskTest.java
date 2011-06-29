@@ -18,7 +18,7 @@ import static org.testng.Assert.assertTrue;
 public class ProvisionTaskTest {
     private static final String WATER_CONTAINER = "мех";
     private EventDistributor _eventDistributor;
-    private AbstractTask _provisionTask;
+    private StatedTask _provisionTask;
     private Provider<GoAndBuyWaterContainerTask> _goAndByWaterContainerTaskProvider;
     private Provider<GoAndFillWaterContainerTask> _fillWaterContainerTaskProvider;
 

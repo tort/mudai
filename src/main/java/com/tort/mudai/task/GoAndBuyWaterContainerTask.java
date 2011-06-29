@@ -2,7 +2,7 @@ package com.tort.mudai.task;
 
 import com.tort.mudai.command.Command;
 
-public class GoAndBuyWaterContainerTask extends AbstractTask {
+public class GoAndBuyWaterContainerTask extends StatedTask {
     public GoAndBuyWaterContainerTask() {
         System.out.println("GO_AND_BUY: started");
     }

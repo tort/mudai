@@ -3,8 +3,6 @@ package com.tort.mudai.task;
 import com.tort.mudai.RoomSnapshot;
 
 public abstract class AbstractTask implements Task {
-    protected Status _status = Status.INIT;
-
     public void move(String direction) {
 //        throw new NotImplementedException();
     }
@@ -50,20 +48,5 @@ public abstract class AbstractTask implements Task {
     }
 
     public void waterContainerFull() {
-    }
-
-    @Override
-    public boolean isInit() {
-        return _status == Status.INIT;
-    }
-
-    @Override
-    public boolean isTerminated() {
-        return _status == Status.TERMINATED;
-    }
-
-    @Override
-    public Status status() {
-        return _status;
     }
 }

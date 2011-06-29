@@ -9,9 +9,8 @@ import com.tort.mudai.command.RawWriteCommand;
 import com.tort.mudai.mapper.Location;
 import com.tort.mudai.mapper.Mob;
 import com.tort.mudai.mapper.Persister;
-import com.tort.mudai.task.AbstractTask;
 import com.tort.mudai.task.Person;
-import com.tort.mudai.task.Task;
+import com.tort.mudai.task.StatedTask;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -72,7 +71,7 @@ public class SimpleMudClient {
         }
     }
 
-    private static class SimpleEventListener extends AbstractTask {
+    private static class SimpleEventListener extends StatedTask {
         private void print(final String message) {
             System.out.println(message);
         }

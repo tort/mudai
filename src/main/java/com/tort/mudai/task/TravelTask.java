@@ -1,6 +1,5 @@
 package com.tort.mudai.task;
 
-import com.tort.mudai.CommandExecutor;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.SimpleCommand;
 import com.tort.mudai.mapper.Direction;
@@ -8,7 +7,7 @@ import com.tort.mudai.mapper.Mapper;
 
 import java.util.List;
 
-public class TravelTask extends AbstractTask {
+public class TravelTask extends StatedTask {
     private final List<Direction> _path;
     private Command _command;
     private Status _status = Status.RUNNING;
