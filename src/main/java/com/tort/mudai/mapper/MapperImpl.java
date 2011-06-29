@@ -75,7 +75,9 @@ public class MapperImpl extends StatedTask implements Mapper {
             }
         }
 
-        run();
+        if(isInitializing()){
+            run();
+        }
     }
 
     @Inject
