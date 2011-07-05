@@ -10,7 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-public class GoAndFillWaterContainerTask extends StatedTask {
+public class FillLiquidContainerTask extends StatedTask {
     private final Mapper _mapper;
     private Command _command;
     private List<Direction> _path;
@@ -18,7 +18,7 @@ public class GoAndFillWaterContainerTask extends StatedTask {
     private final static int HUNGER_INTERVAL = 21;
 
     @Inject
-    public GoAndFillWaterContainerTask(final Mapper mapper) {
+    public FillLiquidContainerTask(final Mapper mapper) {
         _mapper = mapper;
     }
 

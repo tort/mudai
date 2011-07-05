@@ -5,21 +5,20 @@ import com.google.inject.Provider;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.ExamineItemCommand;
 import com.tort.mudai.command.InventoryCommand;
-import org.hibernate.property.Getter;
 
 public class ProvisionTask extends StatedTask {
     private volatile Command _command;
     private final EventDistributor _eventDistributor;
-    private final Provider<GoAndBuyWaterContainerTask> _goAndByWaterContainerTaskProvider;
-    private final Provider<GoAndFillWaterContainerTask> _fillLiquidContainerTaskProvider;
+    private final Provider<RetrieveLiquidContainerTask> _goAndByWaterContainerTaskProvider;
+    private final Provider<FillLiquidContainerTask> _fillLiquidContainerTaskProvider;
     private final String _waterContainer;
 
-    private GoAndBuyWaterContainerTask _buyWaterTask;
+    private RetrieveLiquidContainerTask _buyLiquidTask;
 
     @Inject
     public ProvisionTask(final EventDistributor eventDistributor,
-                         final Provider<GoAndBuyWaterContainerTask> goAndByWaterContainerTaskProvider,
-                         final Provider<GoAndFillWaterContainerTask> fillLiquidContainerTaskProvider,
+                         final Provider<RetrieveLiquidContainerTask> goAndByWaterContainerTaskProvider,
+                         final Provider<FillLiquidContainerTask> fillLiquidContainerTaskProvider,
                          final String waterContainer) {
         _eventDistributor = eventDistributor;
         _goAndByWaterContainerTaskProvider = goAndByWaterContainerTaskProvider;
@@ -30,12 +29,12 @@ public class ProvisionTask extends StatedTask {
 
     @Override
     public Command pulse() {
-        if(_buyWaterTask != null){
-            if(_buyWaterTask.isTerminated()){
-                _buyWaterTask = null;
+        if(_buyLiquidTask != null){
+            if(_buyLiquidTask.isTerminated()){
+                _buyLiquidTask = null;
                 return new ExamineItemCommand(_waterContainer);
             }
-            return _buyWaterTask.pulse();
+            return _buyLiquidTask.pulse();
         }
 
         final Command command = _command;
@@ -53,8 +52,8 @@ public class ProvisionTask extends StatedTask {
             }
         }
 
-        _buyWaterTask = _goAndByWaterContainerTaskProvider.get();
-        _eventDistributor.subscribe(_buyWaterTask);
+        _buyLiquidTask = _goAndByWaterContainerTaskProvider.get();
+        _eventDistributor.subscribe(_buyLiquidTask);
     }
 
     @Override

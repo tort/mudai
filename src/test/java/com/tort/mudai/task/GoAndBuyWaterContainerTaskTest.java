@@ -6,7 +6,7 @@ import org.testng.annotations.Test;
 @Test
 public class GoAndBuyWaterContainerTaskTest {
     public void start(){
-        final GoAndBuyWaterContainerTask task = new GoAndBuyWaterContainerTask();
+        final RetrieveLiquidContainerTask task = new RetrieveLiquidContainerTask();
 
         final Command command = task.pulse();
 

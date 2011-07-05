@@ -19,8 +19,8 @@ public class ProvisionTaskTest {
     private static final String WATER_CONTAINER = "мех";
     private EventDistributor _eventDistributor;
     private StatedTask _provisionTask;
-    private Provider<GoAndBuyWaterContainerTask> _goAndByWaterContainerTaskProvider;
-    private Provider<GoAndFillWaterContainerTask> _fillLiquidContainerTaskProvider;
+    private Provider<RetrieveLiquidContainerTask> _retrieveLiquidContainerTaskProvider;
+    private Provider<FillLiquidContainerTask> _fillLiquidContainerTaskProvider;
 
     public void enterWorld() throws Exception {
         createProvisionTask();
@@ -39,7 +39,7 @@ public class ProvisionTaskTest {
 
         _provisionTask.pulse();
 
-        verify(_eventDistributor).subscribe(isA(GoAndBuyWaterContainerTask.class));
+        verify(_eventDistributor).subscribe(isA(RetrieveLiquidContainerTask.class));
     }
 
     public void waterContainerPresent() {
@@ -62,7 +62,7 @@ public class ProvisionTaskTest {
     public void containerAlmostEmpty() {
         _provisionTask.waterContainerAlmostEmpty();
 
-        verifyTaskSubscribed(GoAndFillWaterContainerTask.class);
+        verifyTaskSubscribed(FillLiquidContainerTask.class);
     }
 
     public void afterBuyWaterContainer() {
@@ -82,34 +82,34 @@ public class ProvisionTaskTest {
         verifyTaskSubscribed(DrinkTask.class);
     }
 
-    private GoAndFillWaterContainerTask createFillWaterContainerTaskJustTerminated() {
+    private FillLiquidContainerTask createFillWaterContainerTaskJustTerminated() {
         //TODO generalize creating terminated task
-        final GoAndFillWaterContainerTask task = mock(GoAndFillWaterContainerTask.class);
+        final FillLiquidContainerTask task = mock(FillLiquidContainerTask.class);
         when(task.status()).thenReturn(Task.Status.TERMINATED);
         return task;
     }
 
-    private GoAndBuyWaterContainerTask createBuyWaterContainerTaskJustTerminated() {
+    private RetrieveLiquidContainerTask createBuyWaterContainerTaskJustTerminated() {
         //TODO generalize creating terminated task
-        final GoAndBuyWaterContainerTask task = mock(GoAndBuyWaterContainerTask.class);
+        final RetrieveLiquidContainerTask task = mock(RetrieveLiquidContainerTask.class);
         when(task.status()).thenReturn(Task.Status.TERMINATED);
         return task;
     }
 
     private void createProvisionTask() {
-        final GoAndBuyWaterContainerTask buyWaterTask = createBuyWaterContainerTaskJustTerminated();
-        when(_goAndByWaterContainerTaskProvider.get()).thenReturn(buyWaterTask);
-        final GoAndFillWaterContainerTask fillWaterTask = createFillWaterContainerTaskJustTerminated();
-        when(_fillLiquidContainerTaskProvider.get()).thenReturn(fillWaterTask);
+        final RetrieveLiquidContainerTask buyLiquidTask = createBuyWaterContainerTaskJustTerminated();
+        when(_retrieveLiquidContainerTaskProvider.get()).thenReturn(buyLiquidTask);
+        final FillLiquidContainerTask fillLiquidTask = createFillWaterContainerTaskJustTerminated();
+        when(_fillLiquidContainerTaskProvider.get()).thenReturn(fillLiquidTask);
 
         _eventDistributor = mock(EventDistributor.class);
-        _provisionTask = new ProvisionTask(_eventDistributor, _goAndByWaterContainerTaskProvider, _fillLiquidContainerTaskProvider, WATER_CONTAINER);
+        _provisionTask = new ProvisionTask(_eventDistributor, _retrieveLiquidContainerTaskProvider, _fillLiquidContainerTaskProvider, WATER_CONTAINER);
     }
 
     @SuppressWarnings({"unchecked"})
     @BeforeMethod
     protected void setUp() throws Exception {
-        _goAndByWaterContainerTaskProvider = mock(Provider.class);
+        _retrieveLiquidContainerTaskProvider = mock(Provider.class);
         _fillLiquidContainerTaskProvider = mock(Provider.class);
 
         createProvisionTask();
