@@ -46,7 +46,7 @@ public class ProvisionTaskTest {
         _provisionTask.inventory(new String[]{WATER_CONTAINER});
         final Command command = _provisionTask.pulse();
 
-        assertWaterContainerPresent(command);
+        assertTrue(command instanceof ExamineItemCommand);
     }
 
     public void containerFull() {
@@ -71,7 +71,7 @@ public class ProvisionTaskTest {
 
         final Command command = _provisionTask.pulse();
 
-        assertWaterContainerPresent(command);
+        assertTrue(command instanceof ExamineItemCommand);
     }
 
     public void afterFillWaterContainer() {
@@ -102,10 +102,6 @@ public class ProvisionTaskTest {
 
         _eventDistributor = mock(EventDistributor.class);
         _provisionTask = new ProvisionTask(_eventDistributor, _goAndByWaterContainerTaskProvider, WATER_CONTAINER);
-    }
-
-    private void assertWaterContainerPresent(final Command command) {
-        assertTrue(command instanceof ExamineItemCommand);
     }
 
     @SuppressWarnings({"unchecked"})

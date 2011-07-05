@@ -41,7 +41,8 @@ public class ProvisionTask extends StatedTask {
     public void inventory(String[] items) {
         for (String item : items) {
             if(item.equals(_waterContainer)){
-
+                _command = new ExamineItemCommand(_waterContainer);
+                return;
             }
         }
 
