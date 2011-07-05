@@ -5,18 +5,25 @@ import com.google.inject.Provider;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.ExamineItemCommand;
 import com.tort.mudai.command.InventoryCommand;
+import org.hibernate.property.Getter;
 
 public class ProvisionTask extends StatedTask {
     private volatile Command _command;
     private final EventDistributor _eventDistributor;
     private final Provider<GoAndBuyWaterContainerTask> _goAndByWaterContainerTaskProvider;
+    private final Provider<GoAndFillWaterContainerTask> _fillLiquidContainerTaskProvider;
     private final String _waterContainer;
+
     private GoAndBuyWaterContainerTask _buyWaterTask;
 
     @Inject
-    public ProvisionTask(final EventDistributor eventDistributor, final Provider<GoAndBuyWaterContainerTask> goAndByWaterContainerTaskProvider, final String waterContainer) {
+    public ProvisionTask(final EventDistributor eventDistributor,
+                         final Provider<GoAndBuyWaterContainerTask> goAndByWaterContainerTaskProvider,
+                         final Provider<GoAndFillWaterContainerTask> fillLiquidContainerTaskProvider,
+                         final String waterContainer) {
         _eventDistributor = eventDistributor;
         _goAndByWaterContainerTaskProvider = goAndByWaterContainerTaskProvider;
+        _fillLiquidContainerTaskProvider = fillLiquidContainerTaskProvider;
         _waterContainer = waterContainer;
         _command = new InventoryCommand();
     }
@@ -53,5 +60,10 @@ public class ProvisionTask extends StatedTask {
     @Override
     public Status status() {
         return Task.Status.RUNNING;
+    }
+
+    @Override
+    public void waterContainerAlmostEmpty() {
+        _eventDistributor.subscribe(_fillLiquidContainerTaskProvider.get());
     }
 }

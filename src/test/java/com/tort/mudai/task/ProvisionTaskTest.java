@@ -20,7 +20,7 @@ public class ProvisionTaskTest {
     private EventDistributor _eventDistributor;
     private StatedTask _provisionTask;
     private Provider<GoAndBuyWaterContainerTask> _goAndByWaterContainerTaskProvider;
-    private Provider<GoAndFillWaterContainerTask> _fillWaterContainerTaskProvider;
+    private Provider<GoAndFillWaterContainerTask> _fillLiquidContainerTaskProvider;
 
     public void enterWorld() throws Exception {
         createProvisionTask();
@@ -99,16 +99,19 @@ public class ProvisionTaskTest {
     private void createProvisionTask() {
         final GoAndBuyWaterContainerTask buyWaterTask = createBuyWaterContainerTaskJustTerminated();
         when(_goAndByWaterContainerTaskProvider.get()).thenReturn(buyWaterTask);
+        final GoAndFillWaterContainerTask fillWaterTask = createFillWaterContainerTaskJustTerminated();
+        when(_fillLiquidContainerTaskProvider.get()).thenReturn(fillWaterTask);
 
         _eventDistributor = mock(EventDistributor.class);
-        _provisionTask = new ProvisionTask(_eventDistributor, _goAndByWaterContainerTaskProvider, WATER_CONTAINER);
+        _provisionTask = new ProvisionTask(_eventDistributor, _goAndByWaterContainerTaskProvider, _fillLiquidContainerTaskProvider, WATER_CONTAINER);
     }
 
     @SuppressWarnings({"unchecked"})
     @BeforeMethod
     protected void setUp() throws Exception {
         _goAndByWaterContainerTaskProvider = mock(Provider.class);
-        _fillWaterContainerTaskProvider = mock(Provider.class);
+        _fillLiquidContainerTaskProvider = mock(Provider.class);
+
         createProvisionTask();
     }
 }
