@@ -52,17 +52,17 @@ public class ProvisionTaskTest {
     public void containerFull() {
         _provisionTask.waterContainerFull();
 
-        verifyDrinkTaskSubscribed();
+        verifyTaskSubscribed(DrinkTask.class);
     }
 
-    private void verifyDrinkTaskSubscribed() {
-        verify(_eventDistributor).subscribe(isA(DrinkTask.class));
+    private void verifyTaskSubscribed(final Class<? extends AbstractTask> taskClass) {
+        verify(_eventDistributor).subscribe(isA(taskClass));
     }
 
     public void containerAlmostEmpty() {
         _provisionTask.waterContainerAlmostEmpty();
 
-        verify(_eventDistributor).subscribe(isA(GoAndFillWaterContainerTask.class));
+        verifyTaskSubscribed(GoAndFillWaterContainerTask.class);
     }
 
     public void afterBuyWaterContainer() {
@@ -79,7 +79,7 @@ public class ProvisionTaskTest {
 
         _provisionTask.pulse();
 
-        verifyDrinkTaskSubscribed();
+        verifyTaskSubscribed(DrinkTask.class);
     }
 
     private GoAndFillWaterContainerTask createFillWaterContainerTaskJustTerminated() {
