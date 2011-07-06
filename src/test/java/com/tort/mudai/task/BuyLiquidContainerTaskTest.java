@@ -4,7 +4,7 @@ import com.tort.mudai.command.Command;
 import org.testng.annotations.Test;
 
 @Test
-public class GoAndBuyWaterContainerTaskTest {
+public class BuyLiquidContainerTaskTest {
     public void start(){
         final RetrieveLiquidContainerTask task = new RetrieveLiquidContainerTask();
 

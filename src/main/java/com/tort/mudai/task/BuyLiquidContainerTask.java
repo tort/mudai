@@ -2,8 +2,8 @@ package com.tort.mudai.task;
 
 import com.tort.mudai.command.Command;
 
-public class RetrieveLiquidContainerTask extends StatedTask {
-    public RetrieveLiquidContainerTask() {
+public class BuyLiquidContainerTask extends StatedTask {
+    public BuyLiquidContainerTask() {
         System.out.println("GO_AND_BUY: started");
     }
 
