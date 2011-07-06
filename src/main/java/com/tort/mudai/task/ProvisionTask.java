@@ -9,16 +9,16 @@ import com.tort.mudai.command.InventoryCommand;
 public class ProvisionTask extends StatedTask {
     private volatile Command _command;
     private final EventDistributor _eventDistributor;
-    private final Provider<RetrieveLiquidContainerTask> _buyLiquidContainerTaskProvider;
+    private final Provider<BuyLiquidContainerTask> _buyLiquidContainerTaskProvider;
     private final Provider<FillLiquidContainerTask> _fillLiquidContainerTaskProvider;
     private final Provider<DrinkTask> _drinkTaskProvider;
     private final String _waterContainer;
 
-    private RetrieveLiquidContainerTask _buyLiquidContainerTask;
+    private BuyLiquidContainerTask _buyLiquidContainerTask;
 
     @Inject
     public ProvisionTask(final EventDistributor eventDistributor,
-                         final Provider<RetrieveLiquidContainerTask> goAndByWaterContainerTaskProvider,
+                         final Provider<BuyLiquidContainerTask> goAndByWaterContainerTaskProvider,
                          final Provider<FillLiquidContainerTask> fillLiquidContainerTaskProvider,
                          final Provider<DrinkTask> drinkTaskProvider,
                          final String waterContainer) {

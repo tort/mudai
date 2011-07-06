@@ -19,7 +19,7 @@ public class ProvisionTaskTest {
     private static final String WATER_CONTAINER = "мех";
     private EventDistributor _eventDistributor;
     private StatedTask _provisionTask;
-    private Provider<RetrieveLiquidContainerTask> _retrieveLiquidContainerTaskProvider;
+    private Provider<BuyLiquidContainerTask> _retrieveLiquidContainerTaskProvider;
     private Provider<FillLiquidContainerTask> _fillLiquidContainerTaskProvider;
     private Provider<DrinkTask> _drinkTaskProvider;
 
@@ -40,7 +40,7 @@ public class ProvisionTaskTest {
 
         _provisionTask.pulse();
 
-        verify(_eventDistributor).subscribe(isA(RetrieveLiquidContainerTask.class));
+        verify(_eventDistributor).subscribe(isA(BuyLiquidContainerTask.class));
     }
 
     public void waterContainerPresent() {
@@ -91,15 +91,15 @@ public class ProvisionTaskTest {
         return task;
     }
 
-    private RetrieveLiquidContainerTask createBuyWaterContainerTaskJustTerminated() {
+    private BuyLiquidContainerTask createBuyWaterContainerTaskJustTerminated() {
         //TODO generalize creating terminated task
-        final RetrieveLiquidContainerTask task = mock(RetrieveLiquidContainerTask.class);
+        final BuyLiquidContainerTask task = mock(BuyLiquidContainerTask.class);
         when(task.status()).thenReturn(Task.Status.TERMINATED);
         return task;
     }
 
     private void createProvisionTask() {
-        final RetrieveLiquidContainerTask buyLiquidTask = createBuyWaterContainerTaskJustTerminated();
+        final BuyLiquidContainerTask buyLiquidTask = createBuyWaterContainerTaskJustTerminated();
         when(_retrieveLiquidContainerTaskProvider.get()).thenReturn(buyLiquidTask);
         final FillLiquidContainerTask fillLiquidTask = createFillWaterContainerTaskJustTerminated();
         when(_fillLiquidContainerTaskProvider.get()).thenReturn(fillLiquidTask);
