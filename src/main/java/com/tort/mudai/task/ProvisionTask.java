@@ -9,12 +9,12 @@ import com.tort.mudai.command.InventoryCommand;
 public class ProvisionTask extends StatedTask {
     private volatile Command _command;
     private final EventDistributor _eventDistributor;
-    private final Provider<RetrieveLiquidContainerTask> _goAndByWaterContainerTaskProvider;
+    private final Provider<RetrieveLiquidContainerTask> _buyLiquidContainerTaskProvider;
     private final Provider<FillLiquidContainerTask> _fillLiquidContainerTaskProvider;
     private final Provider<DrinkTask> _drinkTaskProvider;
     private final String _waterContainer;
 
-    private RetrieveLiquidContainerTask _buyLiquidTask;
+    private RetrieveLiquidContainerTask _buyLiquidContainerTask;
 
     @Inject
     public ProvisionTask(final EventDistributor eventDistributor,
@@ -23,7 +23,7 @@ public class ProvisionTask extends StatedTask {
                          final Provider<DrinkTask> drinkTaskProvider,
                          final String waterContainer) {
         _eventDistributor = eventDistributor;
-        _goAndByWaterContainerTaskProvider = goAndByWaterContainerTaskProvider;
+        _buyLiquidContainerTaskProvider = goAndByWaterContainerTaskProvider;
         _fillLiquidContainerTaskProvider = fillLiquidContainerTaskProvider;
         _drinkTaskProvider = drinkTaskProvider;
         _waterContainer = waterContainer;
@@ -32,12 +32,12 @@ public class ProvisionTask extends StatedTask {
 
     @Override
     public Command pulse() {
-        if(_buyLiquidTask != null){
-            if(_buyLiquidTask.isTerminated()){
-                _buyLiquidTask = null;
+        if(_buyLiquidContainerTask != null){
+            if(_buyLiquidContainerTask.isTerminated()){
+                _buyLiquidContainerTask = null;
                 return new ExamineItemCommand(_waterContainer);
             }
-            return _buyLiquidTask.pulse();
+            return _buyLiquidContainerTask.pulse();
         }
 
         final Command command = _command;
@@ -55,8 +55,8 @@ public class ProvisionTask extends StatedTask {
             }
         }
 
-        _buyLiquidTask = _goAndByWaterContainerTaskProvider.get();
-        _eventDistributor.subscribe(_buyLiquidTask);
+        _buyLiquidContainerTask = _buyLiquidContainerTaskProvider.get();
+        _eventDistributor.subscribe(_buyLiquidContainerTask);
     }
 
     @Override
