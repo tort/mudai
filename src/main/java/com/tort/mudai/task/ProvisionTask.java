@@ -11,6 +11,7 @@ public class ProvisionTask extends StatedTask {
     private final EventDistributor _eventDistributor;
     private final Provider<RetrieveLiquidContainerTask> _goAndByWaterContainerTaskProvider;
     private final Provider<FillLiquidContainerTask> _fillLiquidContainerTaskProvider;
+    private final Provider<DrinkTask> _drinkTaskProvider;
     private final String _waterContainer;
 
     private RetrieveLiquidContainerTask _buyLiquidTask;
@@ -19,10 +20,12 @@ public class ProvisionTask extends StatedTask {
     public ProvisionTask(final EventDistributor eventDistributor,
                          final Provider<RetrieveLiquidContainerTask> goAndByWaterContainerTaskProvider,
                          final Provider<FillLiquidContainerTask> fillLiquidContainerTaskProvider,
+                         final Provider<DrinkTask> drinkTaskProvider,
                          final String waterContainer) {
         _eventDistributor = eventDistributor;
         _goAndByWaterContainerTaskProvider = goAndByWaterContainerTaskProvider;
         _fillLiquidContainerTaskProvider = fillLiquidContainerTaskProvider;
+        _drinkTaskProvider = drinkTaskProvider;
         _waterContainer = waterContainer;
         _command = new InventoryCommand();
     }
@@ -59,6 +62,11 @@ public class ProvisionTask extends StatedTask {
     @Override
     public Status status() {
         return Task.Status.RUNNING;
+    }
+
+    @Override
+    public void waterContainerFull() {
+        _eventDistributor.subscribe(_drinkTaskProvider.get());
     }
 
     @Override
