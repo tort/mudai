@@ -7,6 +7,7 @@ import com.db4o.config.EmbeddedConfiguration;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Names;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.mapper.*;
@@ -19,6 +20,8 @@ import java.util.concurrent.*;
 public class MudaiModule extends AbstractModule {
     @Override
     protected void configure() {
+        install(new FactoryModuleBuilder().implement(Task.class, TravelTask.class).build(TravelTaskFactory.class));
+        
         bind(AbstractTask.class).annotatedWith(Names.named("mapperTask")).to(MapperImpl.class);
         bind(Mapper.class).to(MapperImpl.class);
         bind(MapperImpl.class).in(Scopes.SINGLETON);

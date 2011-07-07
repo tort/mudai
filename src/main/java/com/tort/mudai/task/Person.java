@@ -19,6 +19,8 @@ public class Person extends StatedTask {
     private final Provider<AbstractTask> _mapperTaskProvider;
     private final Provider<ProvisionTask> _provisionTask;
     private final CommandExecutor _commandExecutor;
+    private final TravelTaskFactory _travelTaskFactory;
+
     private ScheduledExecutorService _pulseExecutor;
 
     private Mapper _mapper;
@@ -32,7 +34,8 @@ public class Person extends StatedTask {
                    final ScheduledExecutorService executor,
                    final CommandExecutor commandExecutor,
                    final EventDistributor eventDistributor,
-                   final Provider<ProvisionTask> provisionTask) {
+                   final Provider<ProvisionTask> provisionTask,
+                   final TravelTaskFactory travelTaskFactory) {
 
         _sessionProvider = sessionProvider;
         _commandExecutor = commandExecutor;
@@ -41,6 +44,7 @@ public class Person extends StatedTask {
         _pulseExecutor = executor;
         _eventDistributor = eventDistributor;
         _provisionTask = provisionTask;
+        _travelTaskFactory = travelTaskFactory;
     }
 
     public void subscribe(AbstractTask task) {
@@ -80,7 +84,7 @@ public class Person extends StatedTask {
     }
 
     public void travel(final String to) {
-        _eventDistributor.subscribe(new TravelTask(to, _mapper));
+        _eventDistributor.subscribe(_travelTaskFactory.create(to));
     }
 
     @Override
@@ -92,8 +96,8 @@ public class Person extends StatedTask {
 
                 return command;
             }
-            
-            if(task.isInitializing())
+
+            if (task.isInitializing())
                 break;
         }
 

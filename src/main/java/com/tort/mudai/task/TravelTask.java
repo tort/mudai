@@ -1,5 +1,7 @@
 package com.tort.mudai.task;
 
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.SimpleCommand;
 import com.tort.mudai.mapper.Direction;
@@ -11,7 +13,8 @@ public class TravelTask extends StatedTask {
     private final List<Direction> _path;
     private Command _command;
 
-    public TravelTask(String to, final Mapper mapper) {
+    @Inject
+    TravelTask(@Assisted String to, final Mapper mapper) {
         final List<Direction> path = mapper.pathTo(to);
         if (path == null)
             throw new IllegalArgumentException("path is null");
