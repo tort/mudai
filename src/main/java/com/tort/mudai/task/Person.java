@@ -25,7 +25,7 @@ public class Person extends StatedTask {
 
     private Mapper _mapper;
     private final EventDistributor _eventDistributor;
-    private final List<Task> _pulseTargets = new ArrayList();
+    private final List<Task> _pulseTargets = new ArrayList<Task>();
 
     @Inject
     private Person(final Provider<SessionTask> sessionProvider,
