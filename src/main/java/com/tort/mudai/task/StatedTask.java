@@ -34,4 +34,8 @@ public abstract class StatedTask extends AbstractTask {
     private void logStateChange() {
         System.out.println("TASK " + getClass().getName() + " entered " + _status + " state");
     }
+
+    public void terminate() {
+        _status = Status.TERMINATED;
+    }
 }

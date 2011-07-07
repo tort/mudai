@@ -10,7 +10,6 @@ import java.util.List;
 public class TravelTask extends StatedTask {
     private final List<Direction> _path;
     private Command _command;
-    private Status _status = Status.RUNNING;
 
     public TravelTask(String to, final Mapper mapper) {
         final List<Direction> path = mapper.pathTo(to);
@@ -41,20 +40,11 @@ public class TravelTask extends StatedTask {
         }
     }
 
-    private void terminate() {
-        _status = Status.TERMINATED;
-    }
-
     @Override
     public Command pulse() {
         final Command command = _command;
         _command = null;
         
         return command;
-    }
-
-    @Override
-    public Status status() {
-        return _status;
     }
 }
