@@ -163,4 +163,9 @@ public class MapperImpl extends StatedTask implements Mapper {
         return directions;
     }
 
+    @Override
+    public String nearestWaterSource() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
 }
