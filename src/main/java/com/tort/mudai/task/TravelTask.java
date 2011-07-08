@@ -6,22 +6,24 @@ import com.tort.mudai.command.Command;
 import com.tort.mudai.command.SimpleCommand;
 import com.tort.mudai.mapper.Direction;
 import com.tort.mudai.mapper.Mapper;
+import com.tort.mudai.mapper.MapperException;
 
 import java.util.List;
 
 public class TravelTask extends StatedTask {
-    private final List<Direction> _path;
+    private List<Direction> _path;
     private Command _command;
 
     @Inject
-    TravelTask(@Assisted String to, final Mapper mapper) {
-        final List<Direction> path = mapper.pathTo(to);
-        if (path == null)
-            throw new IllegalArgumentException("path is null");
+    TravelTask(@Assisted final String to, final Mapper mapper) {
+        try {
+            _path = mapper.pathTo(to);
 
-        _path = path;
-
-        goNext(_path.get(0));
+            goNext(_path.get(0));
+        } catch (MapperException e) {
+            System.out.println("UNABLE TO TRAVEL: " + e.getMessage());
+            terminate();
+        }
     }
 
     private void goNext(final Direction direction) {

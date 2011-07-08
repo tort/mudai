@@ -9,6 +9,7 @@ import java.util.List;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.fail;
 
 @Test
 public class MapperImplTest {
@@ -37,9 +38,12 @@ public class MapperImplTest {
         final Persister persister = new MockPersister();
         final MapperImpl mapper = new MapperImpl(graph, persister, null);
 
-        final List<Direction> pathTo = mapper.pathTo("unknown");
-
-        assertNull(pathTo);
+        final List<Direction> pathTo;
+        try {
+            pathTo = mapper.pathTo("unknown");
+            fail("must throw MapperException in case of unknown destination");
+        } catch (MapperException e) {
+        }
     }
 
     public void nearestWaterSource(){

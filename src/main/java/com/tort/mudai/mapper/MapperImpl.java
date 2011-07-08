@@ -108,10 +108,10 @@ public class MapperImpl extends StatedTask implements Mapper {
     }
 
     @Override
-    public List<Direction> pathTo(final String locationTitle) {
+    public List<Direction> pathTo(final String locationTitle) throws MapperException {
         final Location target = _persister.loadLocation(locationTitle);
         if (target == null)
-            return null;
+            throw new MapperException("location not found");
 
         return pathTo(target);
     }

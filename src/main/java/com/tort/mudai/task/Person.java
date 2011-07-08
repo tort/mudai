@@ -7,6 +7,7 @@ import com.tort.mudai.CommandExecutor;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.mapper.Direction;
 import com.tort.mudai.mapper.Mapper;
+import com.tort.mudai.mapper.MapperException;
 
 import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
@@ -73,7 +74,12 @@ public class Person extends StatedTask {
     }
 
     public String pathTo(final String location) {
-        final List<Direction> directions = _mapper.pathTo(location);
+        final List<Direction> directions;
+        try {
+            directions = _mapper.pathTo(location);
+        } catch (MapperException e) {
+            return "CANNOT FIND DESTINATION LOCATION";
+        }
 
         StringBuilder result = new StringBuilder();
         for (Direction direction : directions) {
