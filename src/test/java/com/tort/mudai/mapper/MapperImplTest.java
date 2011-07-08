@@ -41,4 +41,8 @@ public class MapperImplTest {
 
         assertNull(pathTo);
     }
+
+    public void nearestWaterSource(){
+
+    }
 }

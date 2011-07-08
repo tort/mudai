@@ -164,8 +164,18 @@ public class MapperImpl extends StatedTask implements Mapper {
     }
 
     @Override
-    public String nearestWaterSource() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public String nearestWaterSource() throws MapperException {
+        final ObjectSet<Location> locations = _db.query(new Predicate<Location>() {
+            @Override
+            public boolean match(final Location location) {
+                return location.getWaterSource() != null;
+            }
+        });
+        if(locations.isEmpty()){
+            throw new MapperException("NO WATER SOURCES EXIST");
+        }
+
+        return locations.get(0).getTitle();
     }
 
 }

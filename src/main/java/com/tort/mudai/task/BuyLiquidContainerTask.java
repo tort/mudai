@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.tort.mudai.command.BuyCommand;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.mapper.Mapper;
+import com.tort.mudai.mapper.MapperException;
 
 public class BuyLiquidContainerTask extends StatedTask {
     private final EventDistributor _eventDistributor;
@@ -14,20 +15,26 @@ public class BuyLiquidContainerTask extends StatedTask {
 
     @Inject
     public BuyLiquidContainerTask(final EventDistributor eventDistributor,
-                                   final TravelTaskFactory travelTaskFactory,
-                                   final Mapper mapper) {
+                                  final TravelTaskFactory travelTaskFactory,
+                                  final Mapper mapper) {
         _eventDistributor = eventDistributor;
         _travelTaskFactory = travelTaskFactory;
         _mapper = mapper;
 
-        _travelTask = _travelTaskFactory.create(_mapper.nearestWaterSource());
-        _eventDistributor.subscribe(_travelTask);
+        try {
+            final String to = _mapper.nearestWaterSource();
+            _travelTask = _travelTaskFactory.create(to);
+            _eventDistributor.subscribe(_travelTask);
+        } catch (MapperException e) {
+            System.out.println("NO WATER SOURCES");
+            terminate();
+        }
     }
 
     @Override
     public Command pulse() {
-        if(_travelTask != null) {
-            if(_travelTask.isTerminated()){
+        if (_travelTask != null) {
+            if (_travelTask.isTerminated()) {
                 //TODO remobe hardcoded container name
                 _command = new BuyCommand("фляг");
                 _travelTask = null;

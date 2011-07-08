@@ -8,5 +8,5 @@ public interface Mapper {
     void markWaterSource(String waterSource);
     //TODO remove unused
     List<Direction> pathToNearestWaterSource();
-    String nearestWaterSource();
+    String nearestWaterSource() throws MapperException;
 }
