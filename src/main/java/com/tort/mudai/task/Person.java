@@ -6,6 +6,7 @@ import com.google.inject.name.Named;
 import com.tort.mudai.CommandExecutor;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.mapper.Direction;
+import com.tort.mudai.mapper.Location;
 import com.tort.mudai.mapper.Mapper;
 import com.tort.mudai.mapper.MapperException;
 
@@ -89,7 +90,7 @@ public class Person extends StatedTask {
         return result.toString();
     }
 
-    public void travel(final String to) {
+    public void travel(final Location to) {
         _eventDistributor.subscribe(_travelTaskFactory.create(to));
     }
 

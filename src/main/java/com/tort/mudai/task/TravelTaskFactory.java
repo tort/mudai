@@ -1,5 +1,7 @@
 package com.tort.mudai.task;
 
+import com.tort.mudai.mapper.Location;
+
 public interface TravelTaskFactory {
-    TravelTask create(String to);
+    TravelTask create(Location to);
 }

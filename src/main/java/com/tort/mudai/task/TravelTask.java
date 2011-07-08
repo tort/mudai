@@ -5,6 +5,7 @@ import com.google.inject.assistedinject.Assisted;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.SimpleCommand;
 import com.tort.mudai.mapper.Direction;
+import com.tort.mudai.mapper.Location;
 import com.tort.mudai.mapper.Mapper;
 import com.tort.mudai.mapper.MapperException;
 
@@ -15,15 +16,10 @@ public class TravelTask extends StatedTask {
     private Command _command;
 
     @Inject
-    TravelTask(@Assisted final String to, final Mapper mapper) {
-        try {
-            _path = mapper.pathTo(to);
+    TravelTask(@Assisted final Location to, final Mapper mapper) {
+        _path = mapper.pathTo(to);
 
-            goNext(_path.get(0));
-        } catch (MapperException e) {
-            System.out.println("UNABLE TO TRAVEL: " + e.getMessage());
-            terminate();
-        }
+        goNext(_path.get(0));
     }
 
     private void goNext(final Direction direction) {

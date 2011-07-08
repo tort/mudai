@@ -51,13 +51,17 @@ public class SimpleMudClient {
                     for (Location location : _persister.enlistLocations()) {
                         System.out.println("LOCATION: " + location.getTitle());
                     }
-                } else if(command.startsWith(ENLIST_MOBS_COMMAND)) {
+                } else if (command.startsWith(ENLIST_MOBS_COMMAND)) {
                     ObjectSet<Mob> mobs = _persister.enlistMobs();
                     for (Mob mob : mobs) {
                         System.out.println("MOB: " + mob.getLongName());
                     }
                 } else if (command.startsWith(TRAVEL_COMMAND)) {
-                    _person.travel(command.substring(TRAVEL_COMMAND.length() + 1, command.length() - 1));
+                    final String to = command.substring(TRAVEL_COMMAND.length() + 1, command.length() - 1);
+                    final Location location = _persister.loadLocation(to);
+                    if (location != null) {
+                        _person.travel(location);
+                    }
                 } else if (command.startsWith(MARK_WATER_SOURCE_COMMAND)) {
                     _person.markWaterSource(command.substring(MARK_WATER_SOURCE_COMMAND.length() + 1, command.length() - 1));
                 } else {

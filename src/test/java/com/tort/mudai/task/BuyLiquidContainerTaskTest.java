@@ -2,14 +2,13 @@ package com.tort.mudai.task;
 
 import com.tort.mudai.command.BuyCommand;
 import com.tort.mudai.command.Command;
+import com.tort.mudai.mapper.Location;
 import com.tort.mudai.mapper.Mapper;
+import com.tort.mudai.mapper.MapperException;
 import org.testng.annotations.Test;
 
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
@@ -23,7 +22,7 @@ public class BuyLiquidContainerTaskTest {
     /**
      * default behaviour for pulse
      */
-    public void pulse() {
+    public void pulse() throws MapperException {
         final BuyLiquidContainerTask task = createBuyLiquidContainerTask();
 
         final Command command = task.pulse();
@@ -34,7 +33,7 @@ public class BuyLiquidContainerTaskTest {
     /**
      * if travel task is not terminated, forward pulses
      */
-    public void pulseWhenTravelling(){
+    public void pulseWhenTravelling() throws MapperException {
         final BuyLiquidContainerTask task = createBuyLiquidContainerTask();
 
         final Command command = task.pulse();
@@ -42,13 +41,13 @@ public class BuyLiquidContainerTaskTest {
         verify(_travelTask).pulse();
     }
 
-    public void init() {
+    public void init() throws MapperException {
         createBuyLiquidContainerTask();
 
         verifyTaskSubscribed(TravelTask.class);
     }
 
-    public void afterTravel() {
+    public void afterTravel() throws MapperException {
         final BuyLiquidContainerTask containerTask = createBuyLiquidContainerTask();
         when(_travelTask.isTerminated()).thenReturn(true);
 
@@ -65,9 +64,10 @@ public class BuyLiquidContainerTaskTest {
         verify(_eventDistributor).subscribe(isA(taskClass));
     }
 
-    private BuyLiquidContainerTask createBuyLiquidContainerTask() {
+    private BuyLiquidContainerTask createBuyLiquidContainerTask() throws MapperException {
         _eventDistributor = mock(EventDistributor.class);
         _mapper = mock(Mapper.class);
+        when(_mapper.nearestWaterSource()).thenReturn(new Location());
 
         mockTravelTask();
 
@@ -77,6 +77,6 @@ public class BuyLiquidContainerTaskTest {
     private void mockTravelTask() {
         _travelTask = mock(TravelTask.class);
         _travelTaskFactory = mock(TravelTaskFactory.class);
-        when(_travelTaskFactory.create(anyString())).thenReturn(_travelTask);
+        when(_travelTaskFactory.create(isA(Location.class))).thenReturn(_travelTask);
     }
 }

@@ -5,7 +5,6 @@ import com.db4o.ObjectSet;
 import com.db4o.query.Predicate;
 import com.google.inject.Inject;
 import com.tort.mudai.RoomSnapshot;
-import com.tort.mudai.command.Command;
 import com.tort.mudai.task.StatedTask;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.alg.DijkstraShortestPath;
@@ -116,7 +115,8 @@ public class MapperImpl extends StatedTask implements Mapper {
         return pathTo(target);
     }
 
-    private List<Direction> pathTo(final Location target) {
+    @Override
+    public List<Direction> pathTo(final Location target) {
         final DijkstraShortestPath<Location, Direction> _algorythm = new DijkstraShortestPath<Location, Direction>(_graph, _current, target);
         final List<Direction> directions = _algorythm.getPathEdgeList();
 
@@ -159,7 +159,7 @@ public class MapperImpl extends StatedTask implements Mapper {
     }
 
     @Override
-    public String nearestWaterSource() throws MapperException {
+    public Location nearestWaterSource() throws MapperException {
         final ObjectSet<Location> locations = _db.query(new Predicate<Location>() {
             @Override
             public boolean match(final Location location) {
@@ -170,7 +170,7 @@ public class MapperImpl extends StatedTask implements Mapper {
             throw new MapperException("NO WATER SOURCES EXIST");
         }
 
-        return locations.get(0).getTitle();
+        return locations.get(0);
     }
 
 }

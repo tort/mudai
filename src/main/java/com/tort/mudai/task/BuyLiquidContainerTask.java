@@ -3,6 +3,7 @@ package com.tort.mudai.task;
 import com.google.inject.Inject;
 import com.tort.mudai.command.BuyCommand;
 import com.tort.mudai.command.Command;
+import com.tort.mudai.mapper.Location;
 import com.tort.mudai.mapper.Mapper;
 import com.tort.mudai.mapper.MapperException;
 
@@ -22,7 +23,7 @@ public class BuyLiquidContainerTask extends StatedTask {
         _mapper = mapper;
 
         try {
-            final String to = _mapper.nearestWaterSource();
+            final Location to = _mapper.nearestWaterSource();
             _travelTask = _travelTaskFactory.create(to);
             _eventDistributor.subscribe(_travelTask);
         } catch (MapperException e) {
