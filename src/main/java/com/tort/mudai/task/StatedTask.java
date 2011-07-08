@@ -1,5 +1,7 @@
 package com.tort.mudai.task;
 
+import com.tort.mudai.command.Command;
+
 public abstract class StatedTask extends AbstractTask {
     private Status _status;
 

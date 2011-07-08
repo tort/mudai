@@ -124,11 +124,6 @@ public class MapperImpl extends StatedTask implements Mapper {
     }
 
     @Override
-    public Command pulse() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
     public Status status() {
         return Status.RUNNING;
     }
