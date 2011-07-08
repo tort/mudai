@@ -35,7 +35,6 @@ public class ProvisionTask extends StatedTask {
         if(_buyLiquidContainerTask != null){
             if(_buyLiquidContainerTask.isTerminated()){
                 _buyLiquidContainerTask = null;
-                return new ExamineItemCommand(_waterContainer);
             }
             return _buyLiquidContainerTask.pulse();
         }
