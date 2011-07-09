@@ -32,8 +32,12 @@ public class ProvisionTask extends StatedTask {
 
     @Override
     public Command pulse() {
-        if(_buyLiquidContainerTask != null){
-            if(_buyLiquidContainerTask.isTerminated()){
+        if (_buyLiquidContainerTask != null) {
+            if (_buyLiquidContainerTask.isTerminated()) {
+                if (_buyLiquidContainerTask.isFailed()) {
+                    fail();
+                    return null;
+                }
                 _buyLiquidContainerTask = null;
             }
             return _buyLiquidContainerTask.pulse();
@@ -48,7 +52,7 @@ public class ProvisionTask extends StatedTask {
     @Override
     public void inventory(String[] items) {
         for (String item : items) {
-            if(item.equals(_waterContainer)){
+            if (item.equals(_waterContainer)) {
                 _command = new ExamineItemCommand(_waterContainer);
                 return;
             }

@@ -28,7 +28,7 @@ public class BuyLiquidContainerTask extends StatedTask {
             _eventDistributor.subscribe(_travelTask);
         } catch (MapperException e) {
             System.out.println("NO WATER SOURCES");
-            terminate();
+            succeed();
         }
     }
 
@@ -36,6 +36,10 @@ public class BuyLiquidContainerTask extends StatedTask {
     public Command pulse() {
         if (_travelTask != null) {
             if (_travelTask.isTerminated()) {
+                if (_travelTask.isFailed()) {
+                    fail();
+                    return null;
+                }
                 //TODO remobe hardcoded container name
                 _command = new BuyCommand("фляг");
                 _travelTask = null;

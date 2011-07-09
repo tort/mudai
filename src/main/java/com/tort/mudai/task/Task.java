@@ -14,6 +14,7 @@ public interface Task {
     public enum Status{
         INIT,
         RUNNING,
-        TERMINATED
+        SUCCESS,
+        FAIL
     }
 }

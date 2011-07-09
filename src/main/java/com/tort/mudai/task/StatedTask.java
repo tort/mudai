@@ -1,7 +1,5 @@
 package com.tort.mudai.task;
 
-import com.tort.mudai.command.Command;
-
 public abstract class StatedTask extends AbstractTask {
     private Status _status;
 
@@ -25,7 +23,7 @@ public abstract class StatedTask extends AbstractTask {
 
     @Override
     public boolean isTerminated() {
-        return _status == Status.TERMINATED;
+        return _status == Status.SUCCESS || _status == Status.FAIL;
     }
 
     @Override
@@ -37,7 +35,15 @@ public abstract class StatedTask extends AbstractTask {
         System.out.println("TASK " + getClass().getName() + " entered " + _status + " state");
     }
 
-    public void terminate() {
-        _status = Status.TERMINATED;
+    public void succeed() {
+        _status = Status.SUCCESS;
+    }
+
+    public void fail(){
+        _status = Status.FAIL;
+    }
+
+    public boolean isFailed(){
+        return _status == Status.FAIL;
     }
 }

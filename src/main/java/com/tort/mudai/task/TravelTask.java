@@ -7,7 +7,6 @@ import com.tort.mudai.command.SimpleCommand;
 import com.tort.mudai.mapper.Direction;
 import com.tort.mudai.mapper.Location;
 import com.tort.mudai.mapper.Mapper;
-import com.tort.mudai.mapper.MapperException;
 
 import java.util.List;
 
@@ -18,8 +17,17 @@ public class TravelTask extends StatedTask {
     @Inject
     TravelTask(@Assisted final Location to, final Mapper mapper) {
         _path = mapper.pathTo(to);
-
-        goNext(_path.get(0));
+        if (_path == null) {
+            System.out.println("NO PATH FOUND");
+            fail();
+        } else {
+            if (!_path.isEmpty()) {
+                goNext(_path.get(0));
+            } else {
+                System.out.println("EMPTY PATH");
+                fail();
+            }
+        }
     }
 
     private void goNext(final Direction direction) {
@@ -30,7 +38,7 @@ public class TravelTask extends StatedTask {
     public void move(String direction) {
         //TODO check current location has same title as planned, abort task otherwise
         if (_path.isEmpty()) {
-            terminate();
+            succeed();
             return;
         }
 
@@ -43,9 +51,13 @@ public class TravelTask extends StatedTask {
 
     @Override
     public Command pulse() {
+        if(isTerminated()){
+            return null;
+        }
+
         final Command command = _command;
         _command = null;
-        
+
         return command;
     }
 }
