@@ -8,7 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MoveTrigger implements EventTrigger {
-    private final Pattern _pattern = PatternUtil.compile("^Вы поплелись на (север|юг|запад|восток)\\.$.*");
+    private final Pattern _pattern = PatternUtil.compile("^Вы поплелись(?: на)? (север|юг|запад|восток|вверх|вниз)\\.$.*");
     private final EventDistributor _eventDistributor;
 
     public MoveTrigger(final EventDistributor eventDistributor) {
@@ -21,7 +21,7 @@ public class MoveTrigger implements EventTrigger {
         matcher.find();
         final String direction = matcher.group(1);
 
-        _eventDistributor.invoke(new Handler<MoveEvent>(){
+        _eventDistributor.invoke(new Handler(){
             @Override
             public void handle(final AbstractTask task) {
                 task.move(direction);
