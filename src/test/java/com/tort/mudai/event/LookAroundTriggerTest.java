@@ -1,7 +1,5 @@
 package com.tort.mudai.event;
 
-import com.tort.mudai.Handler;
-import com.tort.mudai.task.EventDistributor;
 import org.testng.annotations.Test;
 
 import java.util.regex.Matcher;
