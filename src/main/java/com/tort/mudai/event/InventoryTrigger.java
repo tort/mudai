@@ -23,12 +23,20 @@ public class InventoryTrigger implements EventTrigger {
         final Matcher matcher = PATTERN.matcher(text);
         matcher.find();
         final String invGroup = matcher.group(1);
-        if(!invGroup.equals(" Вы ничего не несете\\.")){
+        if (!invGroup.equals(" Вы ничего не несете\\.")) {
             inventory = invGroup.split(DELIMETER);
+        }
+        for (int i = 0; i < inventory.length; i++) {
+            String item = inventory[i];
+
+            final int stateIndex = item.indexOf("\u001B[1;37m");
+            if (stateIndex > -1) {
+                inventory[i] = item.substring(0, stateIndex - 2);
+            }
         }
 
         final String[] finalInventory = inventory;
-        _eventDistributor.invoke(new Handler(){
+        _eventDistributor.invoke(new Handler() {
             @Override
             public void handle(AbstractTask task) {
                 task.inventory(finalInventory);

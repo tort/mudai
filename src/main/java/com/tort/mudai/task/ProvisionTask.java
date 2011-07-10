@@ -26,14 +26,18 @@ public class ProvisionTask extends StatedTask {
         _buyLiquidContainerTaskProvider = goAndByWaterContainerTaskProvider;
         _fillLiquidContainerTaskProvider = fillLiquidContainerTaskProvider;
         _drinkTaskProvider = drinkTaskProvider;
-        _waterContainer = waterContainer;
+        //TODO fix hardcode
+        _waterContainer = "фляга";
         _command = new InventoryCommand();
-        run();
     }
 
     @Override
     public Command pulse() {
-        if(isTerminated())
+        if (isInitializing()) {
+            run();
+        }
+
+        if (isTerminated())
             return null;
 
         if (_buyLiquidContainerTask != null) {
