@@ -28,6 +28,7 @@ public class ProvisionTask extends StatedTask {
         _drinkTaskProvider = drinkTaskProvider;
         _waterContainer = waterContainer;
         _command = new InventoryCommand();
+        run();
     }
 
     @Override
@@ -60,11 +61,6 @@ public class ProvisionTask extends StatedTask {
 
         _buyLiquidContainerTask = _buyLiquidContainerTaskProvider.get();
         _eventDistributor.subscribe(_buyLiquidContainerTask);
-    }
-
-    @Override
-    public Status status() {
-        return Task.Status.RUNNING;
     }
 
     @Override

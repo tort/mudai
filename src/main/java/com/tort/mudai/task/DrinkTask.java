@@ -7,10 +7,4 @@ public class DrinkTask extends StatedTask {
     public Command pulse() {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
-
-    @Override
-    public Status status() {
-        //TODO pull up
-        return Task.Status.RUNNING;
-    }
 }

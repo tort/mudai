@@ -26,23 +26,23 @@ public abstract class StatedTask extends AbstractTask {
         return _status == Status.SUCCESS || _status == Status.FAIL;
     }
 
-    @Override
-    public Status status() {
-        return _status;
-    }
-
     private void logStateChange() {
         System.out.println("TASK " + getClass().getName() + " entered " + _status + " state");
     }
 
+    @Override
     public void succeed() {
         _status = Status.SUCCESS;
+        logStateChange();
     }
 
+    @Override
     public void fail(){
         _status = Status.FAIL;
+        logStateChange();
     }
 
+    @Override
     public boolean isFailed(){
         return _status == Status.FAIL;
     }

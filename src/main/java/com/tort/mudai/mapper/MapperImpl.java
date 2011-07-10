@@ -123,11 +123,6 @@ public class MapperImpl extends StatedTask implements Mapper {
         return directions;
     }
 
-    @Override
-    public Status status() {
-        return Status.RUNNING;
-    }
-
     private String getOppositeDirection(final String direction) {
         return _directions.get(direction);
     }

@@ -47,6 +47,7 @@ public class Person extends StatedTask {
         _eventDistributor = eventDistributor;
         _provisionTask = provisionTask;
         _travelTaskFactory = travelTaskFactory;
+        run();
     }
 
     public void subscribe(AbstractTask task) {
@@ -115,11 +116,6 @@ public class Person extends StatedTask {
         }
 
         return EMPTY_COMMAND;
-    }
-
-    @Override
-    public Status status() {
-        return Status.RUNNING;
     }
 
     public void markWaterSource(final String waterSource) {

@@ -5,11 +5,15 @@ import com.tort.mudai.command.Command;
 public interface Task {
     Command pulse();
 
-    Status status();
-
     boolean isInitializing();
 
     boolean isTerminated();
+
+    void succeed();
+
+    void fail();
+
+    boolean isFailed();
 
     public enum Status{
         INIT,

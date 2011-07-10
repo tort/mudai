@@ -76,6 +76,10 @@ public class SimpleMudClient {
     }
 
     private static class SimpleEventListener extends StatedTask {
+        public SimpleEventListener(){
+            run();
+        }
+
         private void print(final String message) {
             System.out.println(message);
         }
@@ -104,11 +108,6 @@ public class SimpleMudClient {
         @Override
         public Command pulse() {
             return null;  //To change body of implemented methods use File | Settings | File Templates.
-        }
-
-        @Override
-        public Status status() {
-            return Status.RUNNING;
         }
     }
 

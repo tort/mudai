@@ -87,14 +87,14 @@ public class ProvisionTaskTest {
     private FillLiquidContainerTask createFillWaterContainerTaskJustTerminated() {
         //TODO generalize creating terminated task
         final FillLiquidContainerTask task = mock(FillLiquidContainerTask.class);
-        when(task.status()).thenReturn(Task.Status.TERMINATED);
+        when(task.isTerminated()).thenReturn(true);
         return task;
     }
 
     private BuyLiquidContainerTask createBuyWaterContainerTaskJustTerminated() {
         //TODO generalize creating terminated task
         final BuyLiquidContainerTask task = mock(BuyLiquidContainerTask.class);
-        when(task.status()).thenReturn(Task.Status.TERMINATED);
+        when(task.isTerminated()).thenReturn(true);
         return task;
     }
 

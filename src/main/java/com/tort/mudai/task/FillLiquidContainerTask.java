@@ -20,6 +20,7 @@ public class FillLiquidContainerTask extends StatedTask {
     @Inject
     public FillLiquidContainerTask(final Mapper mapper) {
         _mapper = mapper;
+        run();
     }
 
     @Override
@@ -54,10 +55,5 @@ public class FillLiquidContainerTask extends StatedTask {
         _command = null;
 
         return command;
-    }
-
-    @Override
-    public Status status() {
-        return Status.RUNNING;
     }
 }
