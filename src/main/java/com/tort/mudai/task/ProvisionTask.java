@@ -33,6 +33,9 @@ public class ProvisionTask extends StatedTask {
 
     @Override
     public Command pulse() {
+        if(isTerminated())
+            return null;
+
         if (_buyLiquidContainerTask != null) {
             if (_buyLiquidContainerTask.isTerminated()) {
                 if (_buyLiquidContainerTask.isFailed()) {
