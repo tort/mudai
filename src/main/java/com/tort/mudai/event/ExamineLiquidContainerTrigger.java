@@ -1,12 +1,13 @@
 package com.tort.mudai.event;
 
 import com.tort.mudai.task.EventDistributor;
-import sun.misc.Regexp;
 
 import java.util.regex.Pattern;
 
 public class ExamineLiquidContainerTrigger implements EventTrigger {
-    private final Pattern _pattern = PatternUtil.compile("^");
+    public final static Pattern PATTERN = PatternUtil.compile(".*\nСoстояние\\: (?:идеально|хорошо|средне|плохо|ужасно)\\.\n" +
+            "(.*)\\.\n\n[^\n]*");
+//            "(Наполнена (?:(?:меньше|больше) чем наполовину )?)\\w+ жидкостью\\.\n");
     private final EventDistributor _eventDistributor;
 
     public ExamineLiquidContainerTrigger(final EventDistributor eventDistributor) {
@@ -20,6 +21,6 @@ public class ExamineLiquidContainerTrigger implements EventTrigger {
 
     @Override
     public boolean matches(final String text) {
-        return _pattern.matcher(text).matches();
+        return PATTERN.matcher(text).matches();
     }
 }
