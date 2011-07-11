@@ -1,6 +1,7 @@
 package com.tort.mudai.task;
 
 import com.google.inject.Provider;
+import com.tort.mudai.PersonProperties;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.ExamineItemCommand;
 import com.tort.mudai.command.InventoryCommand;
@@ -23,6 +24,7 @@ public class ProvisionTaskTest {
     private Provider<BuyLiquidContainerTask> _retrieveLiquidContainerTaskProvider;
     private Provider<FillLiquidContainerTask> _fillLiquidContainerTaskProvider;
     private Provider<DrinkTask> _drinkTaskProvider;
+    private PersonProperties _personProperties;
 
     public void enterWorld() throws Exception {
         createProvisionTask();
@@ -105,13 +107,14 @@ public class ProvisionTaskTest {
         final FillLiquidContainerTask fillLiquidTask = createFillWaterContainerTaskJustTerminated();
         when(_fillLiquidContainerTaskProvider.get()).thenReturn(fillLiquidTask);
         when(_drinkTaskProvider.get()).thenReturn(new DrinkTask());
+        when(_personProperties.getLiquidContainer()).thenReturn(WATER_CONTAINER);
 
         _eventDistributor = mock(EventDistributor.class);
         _provisionTask = new ProvisionTask(_eventDistributor,
-                                           _retrieveLiquidContainerTaskProvider,
-                                           _fillLiquidContainerTaskProvider,
-                                           _drinkTaskProvider,
-                                           WATER_CONTAINER);
+                _retrieveLiquidContainerTaskProvider,
+                _fillLiquidContainerTaskProvider,
+                _drinkTaskProvider,
+                _personProperties);
     }
 
     @SuppressWarnings({"unchecked"})
@@ -120,6 +123,7 @@ public class ProvisionTaskTest {
         _retrieveLiquidContainerTaskProvider = mock(Provider.class);
         _fillLiquidContainerTaskProvider = mock(Provider.class);
         _drinkTaskProvider = mock(Provider.class);
+        _personProperties = mock(PersonProperties.class);
 
         createProvisionTask();
     }

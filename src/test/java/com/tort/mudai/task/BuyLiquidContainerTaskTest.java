@@ -1,5 +1,6 @@
 package com.tort.mudai.task;
 
+import com.tort.mudai.PersonProperties;
 import com.tort.mudai.command.BuyCommand;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.mapper.Location;
@@ -18,6 +19,8 @@ public class BuyLiquidContainerTaskTest {
     private TravelTaskFactory _travelTaskFactory;
     private Mapper _mapper;
     private TravelTask _travelTask;
+    private PersonProperties _personProperties;
+    private static final String WATER_CONTAINER = "фляга";
 
     /**
      * default behaviour for pulse
@@ -69,9 +72,12 @@ public class BuyLiquidContainerTaskTest {
         _mapper = mock(Mapper.class);
         when(_mapper.nearestWaterSource()).thenReturn(new Location());
 
+        _personProperties = mock(PersonProperties.class);
+        when(_personProperties.getLiquidContainer()).thenReturn(WATER_CONTAINER);
+
         mockTravelTask();
 
-        return new BuyLiquidContainerTask(_eventDistributor, _travelTaskFactory, _mapper);
+        return new BuyLiquidContainerTask(_eventDistributor, _travelTaskFactory, _mapper, _personProperties);
     }
 
     private void mockTravelTask() {

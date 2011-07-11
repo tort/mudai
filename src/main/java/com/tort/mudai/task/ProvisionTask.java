@@ -2,6 +2,7 @@ package com.tort.mudai.task;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.tort.mudai.PersonProperties;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.ExamineItemCommand;
 import com.tort.mudai.command.InventoryCommand;
@@ -22,13 +23,13 @@ public class ProvisionTask extends StatedTask {
                          final Provider<BuyLiquidContainerTask> goAndByWaterContainerTaskProvider,
                          final Provider<FillLiquidContainerTask> fillLiquidContainerTaskProvider,
                          final Provider<DrinkTask> drinkTaskProvider,
-                         final String waterContainer) {
+                         final PersonProperties personProperties) {
         _eventDistributor = eventDistributor;
         _buyLiquidContainerTaskProvider = goAndByWaterContainerTaskProvider;
         _fillLiquidContainerTaskProvider = fillLiquidContainerTaskProvider;
         _drinkTaskProvider = drinkTaskProvider;
-        //TODO fix hardcode
-        _waterContainer = "фляга";
+        _waterContainer = personProperties.getLiquidContainer();
+
         _command = new InventoryCommand();
     }
 

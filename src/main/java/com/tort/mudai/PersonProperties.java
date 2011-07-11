@@ -8,6 +8,7 @@ import java.util.Properties;
 public class PersonProperties {
     private String _login;
     private String _password;
+    private String _liquidContainer;
     private static final String PROPERTIES_FILENAME = "mudai.properties";
 
     public PersonProperties(){
@@ -23,6 +24,10 @@ public class PersonProperties {
             _password = properties.getProperty("password");
             if(_password == null)
                 throw new RuntimeException("password property is absent");
+
+            _liquidContainer = properties.getProperty("liquidContainer");
+            if(_liquidContainer == null)
+                throw new RuntimeException("liquidContainer property is absent");
         } catch (FileNotFoundException e) {
             throw new RuntimeException("couldn't find " + PROPERTIES_FILENAME);
         } catch (IOException e) {
@@ -36,5 +41,9 @@ public class PersonProperties {
 
     public String getPassword() {
         return _password;
+    }
+
+    public String getLiquidContainer() {
+        return _liquidContainer;
     }
 }
