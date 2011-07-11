@@ -83,6 +83,26 @@ public class ExamineLiquidContainerTriggerTest {
         assertEquals(event.getState(), LiquidContainer.State.LESS_THAN_HALF);
     }
 
+    @Test(dataProvider = "halfFullContainerSamples")
+    public void halfFull(String sample){
+        final ExamineLiquidContainerTrigger trigger = new ExamineLiquidContainerTrigger(null);
+
+        final ExamineLiquidContainerEvent event = trigger.fireEvent(sample);
+
+        assertNotNull(event);
+        assertEquals(event.getState(), LiquidContainer.State.HALF);
+    }
+
+    @Test(dataProvider = "fullContainerSamples")
+    public void full(String sample){
+        final ExamineLiquidContainerTrigger trigger = new ExamineLiquidContainerTrigger(null);
+
+        final ExamineLiquidContainerEvent event = trigger.fireEvent(sample);
+
+        assertNotNull(event);
+        assertEquals(event.getState(), LiquidContainer.State.FULL);
+    }
+
     @DataProvider(name = "samples")
     public Object[][] liquidContainerSamples(){
         return new Object[][]{{FULL_LIQUID_CONT},
@@ -105,6 +125,20 @@ public class ExamineLiquidContainerTriggerTest {
     public Object[][] almostEmptyContainerSamples(){
         return new Object[][]{
                 {ALMOST_EMPTY_FLASK}
+        };
+    }
+
+    @DataProvider(name = "halfFullContainerSamples")
+    public Object[][] halfFullContainerSamples(){
+        return new Object[][]{
+                {HALF_FULL_FLASK}, {HALF_FULL_LIQUID_CONT}
+        };
+    }
+
+    @DataProvider(name = "fullContainerSamples")
+    public Object[][] fullContainerSamples(){
+        return new Object[][]{
+                {FULL_FLASK}, {FULL_LIQUID_CONT}
         };
     }
 }
