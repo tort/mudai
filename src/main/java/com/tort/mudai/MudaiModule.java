@@ -35,7 +35,7 @@ public class MudaiModule extends AbstractModule {
 
         bind(new TypeLiteral<BlockingQueue<Command>>(){}).to(new TypeLiteral<PriorityBlockingQueue<Command>>(){}).in(Scopes.SINGLETON);
         bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(5));
-        bind(ScheduledExecutorService.class).toInstance(Executors.newSingleThreadScheduledExecutor());
+        bind(ScheduledExecutorService.class).toInstance(Executors.newScheduledThreadPool(5));
         bind(new TypeLiteral<DirectedGraph<Location, Direction>>(){}).toInstance(new DefaultDirectedGraph<Location, Direction>(Direction.class));
         bind(Persister.class).to(Db4oPersister.class).in(Scopes.SINGLETON);
 

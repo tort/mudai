@@ -17,6 +17,8 @@ public class ProvisionTask extends StatedTask {
     private final String _waterContainer;
 
     private BuyLiquidContainerTask _buyLiquidContainerTask;
+    private DrinkTask _drinkTask;
+    private FillLiquidContainerTask _fillLiquidContainerTask;
 
     @Inject
     public ProvisionTask(final EventDistributor eventDistributor,
@@ -49,8 +51,36 @@ public class ProvisionTask extends StatedTask {
                     return null;
                 }
                 _buyLiquidContainerTask = null;
+            } else {
+                return _buyLiquidContainerTask.pulse();
             }
-            return _buyLiquidContainerTask.pulse();
+        }
+
+        if (_fillLiquidContainerTask != null) {
+            if (_fillLiquidContainerTask.isTerminated()) {
+                if (_fillLiquidContainerTask.isFailed()) {
+                    fail();
+                    return null;
+                } else if (_fillLiquidContainerTask.isSucceeded()){
+                    if(_drinkTask == null){
+                        _drinkTask = _drinkTaskProvider.get();
+                        _eventDistributor.subscribe(_drinkTask);
+                    }
+                }
+                _fillLiquidContainerTask = null;
+            } else {
+                return _fillLiquidContainerTask.pulse();
+            }
+        }
+
+        if (_drinkTask != null) {
+            if (_drinkTask.isTerminated()) {
+                _drinkTask = null;
+            } else {
+                final Command command = _drinkTask.pulse();
+                if (command != null)
+                    return command;
+            }
         }
 
         final Command command = _command;
@@ -74,10 +104,14 @@ public class ProvisionTask extends StatedTask {
 
     @Override
     public void examineWaterContainer(final LiquidContainer.State state) {
-        if(state != LiquidContainer.State.FULL){
-            _eventDistributor.subscribe(_fillLiquidContainerTaskProvider.get());
+        if (state == LiquidContainer.State.EMPTY || state == LiquidContainer.State.LESS_THAN_HALF) {
+            _fillLiquidContainerTask = _fillLiquidContainerTaskProvider.get();
+            _eventDistributor.subscribe(_fillLiquidContainerTask);
         } else {
-            _eventDistributor.subscribe(_drinkTaskProvider.get());
+            if (_drinkTask == null) {
+                _drinkTask = _drinkTaskProvider.get();
+                _eventDistributor.subscribe(_drinkTask);
+            }
         }
     }
 }

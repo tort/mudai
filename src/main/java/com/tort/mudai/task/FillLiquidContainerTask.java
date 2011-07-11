@@ -1,59 +1,56 @@
 package com.tort.mudai.task;
 
 import com.google.inject.Inject;
+import com.tort.mudai.PersonProperties;
 import com.tort.mudai.command.Command;
-import com.tort.mudai.command.SimpleCommand;
-import com.tort.mudai.mapper.Direction;
+import com.tort.mudai.command.FillLiquidContainerCommand;
+import com.tort.mudai.mapper.Location;
 import com.tort.mudai.mapper.Mapper;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
+import com.tort.mudai.mapper.MapperException;
 
 public class FillLiquidContainerTask extends StatedTask {
-    private final Mapper _mapper;
-    private Command _command;
-    private List<Direction> _path;
-    private final static int THIRST_INTERVAL = 12;
-    private final static int HUNGER_INTERVAL = 21;
+    private FillLiquidContainerCommand _command;
+    private TravelTask _travelTask;
+    private String _liquidContainer;
+    private Mapper _mapper;
 
     @Inject
-    public FillLiquidContainerTask(final Mapper mapper) {
+    public FillLiquidContainerTask(final EventDistributor eventDistributor,
+                                   final TravelTaskFactory travelTaskFactory,
+                                   final Mapper mapper,
+                                   final PersonProperties personProperties) {
         _mapper = mapper;
-        run();
-    }
+        _liquidContainer = personProperties.getLiquidContainer();
 
-    @Override
-    public void move(final String direction) {
-    }
-
-    @Override
-    public void feelThirst() {
-        System.out.println("FEEL THIRST: " + new SimpleDateFormat().format(new Date()));
-    }
-
-    @Override
-    public void feelHunger(){
-        System.out.println("FEEL HUNGER: " + new SimpleDateFormat().format(new Date()));
-    }
-
-    private void goNext() {
-        if(_path.isEmpty()){
-            _command = new SimpleCommand("пить " + _mapper.currentLocation().getWaterSource());
-            return;
+        try {
+            final Location to = mapper.nearestWaterSource();
+            _travelTask = travelTaskFactory.create(to);
+            eventDistributor.subscribe(_travelTask);
+        } catch (MapperException e) {
+            System.out.println("NO WATER SOURCES");
+            succeed();
         }
-
-        final String direction = _path.get(0).getName();
-        _path.remove(0);
-
-        _command = new SimpleCommand(direction);
     }
 
     @Override
     public Command pulse() {
-        final Command command = _command;
+        if (_travelTask != null) {
+            if (_travelTask.isTerminated()) {
+                if (_travelTask.isFailed()) {
+                    fail();
+                    return null;
+                }
+                _command = new FillLiquidContainerCommand(_mapper.currentLocation().getWaterSource(), _liquidContainer);
+                _travelTask = null;
+                succeed();
+            } else {
+                return _travelTask.pulse();
+            }
+        }
+        Command command = _command;
         _command = null;
 
         return command;
     }
+
 }

@@ -8,8 +8,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ExamineLiquidContainerTrigger implements EventTrigger {
-    public final static Pattern PATTERN = PatternUtil.compile(".*\nСoстояние\\: (?:идеально|хорошо|средне|плохо|ужасно)\\.\n" +
-            "(.*)\\.\n\n[^\n]*");
+    public final static Pattern PATTERN = PatternUtil.compile(".*\r?\nСoстояние\\: (?:идеально|хорошо|средне|плохо|ужасно)\\.\r?\n" +
+            "(.*)\\.\r?\n\r?\n[^\r?\n]*");
     private static final Pattern STATE_GROUP_PATTERN =
             PatternUtil.compile("Наполнена ((?:(?:меньше|больше), чем |примерно )наполовину )?[^\\s]* жидкостью");
 

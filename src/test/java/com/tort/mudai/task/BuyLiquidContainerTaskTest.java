@@ -13,6 +13,7 @@ import static org.mockito.Mockito.*;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
+@SuppressWarnings({"JavaDoc", "FieldCanBeLocal"})
 @Test
 public class BuyLiquidContainerTaskTest {
     private EventDistributor _eventDistributor;
@@ -26,7 +27,7 @@ public class BuyLiquidContainerTaskTest {
      * default behaviour for pulse
      */
     public void pulse() throws MapperException {
-        final BuyLiquidContainerTask task = createBuyLiquidContainerTask();
+        final FillLiquidContainerTask task = createBuyLiquidContainerTask();
 
         final Command command = task.pulse();
 
@@ -37,9 +38,9 @@ public class BuyLiquidContainerTaskTest {
      * if travel task is not terminated, forward pulses
      */
     public void pulseWhenTravelling() throws MapperException {
-        final BuyLiquidContainerTask task = createBuyLiquidContainerTask();
+        final FillLiquidContainerTask task = createBuyLiquidContainerTask();
 
-        final Command command = task.pulse();
+        task.pulse();
 
         verify(_travelTask).pulse();
     }
@@ -51,7 +52,7 @@ public class BuyLiquidContainerTaskTest {
     }
 
     public void afterTravel() throws MapperException {
-        final BuyLiquidContainerTask containerTask = createBuyLiquidContainerTask();
+        final FillLiquidContainerTask containerTask = createBuyLiquidContainerTask();
         when(_travelTask.isTerminated()).thenReturn(true);
 
         Command command = containerTask.pulse();
@@ -67,7 +68,7 @@ public class BuyLiquidContainerTaskTest {
         verify(_eventDistributor).subscribe(isA(taskClass));
     }
 
-    private BuyLiquidContainerTask createBuyLiquidContainerTask() throws MapperException {
+    private FillLiquidContainerTask createBuyLiquidContainerTask() throws MapperException {
         _eventDistributor = mock(EventDistributor.class);
         _mapper = mock(Mapper.class);
         when(_mapper.nearestWaterSource()).thenReturn(new Location());
@@ -77,7 +78,7 @@ public class BuyLiquidContainerTaskTest {
 
         mockTravelTask();
 
-        return new BuyLiquidContainerTask(_eventDistributor, _travelTaskFactory, _mapper, _personProperties);
+        return new FillLiquidContainerTask(_eventDistributor, _travelTaskFactory, _mapper, _personProperties);
     }
 
     private void mockTravelTask() {

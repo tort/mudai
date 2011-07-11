@@ -46,6 +46,8 @@ public class TravelTask extends StatedTask {
 
         if (!_path.isEmpty()) {
             goNext(_path.get(0));
+        } else {
+            succeed();
         }
     }
 

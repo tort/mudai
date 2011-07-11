@@ -15,6 +15,8 @@ public interface Task {
 
     boolean isFailed();
 
+    boolean isSucceeded();
+
     public enum Status{
         INIT,
         RUNNING,

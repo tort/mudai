@@ -46,4 +46,9 @@ public abstract class StatedTask extends AbstractTask {
     public boolean isFailed(){
         return _status == Status.FAIL;
     }
+
+    @Override
+    public boolean isSucceeded(){
+        return _status == Status.SUCCESS;
+    }
 }

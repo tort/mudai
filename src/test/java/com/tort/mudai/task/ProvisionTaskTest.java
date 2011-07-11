@@ -9,6 +9,8 @@ import com.tort.mudai.event.LiquidContainer;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.util.concurrent.ScheduledExecutorService;
+
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -18,7 +20,7 @@ import static org.testng.Assert.assertTrue;
 
 @Test
 public class ProvisionTaskTest {
-    private static final String WATER_CONTAINER = "мех";
+    private static final String WATER_CONTAINER = "фляга";
     private EventDistributor _eventDistributor;
     private StatedTask _provisionTask;
     private Provider<BuyLiquidContainerTask> _retrieveLiquidContainerTaskProvider;
@@ -43,7 +45,7 @@ public class ProvisionTaskTest {
 
         _provisionTask.pulse();
 
-        verify(_eventDistributor).subscribe(isA(BuyLiquidContainerTask.class));
+        verify(_eventDistributor).subscribe(isA(FillLiquidContainerTask.class));
     }
 
     public void waterContainerPresent() {
@@ -106,7 +108,7 @@ public class ProvisionTaskTest {
         when(_retrieveLiquidContainerTaskProvider.get()).thenReturn(buyLiquidTask);
         final FillLiquidContainerTask fillLiquidTask = createFillWaterContainerTaskJustTerminated();
         when(_fillLiquidContainerTaskProvider.get()).thenReturn(fillLiquidTask);
-        when(_drinkTaskProvider.get()).thenReturn(new DrinkTask());
+        when(_drinkTaskProvider.get()).thenReturn(new DrinkTask(_personProperties, nullExecutor()));
         when(_personProperties.getLiquidContainer()).thenReturn(WATER_CONTAINER);
 
         _eventDistributor = mock(EventDistributor.class);
@@ -115,6 +117,10 @@ public class ProvisionTaskTest {
                 _fillLiquidContainerTaskProvider,
                 _drinkTaskProvider,
                 _personProperties);
+    }
+
+    private ScheduledExecutorService nullExecutor() {
+        return null;  //To change body of created methods use File | Settings | File Templates.
     }
 
     @SuppressWarnings({"unchecked"})

@@ -54,4 +54,8 @@ public abstract class AbstractTask implements Task {
     public void examineWaterContainer(final LiquidContainer.State state){
 
     }
+
+    public void feelNotThirsty() {
+
+    }
 }
