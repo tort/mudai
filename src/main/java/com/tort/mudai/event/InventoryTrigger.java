@@ -18,7 +18,7 @@ public class InventoryTrigger implements EventTrigger {
     }
 
     @Override
-    public void fireEvent(String text) {
+    public Event fireEvent(String text) {
         String[] inventory = {};
         final Matcher matcher = PATTERN.matcher(text);
         matcher.find();
@@ -42,6 +42,8 @@ public class InventoryTrigger implements EventTrigger {
                 task.inventory(finalInventory);
             }
         });
+
+        return null;
     }
 
     @Override

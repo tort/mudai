@@ -15,13 +15,15 @@ public class FeelHungerTrigger implements EventTrigger {
     }
 
     @Override
-    public void fireEvent(final String text) {
+    public Event fireEvent(final String text) {
         _eventDistributor.invoke(new Handler() {
             @Override
             public void handle(final AbstractTask task) {
                 task.feelHunger();
             }
         });
+
+        return null;
     }
 
     @Override

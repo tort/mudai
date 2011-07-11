@@ -3,9 +3,8 @@ package com.tort.mudai.event;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import java.util.regex.Matcher;
-
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public class ExamineLiquidContainerTriggerTest {
@@ -64,17 +63,18 @@ public class ExamineLiquidContainerTriggerTest {
         assertTrue(matches);
     }
 
-    @Test
-    public void empty(){
-        Matcher matcher = ExamineLiquidContainerTrigger.PATTERN.matcher(EMPTY_LIQUID_CONT);
-        matcher.find();
+    @Test(dataProvider = "emptyLiquidContainerSamples")
+    public void empty(String sample){
+        final ExamineLiquidContainerTrigger trigger = new ExamineLiquidContainerTrigger(null);
 
-        final String stateGroup = matcher.group(1);
-        assertEquals(stateGroup, "Пусто");
+        final ExamineLiquidContainerEvent event = trigger.fireEvent(sample);
+
+        assertNotNull(event);
+        assertEquals(event.getState(), LiquidContainer.State.EMPTY);
     }
 
     @DataProvider(name = "samples")
-    public Object[][] data(){
+    public Object[][] liquidContainerSamples(){
         return new Object[][]{{FULL_LIQUID_CONT},
                 {HALF_FULL_LIQUID_CONT},
                 {EMPTY_LIQUID_CONT},
@@ -82,5 +82,12 @@ public class ExamineLiquidContainerTriggerTest {
                 {HALF_FULL_FLASK},
                 {ALMOST_EMPTY_FLASK},
                 {EMPTY_FLASK}};
+    }
+
+    @DataProvider(name = "emptyLiquidContainerSamples")
+    public Object[][] emptyLiquidContainerSamples(){
+        return new Object[][]{
+                {EMPTY_FLASK}, {EMPTY_LIQUID_CONT}
+        };
     }
 }

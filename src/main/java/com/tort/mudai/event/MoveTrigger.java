@@ -16,7 +16,7 @@ public class MoveTrigger implements EventTrigger {
     }
 
     @Override
-    public void fireEvent(final String text) {
+    public Event fireEvent(final String text) {
         final Matcher matcher = _pattern.matcher(text);
         matcher.find();
         final String direction = matcher.group(1);
@@ -27,6 +27,8 @@ public class MoveTrigger implements EventTrigger {
                 task.move(direction);
             }
         });
+
+        return null;
     }
 
     @Override

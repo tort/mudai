@@ -16,20 +16,19 @@ public class PasswordPromptTrigger implements EventTrigger {
 
     @Override
     public boolean matches(final String text) {
-        if(text == null){
-            return false;
-        }
+        return text != null && _pattern.matcher(text).matches();
 
-        return _pattern.matcher(text).matches();
     }
 
     @Override
-    public void fireEvent(final String text) {
+    public Event fireEvent(final String text) {
         _eventDistributor.invoke(new Handler<LoginPromptEvent>(){
             @Override
             public void handle(final AbstractTask task) {
                 task.passwordPrompt();
             }
         });
+
+        return null;
     }
 }

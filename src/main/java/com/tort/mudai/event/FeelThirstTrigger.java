@@ -14,14 +14,17 @@ public class FeelThirstTrigger implements EventTrigger {
         _eventDistributor = eventDistributor;
     }
 
+    @SuppressWarnings({"UnusedDeclaration"})
     @Override
-    public void fireEvent(final String text) {
+    public Event fireEvent(final String text) {
         _eventDistributor.invoke(new Handler(){
             @Override
             public void handle(final AbstractTask task) {
                 task.feelThirst();
             }
         });
+
+        return null;
     }
 
     @Override

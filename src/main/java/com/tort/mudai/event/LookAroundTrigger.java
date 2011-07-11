@@ -29,7 +29,7 @@ public class LookAroundTrigger implements EventTrigger {
     }
 
     @Override
-    public void fireEvent(final String text) {
+    public Event fireEvent(final String text) {
         final Matcher matcher = PATTERN.matcher(text);
         matcher.find();
 
@@ -57,11 +57,7 @@ public class LookAroundTrigger implements EventTrigger {
                 task.lookAround(roomSnapshot);
             }
         });
-    }
 
-    private class MobsHelper {
-        public void mobs(String objects) {
-
-        }
+        return null;
     }
 }
