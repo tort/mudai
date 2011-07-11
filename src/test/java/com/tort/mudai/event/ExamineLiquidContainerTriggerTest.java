@@ -73,6 +73,16 @@ public class ExamineLiquidContainerTriggerTest {
         assertEquals(event.getState(), LiquidContainer.State.EMPTY);
     }
 
+    @Test(dataProvider = "almostEmptyContainerSamples")
+    public void almostEmpty(String sample){
+        final ExamineLiquidContainerTrigger trigger = new ExamineLiquidContainerTrigger(null);
+
+        final ExamineLiquidContainerEvent event = trigger.fireEvent(sample);
+
+        assertNotNull(event);
+        assertEquals(event.getState(), LiquidContainer.State.LESS_THAN_HALF);
+    }
+
     @DataProvider(name = "samples")
     public Object[][] liquidContainerSamples(){
         return new Object[][]{{FULL_LIQUID_CONT},
@@ -88,6 +98,13 @@ public class ExamineLiquidContainerTriggerTest {
     public Object[][] emptyLiquidContainerSamples(){
         return new Object[][]{
                 {EMPTY_FLASK}, {EMPTY_LIQUID_CONT}
+        };
+    }
+
+    @DataProvider(name = "almostEmptyContainerSamples")
+    public Object[][] almostEmptyContainerSamples(){
+        return new Object[][]{
+                {ALMOST_EMPTY_FLASK}
         };
     }
 }
