@@ -1,8 +1,11 @@
 package com.tort.mudai.event;
 
+import com.tort.mudai.task.EventDistributor;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import static org.mockito.Mockito.mock;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -55,17 +58,18 @@ public class ExamineLiquidContainerTriggerTest {
             "Пусто.\n" +
             "\n" +
             "\u001B[0;32m25H\u001B[0;37m \u001B[0;32m88M\u001B[0;37m 1499о Зауч:0 Вых:С^> ";
+    private EventDistributor _eventDistributor;
 
     @Test(dataProvider = "samples")
     public void matches(String text) throws Exception {
-        boolean matches = new ExamineLiquidContainerTrigger(null).matches(text);
+        boolean matches = new ExamineLiquidContainerTrigger(_eventDistributor).matches(text);
 
         assertTrue(matches);
     }
 
     @Test(dataProvider = "emptyLiquidContainerSamples")
     public void empty(String sample){
-        final ExamineLiquidContainerTrigger trigger = new ExamineLiquidContainerTrigger(null);
+        final ExamineLiquidContainerTrigger trigger = new ExamineLiquidContainerTrigger(_eventDistributor);
 
         final ExamineLiquidContainerEvent event = trigger.fireEvent(sample);
 
@@ -75,7 +79,7 @@ public class ExamineLiquidContainerTriggerTest {
 
     @Test(dataProvider = "almostEmptyContainerSamples")
     public void almostEmpty(String sample){
-        final ExamineLiquidContainerTrigger trigger = new ExamineLiquidContainerTrigger(null);
+        final ExamineLiquidContainerTrigger trigger = new ExamineLiquidContainerTrigger(_eventDistributor);
 
         final ExamineLiquidContainerEvent event = trigger.fireEvent(sample);
 
@@ -85,7 +89,7 @@ public class ExamineLiquidContainerTriggerTest {
 
     @Test(dataProvider = "halfFullContainerSamples")
     public void halfFull(String sample){
-        final ExamineLiquidContainerTrigger trigger = new ExamineLiquidContainerTrigger(null);
+        final ExamineLiquidContainerTrigger trigger = new ExamineLiquidContainerTrigger(_eventDistributor);
 
         final ExamineLiquidContainerEvent event = trigger.fireEvent(sample);
 
@@ -95,7 +99,7 @@ public class ExamineLiquidContainerTriggerTest {
 
     @Test(dataProvider = "fullContainerSamples")
     public void full(String sample){
-        final ExamineLiquidContainerTrigger trigger = new ExamineLiquidContainerTrigger(null);
+        final ExamineLiquidContainerTrigger trigger = new ExamineLiquidContainerTrigger(_eventDistributor);
 
         final ExamineLiquidContainerEvent event = trigger.fireEvent(sample);
 
@@ -140,5 +144,10 @@ public class ExamineLiquidContainerTriggerTest {
         return new Object[][]{
                 {FULL_FLASK}, {FULL_LIQUID_CONT}
         };
+    }
+
+    @BeforeMethod
+    protected void setUp() throws Exception {
+        _eventDistributor = mock(EventDistributor.class);
     }
 }

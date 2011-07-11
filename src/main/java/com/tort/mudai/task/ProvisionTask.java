@@ -5,6 +5,7 @@ import com.google.inject.Provider;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.ExamineItemCommand;
 import com.tort.mudai.command.InventoryCommand;
+import com.tort.mudai.event.LiquidContainer;
 
 public class ProvisionTask extends StatedTask {
     private volatile Command _command;
@@ -71,12 +72,11 @@ public class ProvisionTask extends StatedTask {
     }
 
     @Override
-    public void waterContainerFull() {
-        _eventDistributor.subscribe(_drinkTaskProvider.get());
-    }
-
-    @Override
-    public void waterContainerAlmostEmpty() {
-        _eventDistributor.subscribe(_fillLiquidContainerTaskProvider.get());
+    public void examineWaterContainer(final LiquidContainer.State state) {
+        if(state != LiquidContainer.State.FULL){
+            _eventDistributor.subscribe(_fillLiquidContainerTaskProvider.get());
+        } else {
+            _eventDistributor.subscribe(_drinkTaskProvider.get());
+        }
     }
 }

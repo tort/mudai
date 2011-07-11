@@ -4,6 +4,7 @@ import com.google.inject.Provider;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.ExamineItemCommand;
 import com.tort.mudai.command.InventoryCommand;
+import com.tort.mudai.event.LiquidContainer;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -51,7 +52,7 @@ public class ProvisionTaskTest {
     }
 
     public void containerFull() {
-        _provisionTask.waterContainerFull();
+        _provisionTask.examineWaterContainer(LiquidContainer.State.FULL);
 
         verifyTaskSubscribed(DrinkTask.class);
     }
@@ -61,7 +62,7 @@ public class ProvisionTaskTest {
     }
 
     public void containerAlmostEmpty() {
-        _provisionTask.waterContainerAlmostEmpty();
+        _provisionTask.examineWaterContainer(LiquidContainer.State.LESS_THAN_HALF);
 
         verifyTaskSubscribed(FillLiquidContainerTask.class);
     }
@@ -77,7 +78,7 @@ public class ProvisionTaskTest {
 
     public void afterFillWaterContainer() {
         createProvisionTask();
-        _provisionTask.waterContainerFull();
+        _provisionTask.examineWaterContainer(LiquidContainer.State.FULL);
 
         _provisionTask.pulse();
 

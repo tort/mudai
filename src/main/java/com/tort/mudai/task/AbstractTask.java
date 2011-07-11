@@ -2,6 +2,7 @@ package com.tort.mudai.task;
 
 import com.tort.mudai.RoomSnapshot;
 import com.tort.mudai.command.Command;
+import com.tort.mudai.event.LiquidContainer;
 
 public abstract class AbstractTask implements Task {
     public void move(String direction) {
@@ -45,14 +46,12 @@ public abstract class AbstractTask implements Task {
     public void inventory(final String[] items) {
     }
 
-    public void waterContainerAlmostEmpty() {
-    }
-
-    public void waterContainerFull() {
-    }
-
     @Override
     public Command pulse() {
         return null;
+    }
+
+    public void examineWaterContainer(final LiquidContainer.State state){
+
     }
 }
