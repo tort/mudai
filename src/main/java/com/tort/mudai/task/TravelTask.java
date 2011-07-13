@@ -25,7 +25,7 @@ public class TravelTask extends StatedTask {
                 goNext(_path.get(0));
             } else {
                 System.out.println("EMPTY PATH");
-                fail();
+                succeed();
             }
         }
     }
