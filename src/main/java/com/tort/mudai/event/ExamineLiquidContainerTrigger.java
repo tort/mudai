@@ -11,7 +11,7 @@ public class ExamineLiquidContainerTrigger implements EventTrigger {
     public final static Pattern PATTERN = PatternUtil.compile(".*\r?\nСoстояние\\: (?:идеально|хорошо|средне|плохо|ужасно)\\.\r?\n" +
             "(.*)\\.\r?\n\r?\n[^\r?\n]*");
     private static final Pattern STATE_GROUP_PATTERN =
-            PatternUtil.compile("Наполнена ((?:(?:меньше|больше), чем |примерно )наполовину )?[^\\s]* жидкостью");
+            PatternUtil.compile("Наполнена ((?:(?:меньше|больше), чем |примерно )(?:наполовину|на четверть) )?[^\\s]* жидкостью");
 
     private final EventDistributor _eventDistributor;
 
@@ -40,6 +40,8 @@ public class ExamineLiquidContainerTrigger implements EventTrigger {
                     event = new ExamineLiquidContainerEvent(LiquidContainer.State.LESS_THAN_HALF);
                 } else if (state.equals("больше, чем наполовину ")) {
                     event = new ExamineLiquidContainerEvent(LiquidContainer.State.MORE_THAN_HALF);
+                } else if (state.equals("больше, чем на четверть ")) {
+                    event = new ExamineLiquidContainerEvent(LiquidContainer.State.MORE_THAN_QUARTER);
                 } else if (state.equals("примерно наполовину ")) {
                     event = new ExamineLiquidContainerEvent(LiquidContainer.State.HALF);
                 } else {
