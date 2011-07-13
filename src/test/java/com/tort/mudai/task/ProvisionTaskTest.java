@@ -6,6 +6,7 @@ import com.tort.mudai.command.Command;
 import com.tort.mudai.command.ExamineItemCommand;
 import com.tort.mudai.command.InventoryCommand;
 import com.tort.mudai.event.LiquidContainer;
+import com.tort.mudai.mapper.Mapper;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -108,7 +109,8 @@ public class ProvisionTaskTest {
         when(_retrieveLiquidContainerTaskProvider.get()).thenReturn(buyLiquidTask);
         final FillLiquidContainerTask fillLiquidTask = createFillWaterContainerTaskJustTerminated();
         when(_fillLiquidContainerTaskProvider.get()).thenReturn(fillLiquidTask);
-        when(_drinkTaskProvider.get()).thenReturn(new DrinkTask(_personProperties, nullExecutor()));
+        final Mapper nullMapper = null;
+        when(_drinkTaskProvider.get()).thenReturn(new DrinkTask(_personProperties, nullExecutor(), nullMapper));
         when(_personProperties.getLiquidContainer()).thenReturn(WATER_CONTAINER);
 
         _eventDistributor = mock(EventDistributor.class);
