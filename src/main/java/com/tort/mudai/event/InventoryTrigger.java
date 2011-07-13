@@ -29,9 +29,14 @@ public class InventoryTrigger implements EventTrigger {
         for (int i = 0; i < inventory.length; i++) {
             String item = inventory[i];
 
-            final int stateIndex = item.indexOf("\u001B[1;37m");
+            int stateIndex = item.indexOf(" c ");
             if (stateIndex > -1) {
-                inventory[i] = item.substring(0, stateIndex - 2);
+                inventory[i] = item.substring(0, stateIndex);
+            } else {
+                stateIndex = item.indexOf("\u001B[1;37m");
+                if (stateIndex > -1) {
+                    inventory[i] = item.substring(0, stateIndex - 2);
+                }
             }
         }
 
