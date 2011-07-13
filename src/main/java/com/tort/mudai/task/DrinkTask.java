@@ -5,6 +5,7 @@ import com.tort.mudai.PersonProperties;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.DrinkCommand;
 import com.tort.mudai.event.LiquidContainer;
+import com.tort.mudai.mapper.Mapper;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -14,42 +15,53 @@ public class DrinkTask extends StatedTask {
     private final static int HUNGER_INTERVAL = 21;
 
     private PersonProperties _personProperties;
-    private volatile Command _command;
-    private final DrinkCommand _drinkCommand;
     private ScheduledExecutorService _executor;
+    private final Mapper _mapper;
+    private boolean _feelThirst = false;
 
     @Inject
-    public DrinkTask(final PersonProperties personProperties, final ScheduledExecutorService executor) {
+    public DrinkTask(final PersonProperties personProperties,
+                     final ScheduledExecutorService executor,
+                     final Mapper mapper) {
         _personProperties = personProperties;
         _executor = executor;
+        _mapper = mapper;
 
-        _drinkCommand = new DrinkCommand(_personProperties.getLiquidContainer());
         final Runnable drinkTask = new Runnable() {
             @Override
             public synchronized void run() {
-                _command = _drinkCommand;
+                _feelThirst = true;
             }
         };
-        _command = _drinkCommand;
         _executor.scheduleAtFixedRate(drinkTask, 0, THIRST_INTERVAL, TimeUnit.MINUTES);
         run();
     }
 
     @Override
     public Command pulse() {
-        return _command;
+        if(!_feelThirst)
+            return null;
+
+        final String waterSource = _mapper.currentLocation().getWaterSource();
+        String whereFrom;
+        if (waterSource == null) {
+            whereFrom = _personProperties.getLiquidContainer();
+        } else {
+            whereFrom = waterSource;
+        }
+        return new DrinkCommand(whereFrom);
     }
 
     @Override
     public void feelNotThirsty() {
         synchronized (this) {
-            _command = null;
+            _feelThirst = false;
         }
     }
 
     @Override
     public void examineWaterContainer(final LiquidContainer.State state) {
-        if(state == LiquidContainer.State.EMPTY){
+        if (state == LiquidContainer.State.EMPTY) {
             fail();
         }
     }
