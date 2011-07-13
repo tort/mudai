@@ -42,6 +42,8 @@ public class ExamineLiquidContainerTrigger implements EventTrigger {
                     event = new ExamineLiquidContainerEvent(LiquidContainer.State.MORE_THAN_HALF);
                 } else if (state.equals("больше, чем на четверть ")) {
                     event = new ExamineLiquidContainerEvent(LiquidContainer.State.MORE_THAN_QUARTER);
+                } else if (state.equals("меньше, чем на четверть ")) {
+                    event = new ExamineLiquidContainerEvent(LiquidContainer.State.LESS_THAN_QUARTER);
                 } else if (state.equals("примерно наполовину ")) {
                     event = new ExamineLiquidContainerEvent(LiquidContainer.State.HALF);
                 } else {
