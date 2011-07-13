@@ -7,6 +7,7 @@ import com.google.inject.Injector;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.RawWriteCommand;
 import com.tort.mudai.mapper.Location;
+import com.tort.mudai.mapper.Mapper;
 import com.tort.mudai.mapper.Mob;
 import com.tort.mudai.mapper.Persister;
 import com.tort.mudai.task.Person;
@@ -26,12 +27,15 @@ public class SimpleMudClient {
     private Person _person;
     private CommandExecutor _commandExecutor;
     private Persister _persister;
+    private final Mapper _mapper;
+    private static final String MARK_SHOP_COMMAND = "/магазин";
 
     @Inject
-    protected SimpleMudClient(final Person person, final CommandExecutor commandExecutor, Persister persister) {
+    protected SimpleMudClient(final Person person, final CommandExecutor commandExecutor, Persister persister, Mapper mapper) {
         _person = person;
         _commandExecutor = commandExecutor;
         _persister = persister;
+        _mapper = mapper;
     }
 
     public void start() {
@@ -63,7 +67,9 @@ public class SimpleMudClient {
                         _person.travel(location);
                     }
                 } else if (command.startsWith(MARK_WATER_SOURCE_COMMAND)) {
-                    _person.markWaterSource(command.substring(MARK_WATER_SOURCE_COMMAND.length() + 1, command.length() - 1));
+                    _mapper.markWaterSource(command.substring(MARK_WATER_SOURCE_COMMAND.length() + 1, command.length() - 1));
+                } else if (command.startsWith(MARK_SHOP_COMMAND)) {
+                    _mapper.currentLocation().markShop();
                 } else {
                     _commandExecutor.submit(new RawWriteCommand(command));
                 }

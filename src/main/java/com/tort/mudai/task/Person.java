@@ -118,7 +118,4 @@ public class Person extends StatedTask {
         return EMPTY_COMMAND;
     }
 
-    public void markWaterSource(final String waterSource) {
-        _mapper.markWaterSource(waterSource);
-    }
 }
