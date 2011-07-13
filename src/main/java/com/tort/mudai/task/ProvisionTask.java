@@ -61,11 +61,9 @@ public class ProvisionTask extends StatedTask {
                 if (_fillLiquidContainerTask.isFailed()) {
                     fail();
                     return null;
-                } else if (_fillLiquidContainerTask.isSucceeded()){
-                    if(_drinkTask == null){
-                        _drinkTask = _drinkTaskProvider.get();
-                        _eventDistributor.subscribe(_drinkTask);
-                    }
+                } else if (_fillLiquidContainerTask.isSucceeded()) {
+                    _drinkTask = _drinkTaskProvider.get();
+                    _eventDistributor.subscribe(_drinkTask);
                 }
                 _fillLiquidContainerTask = null;
             } else {
