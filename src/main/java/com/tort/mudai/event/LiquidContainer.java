@@ -8,6 +8,7 @@ public class LiquidContainer {
         LESS_THAN_HALF,
         HALF,
         MORE_THAN_HALF,
+        ALMOST_FULL,
         FULL
     }
 }
