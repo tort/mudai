@@ -21,6 +21,7 @@ public class MudaiModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new FactoryModuleBuilder().implement(Task.class, TravelTask.class).build(TravelTaskFactory.class));
+        install(new FactoryModuleBuilder().implement(Task.class, GoAndDoTask.class).build(GoAndDoTaskFactory.class));
         
         bind(AbstractTask.class).annotatedWith(Names.named("mapperTask")).to(MapperImpl.class);
         bind(Mapper.class).to(MapperImpl.class);
