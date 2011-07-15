@@ -9,6 +9,6 @@ public interface Mapper {
     //TODO remove unused
     List<Direction> pathToNearestWaterSource();
     Location nearestWaterSource() throws MapperException;
-
     List<Direction> pathTo(Location target);
+    Location nearestShop() throws MapperException;
 }

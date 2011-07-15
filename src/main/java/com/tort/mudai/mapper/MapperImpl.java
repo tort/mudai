@@ -118,9 +118,8 @@ public class MapperImpl extends StatedTask implements Mapper {
     @Override
     public List<Direction> pathTo(final Location target) {
         final DijkstraShortestPath<Location, Direction> _algorythm = new DijkstraShortestPath<Location, Direction>(_graph, _current, target);
-        final List<Direction> directions = _algorythm.getPathEdgeList();
 
-        return directions;
+        return _algorythm.getPathEdgeList();
     }
 
     private String getOppositeDirection(final String direction) {
@@ -149,8 +148,7 @@ public class MapperImpl extends StatedTask implements Mapper {
             }
         });
 
-        final List<Direction> directions = pathTo(locations.get(0));
-        return directions;
+        return pathTo(locations.get(0));
     }
 
     @Override
@@ -165,7 +163,23 @@ public class MapperImpl extends StatedTask implements Mapper {
             throw new MapperException("NO WATER SOURCES EXIST");
         }
 
+        //TODO replace with searching for nearest
         return locations.get(0);
     }
 
+    @Override
+    public Location nearestShop() throws MapperException {
+        final ObjectSet<Location> locations = _db.query(new Predicate<Location>() {
+            @Override
+            public boolean match(final Location location) {
+                return location.isShop();
+            }
+        });
+        if(locations.isEmpty()){
+            throw new MapperException("NO SHOPS EXIST");
+        }
+
+        //TODO replace with searching for nearest
+        return locations.get(0);
+    }
 }
