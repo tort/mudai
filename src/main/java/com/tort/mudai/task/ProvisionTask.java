@@ -49,6 +49,8 @@ public class ProvisionTask extends StatedTask {
                 if (_buyLiquidContainerTask.isFailed()) {
                     fail();
                     return null;
+                } else if (_buyLiquidContainerTask.isSucceeded()) {
+                    _command = new InventoryCommand();
                 }
                 _buyLiquidContainerTask = null;
             } else {

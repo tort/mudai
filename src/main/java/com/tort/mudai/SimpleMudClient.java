@@ -70,6 +70,7 @@ public class SimpleMudClient {
                     _mapper.markWaterSource(command.substring(MARK_WATER_SOURCE_COMMAND.length() + 1, command.length() - 1));
                 } else if (command.startsWith(MARK_SHOP_COMMAND)) {
                     _mapper.currentLocation().markShop();
+                    _persister.persistLocation(_mapper.currentLocation());
                 } else {
                     _commandExecutor.submit(new RawWriteCommand(command));
                 }

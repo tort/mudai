@@ -1,7 +1,5 @@
 package com.tort.mudai.mapper;
 
-import com.db4o.collections.ActivatableHashMap;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
