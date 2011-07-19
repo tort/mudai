@@ -1,6 +1,7 @@
 package com.tort.mudai.task;
 
 import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import com.tort.mudai.PersonProperties;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.DrinkCommand;
@@ -17,15 +18,18 @@ public class DrinkTask extends StatedTask {
     private PersonProperties _personProperties;
     private ScheduledExecutorService _executor;
     private final Mapper _mapper;
+    private final TaskTerminateCallback _callback;
     private boolean _feelThirst = false;
 
     @Inject
     public DrinkTask(final PersonProperties personProperties,
                      final ScheduledExecutorService executor,
-                     final Mapper mapper) {
+                     final Mapper mapper,
+                     @Assisted TaskTerminateCallback callback) {
         _personProperties = personProperties;
         _executor = executor;
         _mapper = mapper;
+        _callback = callback;
 
         final Runnable drinkTask = new Runnable() {
             @Override
@@ -62,7 +66,7 @@ public class DrinkTask extends StatedTask {
     @Override
     public void examineWaterContainer(final LiquidContainer.State state) {
         if (state == LiquidContainer.State.EMPTY) {
-            fail();
+            _callback.failed();
         }
     }
 }

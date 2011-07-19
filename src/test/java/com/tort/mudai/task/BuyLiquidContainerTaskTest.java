@@ -78,7 +78,7 @@ public class BuyLiquidContainerTaskTest {
 
         mockTravelTask();
 
-        return new FillLiquidContainerTask(_eventDistributor, _travelTaskFactory, _mapper, _personProperties);
+        return new FillLiquidContainerTask(_eventDistributor, _travelTaskFactory, _mapper, _personProperties, null);
     }
 
     private void mockTravelTask() {

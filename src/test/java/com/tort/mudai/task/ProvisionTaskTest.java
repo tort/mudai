@@ -25,8 +25,8 @@ public class ProvisionTaskTest {
     private EventDistributor _eventDistributor;
     private StatedTask _provisionTask;
     private BuyLiquidContainerTaskFactory _buyLiquidContainerTaskProvider;
-    private Provider<FillLiquidContainerTask> _fillLiquidContainerTaskProvider;
-    private Provider<DrinkTask> _drinkTaskProvider;
+    private FillLiquidContainerTaskFactory _fillLiquidContainerTaskProvider;
+    private DrinkTaskFactory _drinkTaskProvider;
     private PersonProperties _personProperties;
 
     public void enterWorld() throws Exception {
@@ -108,9 +108,9 @@ public class ProvisionTaskTest {
         final BuyLiquidContainerTask buyLiquidTask = createBuyWaterContainerTaskJustTerminated();
         when(_buyLiquidContainerTaskProvider.create(null)).thenReturn(buyLiquidTask);
         final FillLiquidContainerTask fillLiquidTask = createFillWaterContainerTaskJustTerminated();
-        when(_fillLiquidContainerTaskProvider.get()).thenReturn(fillLiquidTask);
+        when(_fillLiquidContainerTaskProvider.create(null)).thenReturn(fillLiquidTask);
         final Mapper nullMapper = null;
-        when(_drinkTaskProvider.get()).thenReturn(new DrinkTask(_personProperties, nullExecutor(), nullMapper));
+        when(_drinkTaskProvider.create(null)).thenReturn(new DrinkTask(_personProperties, nullExecutor(), nullMapper, null));
         when(_personProperties.getLiquidContainer()).thenReturn(WATER_CONTAINER);
 
         _eventDistributor = mock(EventDistributor.class);
@@ -129,8 +129,8 @@ public class ProvisionTaskTest {
     @BeforeMethod
     protected void setUp() throws Exception {
         _buyLiquidContainerTaskProvider = mock(BuyLiquidContainerTaskFactory.class);
-        _fillLiquidContainerTaskProvider = mock(Provider.class);
-        _drinkTaskProvider = mock(Provider.class);
+        _fillLiquidContainerTaskProvider = mock(FillLiquidContainerTaskFactory.class);
+        _drinkTaskProvider = mock(DrinkTaskFactory.class);
         _personProperties = mock(PersonProperties.class);
 
         createProvisionTask();
