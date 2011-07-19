@@ -24,7 +24,7 @@ public class ProvisionTaskTest {
     private static final String WATER_CONTAINER = "фляга";
     private EventDistributor _eventDistributor;
     private StatedTask _provisionTask;
-    private Provider<BuyLiquidContainerTask> _retrieveLiquidContainerTaskProvider;
+    private BuyLiquidContainerTaskFactory _buyLiquidContainerTaskProvider;
     private Provider<FillLiquidContainerTask> _fillLiquidContainerTaskProvider;
     private Provider<DrinkTask> _drinkTaskProvider;
     private PersonProperties _personProperties;
@@ -106,7 +106,7 @@ public class ProvisionTaskTest {
 
     private void createProvisionTask() {
         final BuyLiquidContainerTask buyLiquidTask = createBuyWaterContainerTaskJustTerminated();
-        when(_retrieveLiquidContainerTaskProvider.get()).thenReturn(buyLiquidTask);
+        when(_buyLiquidContainerTaskProvider.create(null)).thenReturn(buyLiquidTask);
         final FillLiquidContainerTask fillLiquidTask = createFillWaterContainerTaskJustTerminated();
         when(_fillLiquidContainerTaskProvider.get()).thenReturn(fillLiquidTask);
         final Mapper nullMapper = null;
@@ -115,7 +115,7 @@ public class ProvisionTaskTest {
 
         _eventDistributor = mock(EventDistributor.class);
         _provisionTask = new ProvisionTask(_eventDistributor,
-                _retrieveLiquidContainerTaskProvider,
+                _buyLiquidContainerTaskProvider,
                 _fillLiquidContainerTaskProvider,
                 _drinkTaskProvider,
                 _personProperties);
@@ -128,7 +128,7 @@ public class ProvisionTaskTest {
     @SuppressWarnings({"unchecked"})
     @BeforeMethod
     protected void setUp() throws Exception {
-        _retrieveLiquidContainerTaskProvider = mock(Provider.class);
+        _buyLiquidContainerTaskProvider = mock(BuyLiquidContainerTaskFactory.class);
         _fillLiquidContainerTaskProvider = mock(Provider.class);
         _drinkTaskProvider = mock(Provider.class);
         _personProperties = mock(PersonProperties.class);

@@ -11,7 +11,7 @@ import com.tort.mudai.event.LiquidContainer;
 public class ProvisionTask extends StatedTask {
     private volatile Command _command;
     private final EventDistributor _eventDistributor;
-    private final Provider<BuyLiquidContainerTask> _buyLiquidContainerTaskProvider;
+    private final BuyLiquidContainerTaskFactory _buyLiquidContainerTaskFactory;
     private final Provider<FillLiquidContainerTask> _fillLiquidContainerTaskProvider;
     private final Provider<DrinkTask> _drinkTaskProvider;
     private final String _waterContainer;
@@ -22,12 +22,12 @@ public class ProvisionTask extends StatedTask {
 
     @Inject
     public ProvisionTask(final EventDistributor eventDistributor,
-                         final Provider<BuyLiquidContainerTask> goAndByWaterContainerTaskProvider,
+                         BuyLiquidContainerTaskFactory buyLiquidContainerTaskFactory,
                          final Provider<FillLiquidContainerTask> fillLiquidContainerTaskProvider,
                          final Provider<DrinkTask> drinkTaskProvider,
                          final PersonProperties personProperties) {
         _eventDistributor = eventDistributor;
-        _buyLiquidContainerTaskProvider = goAndByWaterContainerTaskProvider;
+        _buyLiquidContainerTaskFactory = buyLiquidContainerTaskFactory;
         _fillLiquidContainerTaskProvider = fillLiquidContainerTaskProvider;
         _drinkTaskProvider = drinkTaskProvider;
         _waterContainer = personProperties.getLiquidContainer();
@@ -45,17 +45,7 @@ public class ProvisionTask extends StatedTask {
             return null;
 
         if (_buyLiquidContainerTask != null) {
-            if (_buyLiquidContainerTask.isTerminated()) {
-                if (_buyLiquidContainerTask.isFailed()) {
-                    fail();
-                    return null;
-                } else if (_buyLiquidContainerTask.isSucceeded()) {
-                    _command = new InventoryCommand();
-                }
-                _buyLiquidContainerTask = null;
-            } else {
-                return _buyLiquidContainerTask.pulse();
-            }
+            return _buyLiquidContainerTask.pulse();
         }
 
         if (_fillLiquidContainerTask != null) {
@@ -98,7 +88,7 @@ public class ProvisionTask extends StatedTask {
             }
         }
 
-        _buyLiquidContainerTask = _buyLiquidContainerTaskProvider.get();
+        _buyLiquidContainerTask = _buyLiquidContainerTaskFactory.create(new BuyContainerCallback());
         _eventDistributor.subscribe(_buyLiquidContainerTask);
     }
 
@@ -112,6 +102,20 @@ public class ProvisionTask extends StatedTask {
                 _drinkTask = _drinkTaskProvider.get();
                 _eventDistributor.subscribe(_drinkTask);
             }
+        }
+    }
+
+    private class BuyContainerCallback implements TaskTerminateCallback {
+        @Override
+        public void succeed(){
+            _command = new InventoryCommand();
+            _buyLiquidContainerTask = null;
+        }
+
+        @Override
+        public void fail() {
+            fail();
+            _buyLiquidContainerTask = null;
         }
     }
 }

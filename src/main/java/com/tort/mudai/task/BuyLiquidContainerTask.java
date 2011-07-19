@@ -1,6 +1,7 @@
 package com.tort.mudai.task;
 
 import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import com.tort.mudai.PersonProperties;
 import com.tort.mudai.command.BuyCommand;
 import com.tort.mudai.command.Command;
@@ -10,11 +11,14 @@ import com.tort.mudai.mapper.MapperException;
 
 public class BuyLiquidContainerTask extends StatedTask {
     private GoAndDoTask _goAndDoTask;
+    private final TaskTerminateCallback _callback;
 
     @Inject
     public BuyLiquidContainerTask(final Mapper mapper,
                                   final PersonProperties personProperties,
-                                  final GoAndDoTaskFactory goAndDoTaskFactory) {
+                                  final GoAndDoTaskFactory goAndDoTaskFactory,
+                                  @Assisted TaskTerminateCallback callback) {
+        _callback = callback;
         try {
             Location to = mapper.nearestShop();
             _goAndDoTask = goAndDoTaskFactory.create(to, new BuyCommand(personProperties.getLiquidContainer()));
@@ -29,9 +33,9 @@ public class BuyLiquidContainerTask extends StatedTask {
     public Command pulse() {
         if (_goAndDoTask.isTerminated()) {
             if (_goAndDoTask.isSucceeded()) {
-                succeed();
+                _callback.succeed();
             } else {
-                fail();
+                _callback.fail();
             }
         }
 
