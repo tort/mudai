@@ -8,7 +8,7 @@ package com.tort.mudai.task;
  * To change this template use File | Settings | File Templates.
  */
 public interface TaskTerminateCallback {
-    void succeed();
+    void succeeded();
 
-    void fail();
+    void failed();
 }

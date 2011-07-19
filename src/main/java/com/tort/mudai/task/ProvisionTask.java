@@ -12,7 +12,7 @@ public class ProvisionTask extends StatedTask {
     private volatile Command _command;
     private final EventDistributor _eventDistributor;
     private final BuyLiquidContainerTaskFactory _buyLiquidContainerTaskFactory;
-    private final Provider<FillLiquidContainerTask> _fillLiquidContainerTaskProvider;
+    private final FillLiquidContainerTaskFactory _fillLiquidContainerTaskProvider;
     private final Provider<DrinkTask> _drinkTaskProvider;
     private final String _waterContainer;
 
@@ -23,7 +23,7 @@ public class ProvisionTask extends StatedTask {
     @Inject
     public ProvisionTask(final EventDistributor eventDistributor,
                          BuyLiquidContainerTaskFactory buyLiquidContainerTaskFactory,
-                         final Provider<FillLiquidContainerTask> fillLiquidContainerTaskProvider,
+                         final FillLiquidContainerTaskFactory fillLiquidContainerTaskProvider,
                          final Provider<DrinkTask> drinkTaskProvider,
                          final PersonProperties personProperties) {
         _eventDistributor = eventDistributor;
@@ -49,18 +49,7 @@ public class ProvisionTask extends StatedTask {
         }
 
         if (_fillLiquidContainerTask != null) {
-            if (_fillLiquidContainerTask.isTerminated()) {
-                if (_fillLiquidContainerTask.isFailed()) {
-                    fail();
-                    return null;
-                } else if (_fillLiquidContainerTask.isSucceeded()) {
-                    _drinkTask = _drinkTaskProvider.get();
-                    _eventDistributor.subscribe(_drinkTask);
-                }
-                _fillLiquidContainerTask = null;
-            } else {
-                return _fillLiquidContainerTask.pulse();
-            }
+            return _fillLiquidContainerTask.pulse();
         }
 
         if (_drinkTask != null) {
@@ -95,7 +84,7 @@ public class ProvisionTask extends StatedTask {
     @Override
     public void examineWaterContainer(final LiquidContainer.State state) {
         if (state == LiquidContainer.State.EMPTY || state == LiquidContainer.State.LESS_THAN_HALF) {
-            _fillLiquidContainerTask = _fillLiquidContainerTaskProvider.get();
+            _fillLiquidContainerTask = _fillLiquidContainerTaskProvider.create(new FillContainerCallback());
             _eventDistributor.subscribe(_fillLiquidContainerTask);
         } else {
             if (_drinkTask == null) {
@@ -107,15 +96,30 @@ public class ProvisionTask extends StatedTask {
 
     private class BuyContainerCallback implements TaskTerminateCallback {
         @Override
-        public void succeed(){
+        public void succeeded(){
             _command = new InventoryCommand();
             _buyLiquidContainerTask = null;
         }
 
         @Override
-        public void fail() {
+        public void failed() {
             fail();
             _buyLiquidContainerTask = null;
+        }
+    }
+
+    private class FillContainerCallback implements TaskTerminateCallback {
+        @Override
+        public void succeeded() {
+            _drinkTask = _drinkTaskProvider.get();
+            _eventDistributor.subscribe(_drinkTask);
+            _fillLiquidContainerTask = null;
+        }
+
+        @Override
+        public void failed() {
+            fail();
+            _fillLiquidContainerTask = null;
         }
     }
 }

@@ -33,9 +33,9 @@ public class BuyLiquidContainerTask extends StatedTask {
     public Command pulse() {
         if (_goAndDoTask.isTerminated()) {
             if (_goAndDoTask.isSucceeded()) {
-                _callback.succeed();
+                _callback.succeeded();
             } else {
-                _callback.fail();
+                _callback.failed();
             }
         }
 
