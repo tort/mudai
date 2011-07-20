@@ -58,4 +58,24 @@ public abstract class AbstractTask implements Task {
     public void feelNotThirsty() {
 
     }
+
+    public void couldNotFindItem(String item) {
+
+    }
+
+    public void couldNotFindItemInContainer(String item, String container) {
+
+    }
+
+    public void feelNotHungry() {
+
+    }
+
+    public void eat(String food) {
+
+    }
+
+    public void drink() {
+
+    }
 }

@@ -11,4 +11,5 @@ public interface Mapper {
     Location nearestWaterSource() throws MapperException;
     List<Direction> pathTo(Location target);
     Location nearestShop() throws MapperException;
+    Location nearestTavern() throws MapperException;
 }

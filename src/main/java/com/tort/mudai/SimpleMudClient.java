@@ -29,6 +29,7 @@ public class SimpleMudClient {
     private Persister _persister;
     private final Mapper _mapper;
     private static final String MARK_SHOP_COMMAND = "/магазин";
+    private static final String MARK_TAVERN_COMMAND = "/таверна";
 
     @Inject
     protected SimpleMudClient(final Person person, final CommandExecutor commandExecutor, Persister persister, Mapper mapper) {
@@ -70,6 +71,9 @@ public class SimpleMudClient {
                     _mapper.markWaterSource(command.substring(MARK_WATER_SOURCE_COMMAND.length() + 1, command.length() - 1));
                 } else if (command.startsWith(MARK_SHOP_COMMAND)) {
                     _mapper.currentLocation().markShop();
+                    _persister.persistLocation(_mapper.currentLocation());
+                } else if (command.startsWith(MARK_TAVERN_COMMAND)) {
+                    _mapper.currentLocation().markTavern();
                     _persister.persistLocation(_mapper.currentLocation());
                 } else {
                     _commandExecutor.submit(new RawWriteCommand(command));

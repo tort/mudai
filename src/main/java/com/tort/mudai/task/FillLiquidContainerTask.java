@@ -28,7 +28,7 @@ public class FillLiquidContainerTask extends StatedTask {
 
         try {
             final Location to = mapper.nearestWaterSource();
-            _travelTask = travelTaskFactory.create(to);
+            _travelTask = travelTaskFactory.create(to, new TravelTaskTerminateCallback());
             eventDistributor.subscribe(_travelTask);
         } catch (MapperException e) {
             System.out.println("NO WATER SOURCES");
@@ -41,11 +41,13 @@ public class FillLiquidContainerTask extends StatedTask {
         if (_travelTask != null) {
             if (_travelTask.isTerminated()) {
                 if (_travelTask.isFailed()) {
+                    fail();
                     _callback.failed();
                     return null;
                 }
                 _command = new FillLiquidContainerCommand(_mapper.currentLocation().getWaterSource(), _liquidContainer);
                 _travelTask = null;
+                succeed();
                 _callback.succeeded();
             } else {
                 return _travelTask.pulse();
@@ -57,4 +59,15 @@ public class FillLiquidContainerTask extends StatedTask {
         return command;
     }
 
+    private class TravelTaskTerminateCallback implements TaskTerminateCallback {
+        @Override
+        public void succeeded() {
+
+        }
+
+        @Override
+        public void failed() {
+            fail();
+        }
+    }
 }

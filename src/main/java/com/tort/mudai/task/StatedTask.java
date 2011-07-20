@@ -1,7 +1,7 @@
 package com.tort.mudai.task;
 
 public abstract class StatedTask extends AbstractTask {
-    private Status _status;
+    private volatile Status _status;
 
     public StatedTask(){
         _status = Status.INIT;

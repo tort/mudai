@@ -21,7 +21,19 @@ public class BuyLiquidContainerTask extends StatedTask {
         _callback = callback;
         try {
             Location to = mapper.nearestShop();
-            _goAndDoTask = goAndDoTaskFactory.create(to, new BuyCommand(personProperties.getLiquidContainer()));
+            _goAndDoTask = goAndDoTaskFactory.create(to, new BuyCommand(personProperties.getLiquidContainer()), new TaskTerminateCallback(){
+                @Override
+                public void succeeded() {
+                    succeed();
+                    _callback.succeeded();
+                }
+
+                @Override
+                public void failed() {
+                    fail();
+                    _callback.failed();
+                }
+            });
         } catch (MapperException e) {
             //TODO replace with some logging
             System.out.println(e.getMessage());
@@ -31,14 +43,6 @@ public class BuyLiquidContainerTask extends StatedTask {
 
     @Override
     public Command pulse() {
-        if (_goAndDoTask.isTerminated()) {
-            if (_goAndDoTask.isSucceeded()) {
-                _callback.succeeded();
-            } else {
-                _callback.failed();
-            }
-        }
-
         if (isTerminated())
             return null;
 

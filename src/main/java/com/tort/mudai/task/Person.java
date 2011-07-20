@@ -92,7 +92,7 @@ public class Person extends StatedTask {
     }
 
     public void travel(final Location to) {
-        _eventDistributor.subscribe(_travelTaskFactory.create(to));
+        _eventDistributor.subscribe(_travelTaskFactory.create(to, new TravelTaskTerminateCallback()));
     }
 
     @Override
@@ -118,4 +118,15 @@ public class Person extends StatedTask {
         return EMPTY_COMMAND;
     }
 
+    private static class TravelTaskTerminateCallback implements TaskTerminateCallback {
+        @Override
+        public void succeeded() {
+
+        }
+
+        @Override
+        public void failed() {
+
+        }
+    }
 }

@@ -4,22 +4,27 @@ import com.tort.mudai.Handler;
 import com.tort.mudai.task.AbstractTask;
 import com.tort.mudai.task.EventDistributor;
 
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class DrinkTrigger implements EventTrigger {
-    private static final Pattern PATTERN = PatternUtil.compile(".*Вы выпили (?:[^\n]*) из (?:[^\n]*)\\..*");
+public class EatTrigger implements EventTrigger {
     private final EventDistributor _eventDistributor;
+    private static final Pattern PATTERN = PatternUtil.compile(".*Вы съели ([^\n]*)\\..*");
 
-    public DrinkTrigger(EventDistributor eventDistributor) {
+    public EatTrigger(EventDistributor eventDistributor) {
         _eventDistributor = eventDistributor;
     }
 
     @Override
     public Event fireEvent(String text) {
+        final Matcher matcher = PATTERN.matcher(text);
+        matcher.find();
+
+        final String food = matcher.group(1);
         _eventDistributor.invoke(new Handler(){
             @Override
             public void handle(AbstractTask task) {
-                task.drink();
+                task.eat(food);
             }
         });
 

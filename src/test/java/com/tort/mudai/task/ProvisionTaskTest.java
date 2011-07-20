@@ -1,6 +1,5 @@
 package com.tort.mudai.task;
 
-import com.google.inject.Provider;
 import com.tort.mudai.PersonProperties;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.ExamineItemCommand;
@@ -26,7 +25,7 @@ public class ProvisionTaskTest {
     private StatedTask _provisionTask;
     private BuyLiquidContainerTaskFactory _buyLiquidContainerTaskProvider;
     private FillLiquidContainerTaskFactory _fillLiquidContainerTaskProvider;
-    private DrinkTaskFactory _drinkTaskProvider;
+    private DrinkTaskFactory _drinkTaskFactory;
     private PersonProperties _personProperties;
 
     public void enterWorld() throws Exception {
@@ -110,15 +109,14 @@ public class ProvisionTaskTest {
         final FillLiquidContainerTask fillLiquidTask = createFillWaterContainerTaskJustTerminated();
         when(_fillLiquidContainerTaskProvider.create(null)).thenReturn(fillLiquidTask);
         final Mapper nullMapper = null;
-        when(_drinkTaskProvider.create(null)).thenReturn(new DrinkTask(_personProperties, nullExecutor(), nullMapper, null));
+        when(_drinkTaskFactory.create(null)).thenReturn(new DrinkTask(_eventDistributor, nullExecutor(), nullMapper, null, _personProperties, null));
         when(_personProperties.getLiquidContainer()).thenReturn(WATER_CONTAINER);
 
         _eventDistributor = mock(EventDistributor.class);
         _provisionTask = new ProvisionTask(_eventDistributor,
-                _buyLiquidContainerTaskProvider,
-                _fillLiquidContainerTaskProvider,
-                _drinkTaskProvider,
-                _personProperties);
+                _drinkTaskFactory,
+                null
+        );
     }
 
     private ScheduledExecutorService nullExecutor() {
@@ -130,7 +128,7 @@ public class ProvisionTaskTest {
     protected void setUp() throws Exception {
         _buyLiquidContainerTaskProvider = mock(BuyLiquidContainerTaskFactory.class);
         _fillLiquidContainerTaskProvider = mock(FillLiquidContainerTaskFactory.class);
-        _drinkTaskProvider = mock(DrinkTaskFactory.class);
+        _drinkTaskFactory = mock(DrinkTaskFactory.class);
         _personProperties = mock(PersonProperties.class);
 
         createProvisionTask();

@@ -13,19 +13,23 @@ import java.util.List;
 public class TravelTask extends StatedTask {
     private List<Direction> _path;
     private Command _command;
+    private final TaskTerminateCallback _callback;
 
     @Inject
-    TravelTask(@Assisted final Location to, final Mapper mapper) {
+    public TravelTask(@Assisted final Location to, @Assisted TaskTerminateCallback callback, final Mapper mapper) {
+        _callback = callback;
         _path = mapper.pathTo(to);
         if (_path == null) {
             System.out.println("NO PATH FOUND");
             fail();
+            _callback.failed();
         } else {
             if (!_path.isEmpty()) {
                 goNext(_path.get(0));
             } else {
                 System.out.println("EMPTY PATH");
                 succeed();
+                _callback.succeeded();
             }
         }
     }
@@ -39,6 +43,7 @@ public class TravelTask extends StatedTask {
         //TODO check current location has same title as planned, abort task otherwise
         if (_path.isEmpty()) {
             succeed();
+            _callback.succeeded();
             return;
         }
 
@@ -48,6 +53,7 @@ public class TravelTask extends StatedTask {
             goNext(_path.get(0));
         } else {
             succeed();
+            _callback.succeeded();
         }
     }
 

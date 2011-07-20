@@ -6,20 +6,20 @@ import com.tort.mudai.task.EventDistributor;
 
 import java.util.regex.Pattern;
 
-public class DrinkTrigger implements EventTrigger {
-    private static final Pattern PATTERN = PatternUtil.compile(".*Вы выпили (?:[^\n]*) из (?:[^\n]*)\\..*");
+public class NotThirstyTrigger implements EventTrigger {
     private final EventDistributor _eventDistributor;
+    private static final Pattern PATTERN = PatternUtil.compile(".*Вы не чувствуете жажды\\..*");
 
-    public DrinkTrigger(EventDistributor eventDistributor) {
+    public NotThirstyTrigger(final EventDistributor eventDistributor) {
         _eventDistributor = eventDistributor;
     }
 
     @Override
-    public Event fireEvent(String text) {
+    public Event fireEvent(final String text) {
         _eventDistributor.invoke(new Handler(){
             @Override
-            public void handle(AbstractTask task) {
-                task.drink();
+            public void handle(final AbstractTask task) {
+                task.feelNotThirsty();
             }
         });
 
@@ -27,7 +27,7 @@ public class DrinkTrigger implements EventTrigger {
     }
 
     @Override
-    public boolean matches(String text) {
+    public boolean matches(final String text) {
         return PATTERN.matcher(text).matches();
     }
 }

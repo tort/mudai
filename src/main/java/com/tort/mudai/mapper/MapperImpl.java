@@ -178,4 +178,19 @@ public class MapperImpl extends StatedTask implements Mapper {
         return locations.get(0);
     }
 
+    @Override
+    public Location nearestTavern() throws MapperException {
+        final ObjectSet<Location> locations = _db.query(new Predicate<Location>() {
+            @Override
+            public boolean match(final Location location) {
+                return location.isTavern();
+            }
+        });
+        if(locations.isEmpty()){
+            throw new MapperException("NO TAVERNS EXIST");
+        }
+
+        //TODO replace with searching for nearest
+        return locations.get(0);
+    }
 }

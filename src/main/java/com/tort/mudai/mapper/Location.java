@@ -9,6 +9,7 @@ public class Location {
     private Map<String, Location> _directions = new HashMap<String, Location>();
     private String _waterSource;
     private boolean _isShop = false;
+    private boolean _isTavern = false;
 
     public String getTitle() {
         return _title;
@@ -42,7 +43,15 @@ public class Location {
         _isShop = true;
     }
 
+    public void markTavern(){
+        _isTavern = true;
+    }
+
     public boolean isShop(){
         return _isShop;
+    }
+
+    public boolean isTavern() {
+        return _isTavern;
     }
 }

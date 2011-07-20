@@ -2,6 +2,7 @@ package com.tort.mudai;
 
 import com.google.inject.Inject;
 import com.tort.mudai.command.Command;
+import com.tort.mudai.command.MultiCommand;
 import com.tort.mudai.command.SimpleCommand;
 import com.tort.mudai.command.StartSessionCommand;
 import com.tort.mudai.event.*;
@@ -34,7 +35,7 @@ public class AdapterImpl implements Adapter {
     private EventDistributor _eventDistributor;
 
     @Inject
-    protected AdapterImpl(final BlockingQueue<Command> commands,
+    public AdapterImpl(final BlockingQueue<Command> commands,
                           final ExecutorService executor,
                           final EventDistributor eventDistributor) {
         _commands = commands;
@@ -49,8 +50,13 @@ public class AdapterImpl implements Adapter {
         _eventTriggers.add(new FeelHungerTrigger(eventDistributor));
         _eventTriggers.add(new InventoryTrigger(eventDistributor));
         _eventTriggers.add(new ExamineLiquidContainerTrigger(eventDistributor));
-        _eventTriggers.add(new DrinkTrigger(eventDistributor));
+        _eventTriggers.add(new NotThirstyTrigger(eventDistributor));
+        _eventTriggers.add(new NotHungryTrigger(eventDistributor));
         _eventTriggers.add(new EmptyLiquidContainerTrigger(eventDistributor));
+        _eventTriggers.add(new CantFindItemTrigger(eventDistributor));
+        _eventTriggers.add(new CantFindItemInContainerTrigger(eventDistributor));
+        _eventTriggers.add(new EatTrigger(eventDistributor));
+        _eventTriggers.add(new DrinkTrigger(eventDistributor));
 
         _simpleTriggers.add(new SimpleTrigger(".*^\\* В связи с проблемами перевода фразы ANYKEY нажмите ENTER.*", new String[]{"", "смотр"}));
         _simpleTriggers.add(new SimpleTrigger(".*^Select one : $", new String[]{ENCODING}));
@@ -104,6 +110,11 @@ public class AdapterImpl implements Adapter {
                 final Command command = _commands.take();
                 if (command instanceof StartSessionCommand) {
                     start();
+                } else if(command instanceof MultiCommand) {
+                    MultiCommand multiCommand = (MultiCommand) command;
+                    for (Command comm : multiCommand.getCommands()) {
+                        send(comm);
+                    }
                 } else {
                     send(command);
                 }

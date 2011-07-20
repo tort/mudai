@@ -84,6 +84,6 @@ public class BuyLiquidContainerTaskTest {
     private void mockTravelTask() {
         _travelTask = mock(TravelTask.class);
         _travelTaskFactory = mock(TravelTaskFactory.class);
-        when(_travelTaskFactory.create(isA(Location.class))).thenReturn(_travelTask);
+        when(_travelTaskFactory.create(isA(Location.class), null)).thenReturn(_travelTask);
     }
 }

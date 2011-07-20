@@ -6,11 +6,11 @@ import com.tort.mudai.task.EventDistributor;
 
 import java.util.regex.Pattern;
 
-public class DrinkTrigger implements EventTrigger {
-    private static final Pattern PATTERN = PatternUtil.compile(".*Вы выпили (?:[^\n]*) из (?:[^\n]*)\\..*");
+public class NotHungryTrigger implements EventTrigger {
+    private static final Pattern PATTERN = PatternUtil.compile(".*(?:Вы наелись\\.|Вы слишком сыты для этого \\!).*");
     private final EventDistributor _eventDistributor;
 
-    public DrinkTrigger(EventDistributor eventDistributor) {
+    public NotHungryTrigger(EventDistributor eventDistributor) {
         _eventDistributor = eventDistributor;
     }
 
@@ -19,7 +19,7 @@ public class DrinkTrigger implements EventTrigger {
         _eventDistributor.invoke(new Handler(){
             @Override
             public void handle(AbstractTask task) {
-                task.drink();
+                task.feelNotHungry();
             }
         });
 
