@@ -7,17 +7,20 @@ import com.tort.mudai.command.ExamineItemCommand;
 import com.tort.mudai.command.InventoryCommand;
 import com.tort.mudai.event.LiquidContainer;
 
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 public class ProvisionTask extends StatedTask {
-    private volatile Command _command;
+    private static final Command EMPTY_COMMAND = null;
+
     private final EventDistributor _eventDistributor;
     private final BuyLiquidContainerTaskFactory _buyLiquidContainerTaskFactory;
     private final FillLiquidContainerTaskFactory _fillLiquidContainerTaskProvider;
     private final DrinkTaskFactory _drinkTaskProvider;
     private final String _waterContainer;
+    private final List<Task> _subtasks = new CopyOnWriteArrayList<Task>();
 
-    private BuyLiquidContainerTask _buyLiquidContainerTask;
-    private DrinkTask _drinkTask;
-    private FillLiquidContainerTask _fillLiquidContainerTask;
+    private volatile Command _command;
 
     @Inject
     public ProvisionTask(final EventDistributor eventDistributor,
@@ -43,18 +46,20 @@ public class ProvisionTask extends StatedTask {
         if (isTerminated())
             return null;
 
-        if (_buyLiquidContainerTask != null) {
-            return _buyLiquidContainerTask.pulse();
-        }
-
-        if (_fillLiquidContainerTask != null) {
-            return _fillLiquidContainerTask.pulse();
-        }
-
-        if (_drinkTask != null) {
-            final Command command = _drinkTask.pulse();
-            if (command != null)
+        for (Task task : _subtasks) {
+            Command command = task.pulse();
+            if (command != EMPTY_COMMAND) {
                 return command;
+            }
+
+            if (task.isInitializing())
+                break;
+        }
+
+        for (Iterator<Task> taskIterator = _subtasks.iterator(); taskIterator.hasNext();) {
+            Task task = taskIterator.next();
+            if(task.isTerminated())
+                taskIterator.remove();
         }
 
         final Command command = _command;
@@ -72,20 +77,22 @@ public class ProvisionTask extends StatedTask {
             }
         }
 
-        _buyLiquidContainerTask = _buyLiquidContainerTaskFactory.create(new BuyContainerCallback());
-        _eventDistributor.subscribe(_buyLiquidContainerTask);
+        AbstractTask buyLiquidContainerTask = _buyLiquidContainerTaskFactory.create(new BuyContainerCallback());
+        _subtasks.add(buyLiquidContainerTask);
+        _eventDistributor.subscribe(buyLiquidContainerTask);
     }
 
     @Override
     public void examineWaterContainer(final LiquidContainer.State state) {
         if (state == LiquidContainer.State.EMPTY || state == LiquidContainer.State.LESS_THAN_HALF) {
-            _fillLiquidContainerTask = _fillLiquidContainerTaskProvider.create(new FillContainerCallback());
-            _eventDistributor.subscribe(_fillLiquidContainerTask);
+            final FillLiquidContainerTask task = _fillLiquidContainerTaskProvider.create(new FillContainerCallback());
+            _subtasks.add(task);
+            _eventDistributor.subscribe(task);
         } else {
-            if (_drinkTask == null) {
-                _drinkTask = _drinkTaskProvider.create(new DrinkTaskCallback());
-                _eventDistributor.subscribe(_drinkTask);
-            }
+            //TODO prove, that drink task doesn't exist already
+            final DrinkTask drinkTask = _drinkTaskProvider.create(new DrinkTaskCallback());
+            _subtasks.add(drinkTask);
+            _eventDistributor.subscribe(drinkTask);
         }
     }
 
@@ -93,28 +100,25 @@ public class ProvisionTask extends StatedTask {
         @Override
         public void succeeded() {
             _command = new InventoryCommand();
-            _buyLiquidContainerTask = null;
         }
 
         @Override
         public void failed() {
             fail();
-            _buyLiquidContainerTask = null;
         }
     }
 
     private class FillContainerCallback implements TaskTerminateCallback {
         @Override
         public void succeeded() {
-            _drinkTask = _drinkTaskProvider.create(new DrinkTaskCallback());
-            _eventDistributor.subscribe(_drinkTask);
-            _fillLiquidContainerTask = null;
+            final DrinkTask drinkTask = _drinkTaskProvider.create(new DrinkTaskCallback());
+            _subtasks.add(drinkTask);
+            _eventDistributor.subscribe(drinkTask);
         }
 
         @Override
         public void failed() {
             fail();
-            _fillLiquidContainerTask = null;
         }
     }
 
@@ -125,7 +129,6 @@ public class ProvisionTask extends StatedTask {
 
         @Override
         public void failed() {
-            _drinkTask = null;
         }
     }
 }
