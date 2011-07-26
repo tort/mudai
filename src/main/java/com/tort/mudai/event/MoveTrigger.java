@@ -8,7 +8,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MoveTrigger implements EventTrigger {
-    private final Pattern _pattern = PatternUtil.compile("^Вы поплелись(?: на)? (север|юг|запад|восток|вверх|вниз)\\.$.*");
+    public static final DirectionLister lister = new DirectionLister();
+    private final Pattern _pattern = PatternUtil.compile("^Вы поплелись(?: на)? (" + lister.listDirections() + ")\\.$.*");
     private final EventDistributor _eventDistributor;
 
     public MoveTrigger(final EventDistributor eventDistributor) {

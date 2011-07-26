@@ -85,12 +85,12 @@ public class MapperImpl extends StatedTask implements Mapper {
         _persister = persister;
         _db = db;
 
-        _directions.put("запад", "восток");
-        _directions.put("восток", "запад");
-        _directions.put("север", "юг");
-        _directions.put("юг", "север");
-        _directions.put("вверх", "вниз");
-        _directions.put("вниз", "вверх");
+        _directions.put(Directions.WEST.name(), Directions.EAST.name());
+        _directions.put(Directions.EAST.name(), Directions.WEST.name());
+        _directions.put(Directions.NORTH.name(), Directions.SOUTH.name());
+        _directions.put(Directions.SOUTH.name(), Directions.NORTH.name());
+        _directions.put(Directions.UP.name(), Directions.DOWN.name());
+        _directions.put(Directions.DOWN.name(), Directions.UP.name());
 
         final List<Location> locations = _persister.enlistLocations();
 
