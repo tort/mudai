@@ -9,9 +9,7 @@ import com.tort.mudai.task.StatedTask;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.alg.DijkstraShortestPath;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @SuppressWarnings({"UnusedDeclaration"})
@@ -20,12 +18,12 @@ public class MapperImpl extends StatedTask implements Mapper {
     private volatile Location _current;
     private LocationHelper _locationHelper;
     private Persister _persister;
-    private Map<String, String> _directions = new HashMap<String, String>();
     private final ObjectContainer _db;
+    private final DirectionHelper _directionHelper;
 
     @Override
     public void move(String direction, String locationTitle) {
-        final String oppositeDirection = getOppositeDirection(direction);
+        final String oppositeDirection = _directionHelper.getOppositeDirection(direction);
         Location location = _current.getByDirection(direction);
         if (location == null) {
             Location newLocation = _persister.loadLocation(locationTitle);
@@ -85,17 +83,13 @@ public class MapperImpl extends StatedTask implements Mapper {
     }
 
     @Inject
-    public MapperImpl(final DirectedGraph<Location, Direction> graph, final Persister persister, final ObjectContainer db) {
+    public MapperImpl(final DirectedGraph<Location, Direction> graph, final Persister persister, final ObjectContainer db, DirectionHelper directionHelper) {
         _graph = graph;
         _persister = persister;
         _db = db;
+        _directionHelper = directionHelper;
 
-        _directions.put(Directions.WEST.name(), Directions.EAST.name());
-        _directions.put(Directions.EAST.name(), Directions.WEST.name());
-        _directions.put(Directions.NORTH.name(), Directions.SOUTH.name());
-        _directions.put(Directions.SOUTH.name(), Directions.NORTH.name());
-        _directions.put(Directions.UP.name(), Directions.DOWN.name());
-        _directions.put(Directions.DOWN.name(), Directions.UP.name());
+        new DirectionHelper().invoke();
 
         final List<Location> locations = _persister.enlistLocations();
 
@@ -125,10 +119,6 @@ public class MapperImpl extends StatedTask implements Mapper {
         final DijkstraShortestPath<Location, Direction> _algorythm = new DijkstraShortestPath<Location, Direction>(_graph, _current, target);
 
         return _algorythm.getPathEdgeList();
-    }
-
-    private String getOppositeDirection(final String direction) {
-        return _directions.get(direction);
     }
 
     @Override
@@ -187,4 +177,5 @@ public class MapperImpl extends StatedTask implements Mapper {
         //TODO replace with searching for nearest
         return locations.get(0);
     }
+
 }
