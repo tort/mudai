@@ -24,20 +24,25 @@ public class MapperImpl extends StatedTask implements Mapper {
     private final ObjectContainer _db;
 
     @Override
-    public void move(String direction) {
+    public void move(String direction, String locationTitle) {
         final String oppositeDirection = getOppositeDirection(direction);
-        Location location = _current.getByDirection(direction );
+        Location location = _current.getByDirection(direction);
         if (location == null) {
-            final Location newLocation = new Location();
-            _current.addDirection(direction , newLocation);
+            Location newLocation = _persister.loadLocation(locationTitle);
+            if (newLocation == null) {
+                newLocation = new Location();
+                System.out.println("NEW ROOM");
+            } else {
+                System.out.println("ROOM: " + locationTitle);
+            }
+            _current.addDirection(direction, newLocation);
             newLocation.addDirection(oppositeDirection, _current);
             _graph.addVertex(newLocation);
-            _graph.addEdge(_current, newLocation, new Direction(direction ));
+            _graph.addEdge(_current, newLocation, new Direction(direction));
             _graph.addEdge(newLocation, _current, new Direction(oppositeDirection));
             _persister.persistLocation(newLocation);
             _persister.persistLocation(_current);
             _current = newLocation;
-            System.out.println("NEW ROOM");
         } else {
             System.out.println("ROOM: " + location.getTitle());
             _current = location;
@@ -74,7 +79,7 @@ public class MapperImpl extends StatedTask implements Mapper {
             }
         }
 
-        if(isInitializing()){
+        if (isInitializing()) {
             run();
         }
     }
@@ -159,7 +164,7 @@ public class MapperImpl extends StatedTask implements Mapper {
                 return location.getWaterSource() != null;
             }
         });
-        if(locations.isEmpty()){
+        if (locations.isEmpty()) {
             throw new MapperException("NO WATER SOURCES EXIST");
         }
 
@@ -175,7 +180,7 @@ public class MapperImpl extends StatedTask implements Mapper {
                 return location.isShop();
             }
         });
-        if(locations.isEmpty()){
+        if (locations.isEmpty()) {
             throw new MapperException("NO SHOPS EXIST");
         }
 

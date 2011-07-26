@@ -9,7 +9,8 @@ import java.util.regex.Pattern;
 
 public class MoveTrigger implements EventTrigger {
     public static final DirectionLister lister = new DirectionLister();
-    private final Pattern _pattern = PatternUtil.compile("^Вы поплелись(?: на)? (" + lister.listDirections() + ")\\.$.*");
+    public static final Pattern PATTERN = PatternUtil.compile("^Вы поплелись на (" + lister.listDirections() + ")\\.\r?\n" +
+            "\u001B\\[1\\;36m(.*)\u001B\\[0\\;37m$\\s\\s\\s.*\r?\n\r?\n.*");
     private final EventDistributor _eventDistributor;
 
     public MoveTrigger(final EventDistributor eventDistributor) {
@@ -18,14 +19,16 @@ public class MoveTrigger implements EventTrigger {
 
     @Override
     public Event fireEvent(final String text) {
-        final Matcher matcher = _pattern.matcher(text);
+        final Matcher matcher = PATTERN.matcher(text);
         matcher.find();
         final String direction = matcher.group(1);
+        final String locationTitle = matcher.group(2);
+
 
         _eventDistributor.invoke(new Handler(){
             @Override
             public void handle(final AbstractTask task) {
-                task.move(direction);
+                task.move(direction, locationTitle);
             }
         });
 
@@ -34,6 +37,6 @@ public class MoveTrigger implements EventTrigger {
 
     @Override
     public boolean matches(final String text) {
-        return _pattern.matcher(text).matches();
+        return PATTERN.matcher(text).matches();
     }
 }

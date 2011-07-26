@@ -35,7 +35,7 @@ public class TravelTask extends StatedTask {
     }
 
     @Override
-    public void move(String direction) {
+    public void move(String direction, String locationTitle) {
         //TODO check current location has same title as planned, abort task otherwise
         if (_path.isEmpty()) {
             succeed();
