@@ -1,9 +1,15 @@
 package com.tort.mudai;
 
+import com.tort.mudai.mapper.Directions;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class RoomSnapshot {
     private String _locationTitle;
     private String[] _objectsPresent;
     private String[] _mobs;
+    private List<Directions> _doors = new ArrayList<Directions>();
 
     public void setLocationTitle(String locationTitle) {
         _locationTitle = locationTitle;
@@ -27,5 +33,9 @@ public class RoomSnapshot {
 
     public String[] getMobs() {
         return _mobs;
+    }
+
+    public void addDoor(Directions door) {
+        _doors.add(door);
     }
 }

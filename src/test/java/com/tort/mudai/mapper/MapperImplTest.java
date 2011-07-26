@@ -36,7 +36,7 @@ public class MapperImplTest {
     public void getPathToUnknownRoom(){
         final DirectedGraph<Location, Direction> graph = new DefaultDirectedGraph(String.class);
         final Persister persister = new MockPersister();
-        final MapperImpl mapper = new MapperImpl(graph, persister, null, _directionHelper);
+        final MapperImpl mapper = new MapperImpl(graph, persister, null, null);
 
         final List<Direction> pathTo;
         try {
