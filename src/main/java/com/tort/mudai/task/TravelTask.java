@@ -3,17 +3,21 @@ package com.tort.mudai.task;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.tort.mudai.command.Command;
+import com.tort.mudai.command.MoveCommand;
+import com.tort.mudai.command.OpenCommand;
 import com.tort.mudai.command.SimpleCommand;
 import com.tort.mudai.mapper.Direction;
 import com.tort.mudai.mapper.Location;
 import com.tort.mudai.mapper.Mapper;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 public class TravelTask extends StatedTask {
     private List<Direction> _path;
-    private Command _command;
     private final TaskTerminateCallback _callback;
+    private Queue<Command> _commands = new LinkedList<Command>();
 
     @Inject
     public TravelTask(@Assisted final Location to, @Assisted TaskTerminateCallback callback, final Mapper mapper) {
@@ -35,7 +39,7 @@ public class TravelTask extends StatedTask {
     }
 
     private void goNext(final Direction direction) {
-        _command = new SimpleCommand(direction.getName());
+        _commands.add(new SimpleCommand(direction.getName()));
     }
 
     @Override
@@ -58,14 +62,17 @@ public class TravelTask extends StatedTask {
     }
 
     @Override
+    public void discoverObstacle(String obstacle) {
+        _commands.add(new OpenCommand(_path.get(0), obstacle));
+        _commands.add(new MoveCommand(_path.get(0)));
+    }
+
+    @Override
     public Command pulse() {
         if(isTerminated()){
             return null;
         }
 
-        final Command command = _command;
-        _command = null;
-
-        return command;
+        return _commands.poll();
     }
 }

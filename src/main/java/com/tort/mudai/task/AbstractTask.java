@@ -78,4 +78,9 @@ public abstract class AbstractTask implements Task {
     public void drink() {
 
     }
+
+
+    public void discoverObstacle(String obstacle) {
+
+    }
 }
