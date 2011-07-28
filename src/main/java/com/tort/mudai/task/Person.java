@@ -92,7 +92,9 @@ public class Person extends StatedTask {
     }
 
     public void travel(final Location to) {
-        _eventDistributor.subscribe(_travelTaskFactory.create(to, new TravelTaskTerminateCallback()));
+        final TravelTask travelTask = _travelTaskFactory.create(to, new TravelTaskTerminateCallback());
+        _eventDistributor.subscribe(travelTask);
+        _pulseTargets.add(travelTask);
     }
 
     @Override
