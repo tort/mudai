@@ -2,7 +2,6 @@ package com.tort.mudai.event;
 
 import com.tort.mudai.Handler;
 import com.tort.mudai.RoomSnapshot;
-import com.tort.mudai.mapper.Directions;
 import com.tort.mudai.task.AbstractTask;
 import com.tort.mudai.task.EventDistributor;
 
@@ -15,7 +14,7 @@ public class LookAroundTrigger implements EventTrigger {
             "\u001B\\[1\\;36m(.*)\u001B\\[0\\;37m$\\s\\s\\s.*\r?\n\r?\n" +
             "\u001B\\[1\\;33m(?:(.*)\r?\n)?" +
             "\u001B\\[1\\;31m(?:(.*)\r?\n)?" +
-            "\u001B\\[0\\;37m\r?\n?\u001B\\[0\\;32m[^\n] Вых:(С|\\(С\\))?(В|\\(В\\))?(Ю|\\(Ю\\))?(З|\\(З\\))?(\\^|\\(^\\))?(v|\\(v\\))?>$");
+            "\u001B\\[0\\;37m\r?\n?\u001B\\[0\\;32m[^\n]*$");
 
     private final EventDistributor _eventDistributor;
 
@@ -52,30 +51,6 @@ public class LookAroundTrigger implements EventTrigger {
         roomSnapshot.setLocationTitle(locationTitle);
         roomSnapshot.setObjectsPresent(objects);
         roomSnapshot.setMobs(mobs);
-
-        final String northExitGroup = matcher.group(4);
-        if("\\(С\\)".equals(northExitGroup))
-            roomSnapshot.addDoor(Directions.NORTH);
-
-        final String eastExitGroup = matcher.group(5);
-        if("\\(В\\)".equals(eastExitGroup))
-            roomSnapshot.addDoor(Directions.EAST);
-
-        final String westExitGroup = matcher.group(6);
-        if("\\(З\\)".equals(westExitGroup))
-            roomSnapshot.addDoor(Directions.WEST);
-
-        final String southExitGroup = matcher.group(7);
-        if("\\(Ю\\)".equals(southExitGroup))
-            roomSnapshot.addDoor(Directions.SOUTH);
-
-        final String upExitGroup = matcher.group(8);
-        if("\\(\\^\\)".equals(upExitGroup))
-            roomSnapshot.addDoor(Directions.UP);
-
-        final String downExitGroup = matcher.group(9);
-        if("\\(v\\)".equals(downExitGroup))
-            roomSnapshot.addDoor(Directions.DOWN);
 
         _eventDistributor.invoke(new Handler<LookAroundEvent>() {
             @Override
