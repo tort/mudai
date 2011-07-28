@@ -29,17 +29,21 @@ public class MapperImpl extends StatedTask implements Mapper {
             Location newLocation = _persister.loadLocation(locationTitle);
             if (newLocation == null) {
                 newLocation = new Location();
+                _graph.addVertex(newLocation);
                 System.out.println("NEW ROOM");
             } else {
                 System.out.println("ROOM: " + locationTitle);
             }
-            _current.addDirection(direction, newLocation);
-            newLocation.addDirection(oppositeDirection, _current);
-            _graph.addVertex(newLocation);
-            _graph.addEdge(_current, newLocation, new Direction(direction));
-            _graph.addEdge(newLocation, _current, new Direction(oppositeDirection));
-            _persister.persistLocation(newLocation);
-            _persister.persistLocation(_current);
+
+            if (_current.getByDirection(direction) == null) {
+                _current.addDirection(direction, newLocation);
+                newLocation.addDirection(oppositeDirection, _current);
+                _graph.addEdge(_current, newLocation, new Direction(direction));
+                _graph.addEdge(newLocation, _current, new Direction(oppositeDirection));
+                _persister.persistLocation(newLocation);
+                _persister.persistLocation(_current);
+            }
+
             _current = newLocation;
         } else {
             System.out.println("ROOM: " + location.getTitle());
@@ -88,8 +92,6 @@ public class MapperImpl extends StatedTask implements Mapper {
         _persister = persister;
         _db = db;
         _directionHelper = directionHelper;
-
-        new DirectionHelper().invoke();
 
         final List<Location> locations = _persister.enlistLocations();
 
@@ -186,7 +188,7 @@ public class MapperImpl extends StatedTask implements Mapper {
                 return location.isTavern();
             }
         });
-        if(locations.isEmpty()){
+        if (locations.isEmpty()) {
             throw new MapperException("NO TAVERNS EXIST");
         }
 
