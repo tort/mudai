@@ -12,6 +12,7 @@ public class LookAroundTrigger implements EventTrigger {
     public static final DirectionLister lister = new DirectionLister();
     public static final Pattern PATTERN = PatternUtil.compile("^(?:Вы поплелись на (?:" + lister.listDirections() + ")\\.\r?\n)?" +
             "\u001B\\[1\\;36m(.*)\u001B\\[0\\;37m$\\s\\s\\s.*\r?\n\r?\n" +
+            "(?:\u001B\\[1\\;37mСнежный ковер лежит у Вас под ногами.\u001B\\[0\\;37m\r?\n)?" +
             "\u001B\\[1\\;33m(?:(.*)\r?\n)?" +
             "\u001B\\[1\\;31m(?:(.*)\r?\n)?" +
             "\u001B\\[0\\;37m\r?\n?\u001B\\[0\\;32m[^\n]*$");
