@@ -115,8 +115,8 @@ public class ProvisionTaskTest {
         _eventDistributor = mock(EventDistributor.class);
         _provisionTask = new ProvisionTask(_eventDistributor,
                 _drinkTaskFactory,
-                null
-        );
+                null,
+                _pulseDistributor);
     }
 
     private ScheduledExecutorService nullExecutor() {

@@ -1,18 +1,12 @@
 package com.tort.mudai.task;
 
 import com.google.inject.Inject;
+import com.tort.mudai.PulseDistributor;
 import com.tort.mudai.command.Command;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 public class ProvisionTask extends StatedTask {
-    private static final Command EMPTY_COMMAND = null;
-
     private final EventDistributor _eventDistributor;
-    private final List<Task> _subtasks = new CopyOnWriteArrayList<Task>();
+    private final PulseDistributor _pulseDistributor;
 
     private final EatTaskFactory _eatTaskFactory;
     private final DrinkTaskFactory _drinkTaskFactory;
@@ -20,43 +14,24 @@ public class ProvisionTask extends StatedTask {
     @Inject
     public ProvisionTask(final EventDistributor eventDistributor,
                          final DrinkTaskFactory drinkTaskFactory,
-                         final EatTaskFactory eatTaskFactory) {
+                         final EatTaskFactory eatTaskFactory, PulseDistributor pulseDistributor) {
         _eventDistributor = eventDistributor;
         _drinkTaskFactory = drinkTaskFactory;
         _eatTaskFactory = eatTaskFactory;
+        _pulseDistributor = pulseDistributor;
 
         final EatTask eatTask = _eatTaskFactory.create(new EatTaskCallback());
-        _subtasks.add(eatTask);
+        _pulseDistributor.subscribe(eatTask);
         _eventDistributor.subscribe(eatTask);
 
         final DrinkTask drinkTask = _drinkTaskFactory.create(new DrinkTaskCallback());
-        _subtasks.add(drinkTask);
+        _pulseDistributor.subscribe(drinkTask);
         _eventDistributor.subscribe(drinkTask);
     }
 
     @Override
     public Command pulse() {
-        for (Task task : _subtasks) {
-            Command command = task.pulse();
-            if (command != EMPTY_COMMAND) {
-                return command;
-            }
-
-            if (task.isInitializing())
-                break;
-        }
-
-        List<Task> toDelete = new ArrayList();
-        for (Task subtask : _subtasks) {
-            if (subtask.isTerminated())
-                toDelete.add(subtask);
-        }
-
-        for (Task task : toDelete) {
-            _subtasks.remove(task);
-        }
-
-        return null;
+        return _pulseDistributor.invoke();
     }
 
     private class DrinkTaskCallback implements TaskTerminateCallback {
@@ -81,4 +56,5 @@ public class ProvisionTask extends StatedTask {
             fail();
         }
     }
+
 }
