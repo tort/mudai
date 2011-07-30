@@ -14,7 +14,7 @@ public class PulseDistributor {
 
     private final List<Task> _subtasks = new CopyOnWriteArrayList<Task>();
 
-    public Command invoke() {
+    public Command pulse() {
         Command command = null;
         for (Task task : _subtasks) {
             command = task.pulse();
@@ -26,15 +26,16 @@ public class PulseDistributor {
                 break;
         }
 
-        List<Task> toDelete = new ArrayList();
+        List<Task> terminatedTasks = new ArrayList();
         for (Task subtask : _subtasks) {
             if (subtask.isTerminated())
-                toDelete.add(subtask);
+                terminatedTasks.add(subtask);
         }
 
-        for (Task task : toDelete) {
-            _subtasks.remove(task);
+        for (Task terminatedTask : terminatedTasks) {
+            _subtasks.remove(terminatedTask);
         }
+
         return command;
     }
 

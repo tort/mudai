@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.tort.mudai.CommandExecutor;
+import com.tort.mudai.PulseDistributor;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.mapper.Direction;
 import com.tort.mudai.mapper.Location;
@@ -16,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Person extends StatedTask {
     private static final Command EMPTY_COMMAND = null;
-    
+
     private final Provider<SessionTask> _sessionProvider;
     private final Provider<AbstractTask> _mapperTaskProvider;
     private final Provider<ProvisionTask> _provisionTask;
@@ -27,7 +28,7 @@ public class Person extends StatedTask {
 
     private Mapper _mapper;
     private final EventDistributor _eventDistributor;
-    private final List<Task> _pulseTargets = new ArrayList<Task>();
+    private PulseDistributor _pulseDistributor;
 
     @Inject
     private Person(final Provider<SessionTask> sessionProvider,
@@ -37,7 +38,7 @@ public class Person extends StatedTask {
                    final CommandExecutor commandExecutor,
                    final EventDistributor eventDistributor,
                    final Provider<ProvisionTask> provisionTask,
-                   final TravelTaskFactory travelTaskFactory) {
+                   final TravelTaskFactory travelTaskFactory, PulseDistributor pulseDistributor) {
 
         _sessionProvider = sessionProvider;
         _commandExecutor = commandExecutor;
@@ -47,6 +48,7 @@ public class Person extends StatedTask {
         _eventDistributor = eventDistributor;
         _provisionTask = provisionTask;
         _travelTaskFactory = travelTaskFactory;
+        _pulseDistributor = pulseDistributor;
         run();
     }
 
@@ -63,15 +65,18 @@ public class Person extends StatedTask {
         _eventDistributor.subscribe(mapperTask);
         _eventDistributor.subscribe(provisionTask);
 
-        _pulseTargets.add(sessionTask);
-        _pulseTargets.add(mapperTask);
-        _pulseTargets.add(provisionTask);
+        _pulseDistributor.subscribe(sessionTask);
+        _pulseDistributor.subscribe(mapperTask);
+        _pulseDistributor.subscribe(provisionTask);
 
         _pulseExecutor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
                 try {
-                    pulse();
+                    final Command pulse = pulse();
+                    if (pulse != null) {
+                        _commandExecutor.submit(pulse);
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                 }
@@ -82,22 +87,12 @@ public class Person extends StatedTask {
     public void travel(final Location to) {
         final TravelTask travelTask = _travelTaskFactory.create(to, new TravelTaskTerminateCallback());
         _eventDistributor.subscribe(travelTask);
-        _pulseTargets.add(travelTask);
+        _pulseDistributor.subscribe(travelTask);
     }
 
     @Override
     public Command pulse() {
-        for (Task task : _pulseTargets) {
-            Command command = task.pulse();
-            if (command != EMPTY_COMMAND) {
-                _commandExecutor.submit(command);
-
-                return command;
-            }
-
-            if (task.isInitializing())
-                break;
-        }
+        final Command command = _pulseDistributor.pulse();
 
         for (Task task : _eventDistributor.getTargets()) {
             if (task.isTerminated()) {
@@ -105,7 +100,7 @@ public class Person extends StatedTask {
             }
         }
 
-        return EMPTY_COMMAND;
+        return command;
     }
 
     private static class TravelTaskTerminateCallback implements TaskTerminateCallback {
