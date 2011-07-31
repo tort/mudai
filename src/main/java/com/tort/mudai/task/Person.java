@@ -15,8 +15,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class Person extends StatedTask {
-    private static final Command EMPTY_COMMAND = null;
-
     private final Provider<SessionTask> _sessionProvider;
     private final Provider<AbstractTask> _mapperTaskProvider;
     private final Provider<ProvisionTask> _provisionTask;
@@ -70,7 +68,11 @@ public class Person extends StatedTask {
         _pulseExecutor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                pulse();
+                try {
+                    pulse();
+                } catch (Exception e) {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                }
             }
         }, 1, 1, TimeUnit.SECONDS);
     }
