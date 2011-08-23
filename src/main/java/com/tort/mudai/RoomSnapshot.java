@@ -2,8 +2,8 @@ package com.tort.mudai;
 
 public class RoomSnapshot {
     private String _locationTitle;
-    private String[] _objectsPresent;
-    private String[] _mobs;
+    private String[] _objectsPresent = new String[]{};
+    private String[] _mobs = new String[]{};
 
     public void setLocationTitle(String locationTitle) {
         _locationTitle = locationTitle;
