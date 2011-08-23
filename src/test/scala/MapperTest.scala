@@ -10,30 +10,46 @@ import org.scalatest.{BeforeAndAfterEach, FeatureSpec}
 class MapperTest extends FeatureSpec with BeforeAndAfterEach {
   feature("mapping") {
     scenario("map three locations, pass back, check way forth") {
-      val injector: Injector = Guice.createInjector(new MapperTestModule)
-      val mapper: MapperImpl = injector.getInstance(classOf[MapperImpl])
-
-      assert(mapper != null)
-
-      val roomSnapshot: RoomSnapshot = new RoomSnapshot()
-      roomSnapshot.setLocationTitle("room 1")
-      mapper.lookAround(roomSnapshot)
-      assert(mapper.currentLocation() != null)
-
-      mapper.move(Directions.SOUTH.getName, "room 2")
-      mapper.move(Directions.SOUTH.getName, "room 3");
-
-      val pathBack: List[Direction] = mapper.pathTo("room 1")
-      assert(pathBack.size() == 2)
-
-      mapper.move(Directions.NORTH.getName, "room 2")
-      mapper.move(Directions.NORTH.getName, "room 1")
-      assert(mapper.currentLocation().getTitle == "room 1")
-
-      val pathForth: List[Direction] = mapper.pathTo("room 3")
-      assert(pathForth.size == 2)
+      val mapper: MapperImpl = createMapper
+      mapTerrain(mapper)
+      checkPathBack(mapper)
+      moveBack(mapper)
+      checkForth(mapper)
     }
+  }
 
+  def createMapper(): MapperImpl = {
+    val injector: Injector = Guice.createInjector(new MapperTestModule)
+    val mapper: MapperImpl = injector.getInstance(classOf[MapperImpl])
+    assert(mapper != null)
+
+    mapper
+  }
+
+  def mapTerrain(mapper: MapperImpl) {
+    val roomSnapshot: RoomSnapshot = new RoomSnapshot()
+    roomSnapshot.setLocationTitle("room 1")
+    mapper.lookAround(roomSnapshot)
+    assert(mapper.currentLocation() != null)
+
+    mapper.move(Directions.SOUTH.getName, "room 2")
+    mapper.move(Directions.SOUTH.getName, "room 3");
+  }
+
+  def checkPathBack(mapper: MapperImpl) {
+    val pathBack: List[Direction] = mapper.pathTo("room 1")
+    assert(pathBack.size() == 2)
+  }
+
+  def moveBack(mapper: MapperImpl) {
+    mapper.move(Directions.NORTH.getName, "room 2")
+    mapper.move(Directions.NORTH.getName, "room 1")
+    assert(mapper.currentLocation().getTitle == "room 1")
+  }
+
+  def checkForth(mapper: MapperImpl) {
+    val pathForth: List[Direction] = mapper.pathTo("room 3")
+    assert(pathForth.size == 2)
   }
 
   override protected def afterEach() {
