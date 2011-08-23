@@ -26,6 +26,10 @@ class MapperTest extends FeatureSpec with BeforeAndAfterEach {
     mapper
   }
 
+  def room3: String = {
+    "room 3"
+  }
+
   def mapTerrain(mapper: MapperImpl) {
     val roomSnapshot: RoomSnapshot = new RoomSnapshot()
     roomSnapshot.setLocationTitle("room 1")
@@ -33,7 +37,7 @@ class MapperTest extends FeatureSpec with BeforeAndAfterEach {
     assert(mapper.currentLocation() != null)
 
     mapper.move(Directions.SOUTH.getName, "room 2")
-    mapper.move(Directions.SOUTH.getName, "room 3");
+    mapper.move(Directions.SOUTH.getName, room3);
   }
 
   def checkPathBack(mapper: MapperImpl) {
@@ -48,7 +52,7 @@ class MapperTest extends FeatureSpec with BeforeAndAfterEach {
   }
 
   def checkForth(mapper: MapperImpl) {
-    val pathForth: List[Direction] = mapper.pathTo("room 3")
+    val pathForth: List[Direction] = mapper.pathTo(room3)
     assert(pathForth.size == 2)
   }
 

@@ -23,32 +23,34 @@ public class MapperImpl extends StatedTask implements Mapper {
 
     @Override
     public void move(String direction, String locationTitle) {
-        final String oppositeDirection = _directionHelper.getOppositeDirection(direction);
         Location location = _current.getByDirection(direction);
-        if (location == null) {
-            Location newLocation = _persister.loadLocation(locationTitle);
-            if (newLocation == null) {
-                newLocation = new Location();
-                _graph.addVertex(newLocation);
-                System.out.println("NEW ROOM");
-            } else {
-                System.out.println("ROOM: " + locationTitle);
-            }
-
-            if (_current.getByDirection(direction) == null) {
-                _current.addDirection(direction, newLocation);
-                newLocation.addDirection(oppositeDirection, _current);
-                _graph.addEdge(_current, newLocation, new Direction(direction));
-                _graph.addEdge(newLocation, _current, new Direction(oppositeDirection));
-                _persister.persistLocation(newLocation);
-                _persister.persistLocation(_current);
-            }
-
-            _current = newLocation;
-        } else {
+        if (location != null) {
             System.out.println("ROOM: " + location.getTitle());
             _current = location;
+            return;
         }
+
+        Location newLocation = _persister.loadLocation(locationTitle);
+        if (newLocation == null) {
+            newLocation = new Location();
+            newLocation.setTitle(locationTitle);
+            _graph.addVertex(newLocation);
+            System.out.println("NEW ROOM");
+        } else {
+            System.out.println("ROOM: " + locationTitle);
+        }
+
+        if (_current.getByDirection(direction) == null) {
+            _current.addDirection(direction, newLocation);
+            final String oppositeDirection = _directionHelper.getOppositeDirection(direction);
+            newLocation.addDirection(oppositeDirection, _current);
+            _graph.addEdge(_current, newLocation, new Direction(direction));
+            _graph.addEdge(newLocation, _current, new Direction(oppositeDirection));
+            _persister.persistLocation(newLocation);
+            _persister.persistLocation(_current);
+        }
+
+        _current = newLocation;
     }
 
     @Override
