@@ -1,6 +1,5 @@
 package com.tort.mudai.command;
 
-import com.tort.mudai.command.Command;
 import com.tort.mudai.mapper.Direction;
 
 public class OpenCommand implements Command {
