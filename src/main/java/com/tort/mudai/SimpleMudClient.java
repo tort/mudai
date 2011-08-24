@@ -6,16 +6,14 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.RawWriteCommand;
-import com.tort.mudai.mapper.Location;
-import com.tort.mudai.mapper.Mapper;
-import com.tort.mudai.mapper.Mob;
-import com.tort.mudai.mapper.Persister;
+import com.tort.mudai.mapper.*;
 import com.tort.mudai.task.Person;
 import com.tort.mudai.task.StatedTask;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.CharBuffer;
+import java.util.List;
 
 public class SimpleMudClient {
     private static final String FIND_PATH_COMMAND = "/путь";
@@ -50,8 +48,7 @@ public class SimpleMudClient {
                 charBuffer.flip();
                 final String command = charBuffer.toString();
                 if (command.startsWith(FIND_PATH_COMMAND)) {
-                    final String path = _person.pathTo(command.substring(FIND_PATH_COMMAND.length() + 1, command.length() - 1));
-                    System.out.println("PATH: " + path);
+                    handleFindPathCommand(command);
                 } else if (command.startsWith(LIST_LOCATIONS_COMMAND)) {
                     for (Location location : _persister.enlistLocations()) {
                         System.out.println("LOCATION: " + location.getTitle());
@@ -62,11 +59,7 @@ public class SimpleMudClient {
                         System.out.println("MOB: " + mob.getLongName());
                     }
                 } else if (command.startsWith(TRAVEL_COMMAND)) {
-                    final String to = command.substring(TRAVEL_COMMAND.length() + 1, command.length() - 1);
-                    final Location location = _persister.loadLocation(to);
-                    if (location != null) {
-                        _person.travel(location);
-                    }
+                    handleTravelCommand(command);
                 } else if (command.startsWith(MARK_WATER_SOURCE_COMMAND)) {
                     _mapper.markWaterSource(command.substring(MARK_WATER_SOURCE_COMMAND.length() + 1, command.length() - 1));
                 } else if (command.startsWith(MARK_SHOP_COMMAND)) {
@@ -86,8 +79,44 @@ public class SimpleMudClient {
         }
     }
 
+    private void handleFindPathCommand(String command) {
+        String to = command.substring(FIND_PATH_COMMAND.length() + 1, command.length() - 1);
+        Location prototype = new Location();
+        prototype.setTitle(to);
+        final List<Location> locations = _persister.loadLocation(prototype);
+        if (locations.size() > 1) {
+            System.out.println(locations.size() + " locations found, titled " + prototype.getTitle());
+            for (Location location : locations) {
+                System.out.println("DISTANCE: " + _mapper.pathTo(location).size());
+            }
+        } else {
+            final List<Direction> path = _mapper.pathTo(locations.get(0));
+
+            StringBuilder result = new StringBuilder();
+            for (Direction direction : path) {
+                result.append(direction.getName());
+            }
+            System.out.println("PATH: " + path);
+        }
+    }
+
+    private void handleTravelCommand(String command) {
+        final String to = command.substring(TRAVEL_COMMAND.length() + 1, command.length() - 1);
+        Location prototype = new Location();
+        prototype.setTitle(to);
+        final List<Location> locations = _persister.loadLocation(prototype);
+        if (locations.size() > 1) {
+            System.out.println(locations.size() + " locations found, titled " + prototype.getTitle());
+            for (Location location : locations) {
+                System.out.println("DISTANCE: " + _mapper.pathTo(location).size());
+            }
+        } else {
+            _person.travel(locations.get(0));
+        }
+    }
+
     private static class SimpleEventListener extends StatedTask {
-        public SimpleEventListener(){
+        public SimpleEventListener() {
             run();
         }
 

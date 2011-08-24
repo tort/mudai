@@ -75,22 +75,6 @@ public class Person extends StatedTask {
         }, 1, 1, TimeUnit.SECONDS);
     }
 
-    public String pathTo(final String location) {
-        final List<Direction> directions;
-        try {
-            directions = _mapper.pathTo(location);
-        } catch (MapperException e) {
-            return "CANNOT FIND DESTINATION LOCATION";
-        }
-
-        StringBuilder result = new StringBuilder();
-        for (Direction direction : directions) {
-            result.append(direction.getName());
-        }
-
-        return result.toString();
-    }
-
     public void travel(final Location to) {
         final TravelTask travelTask = _travelTaskFactory.create(to, new TravelTaskTerminateCallback());
         _eventDistributor.subscribe(travelTask);

@@ -22,22 +22,10 @@ public class Db4oPersister implements Persister {
     }
 
     @Override
-    public Location loadLocation(final String title) {
-        final ObjectSet<Location> locations = _db.query(new Predicate<Location>() {
-            @Override
-            public boolean match(final Location location) {
-                return location.getTitle().equals(title);
-            }
-        });
+    public List<Location> loadLocation(Location prototype) {
+        final ObjectSet<Location> locations = _db.queryByExample(prototype);
 
-        if (locations.isEmpty()) {
-            System.out.println("NOT FOUND LOCATION: " + title);
-            return null;
-        } else {
-            System.out.println("FOUND " + locations.size() + " LOCATIONS " + title);
-        }
-
-        return locations.get(0);
+        return locations;
     }
 
     @Override

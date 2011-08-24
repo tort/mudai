@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 public class LookAroundTrigger implements EventTrigger {
     public static final DirectionLister lister = new DirectionLister();
     public static final Pattern PATTERN = PatternUtil.compile("^(?:Вы поплелись на (?:" + lister.listDirections() + ")\\.\r?\n)?" +
-            "\u001B\\[1\\;36m(.*)\u001B\\[0\\;37m$\\s\\s\\s.*\r?\n\r?\n" +
+            "\u001B\\[1\\;36m(.*)\u001B\\[0\\;37m$\\s\\s\\s(.*)\r?\n\r?\n" +
             "(?:\u001B\\[1\\;37mСнежный ковер лежит у Вас под ногами.\u001B\\[0\\;37m\r?\n)?" +
             "\u001B\\[1\\;33m(?:(.*)\r?\n)?" +
             "\u001B\\[1\\;31m(?:(.*)\r?\n)?" +
@@ -36,13 +36,14 @@ public class LookAroundTrigger implements EventTrigger {
         matcher.find();
 
         final String locationTitle = matcher.group(1);
-        final String objectsGroup = matcher.group(2);
+        final String locationDesc = matcher.group(2);
+        final String objectsGroup = matcher.group(3);
         String[] objects = new String[]{};
         if(objectsGroup != null){
             objects = objectsGroup.split("\n");
         }
 
-        String mobsGroup = matcher.group(3);
+        String mobsGroup = matcher.group(4);
         String[] mobs = new String[]{};
         if (mobsGroup != null) {
             mobs = mobsGroup.split("\n");
@@ -52,6 +53,7 @@ public class LookAroundTrigger implements EventTrigger {
         roomSnapshot.setLocationTitle(locationTitle);
         roomSnapshot.setObjectsPresent(objects);
         roomSnapshot.setMobs(mobs);
+        roomSnapshot.setLocationDesc(locationDesc);
 
         _eventDistributor.invoke(new Handler<LookAroundEvent>() {
             @Override

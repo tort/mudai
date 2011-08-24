@@ -5,7 +5,7 @@ import com.tort.mudai.command.Command;
 import com.tort.mudai.event.LiquidContainer;
 
 public abstract class AbstractTask implements Task {
-    public void move(String direction, String locationTitle) {
+    public void move(String direction, RoomSnapshot roomSnapshot) {
 //        throw new NotImplementedException();
     }
 

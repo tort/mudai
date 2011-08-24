@@ -39,11 +39,10 @@ public class MapperImplTest {
         final MapperImpl mapper = new MapperImpl(graph, persister, null, null);
 
         final List<Direction> pathTo;
-        try {
-            pathTo = mapper.pathTo("unknown");
-            fail("must throw MapperException in case of unknown destination");
-        } catch (MapperException e) {
-        }
+        final Location location = new Location();
+        location.setTitle("unknown");
+        pathTo = mapper.pathTo(location);
+        fail("must throw MapperException in case of unknown destination");
     }
 
     public void nearestWaterSource(){

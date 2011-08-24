@@ -4,6 +4,7 @@ public class RoomSnapshot {
     private String _locationTitle;
     private String[] _objectsPresent = new String[]{};
     private String[] _mobs = new String[]{};
+    private String _locationDesc;
 
     public void setLocationTitle(String locationTitle) {
         _locationTitle = locationTitle;
@@ -27,5 +28,13 @@ public class RoomSnapshot {
 
     public String[] getMobs() {
         return _mobs;
+    }
+
+    public void setLocationDesc(String locationDesc) {
+        _locationDesc = locationDesc;
+    }
+
+    public String getLocationDesc() {
+        return _locationDesc;
     }
 }

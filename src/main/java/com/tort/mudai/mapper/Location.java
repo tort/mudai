@@ -10,6 +10,7 @@ public class Location {
     private String _waterSource;
     private boolean _isShop = false;
     private boolean _isTavern = false;
+    private String _desc;
 
     public String getTitle() {
         return _title;
@@ -53,5 +54,13 @@ public class Location {
 
     public boolean isTavern() {
         return _isTavern;
+    }
+
+    public void setDesc(String desc) {
+        _desc = desc;
+    }
+
+    public String getDesc() {
+        return _desc;
     }
 }

@@ -4,6 +4,7 @@ import com.db4o.Db4oEmbedded;
 import com.db4o.EmbeddedObjectContainer;
 import com.db4o.ObjectContainer;
 import com.db4o.config.EmbeddedConfiguration;
+import com.db4o.io.MemoryStorage;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
@@ -30,6 +31,7 @@ public class MapperTestModule extends AbstractModule {
 
         final EmbeddedConfiguration configuration = Db4oEmbedded.newConfiguration();
         configuration.common().objectClass(Location.class).cascadeOnUpdate(true);
+        configuration.file().storage(new MemoryStorage());
         final EmbeddedObjectContainer db = Db4oEmbedded.openFile(configuration, "mapper-test.db");
         bind(ObjectContainer.class).toInstance(db);
     }

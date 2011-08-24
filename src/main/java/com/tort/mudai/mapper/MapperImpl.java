@@ -22,7 +22,7 @@ public class MapperImpl extends StatedTask implements Mapper {
     private final DirectionHelper _directionHelper;
 
     @Override
-    public void move(String direction, String locationTitle) {
+    public void move(String direction, RoomSnapshot roomSnapshot) {
         Location location = _current.getByDirection(direction);
         if (location != null) {
             System.out.println("ROOM: " + location.getTitle());
@@ -30,14 +30,27 @@ public class MapperImpl extends StatedTask implements Mapper {
             return;
         }
 
-        Location newLocation = _persister.loadLocation(locationTitle);
+        Location prototype = new Location();
+        prototype.setTitle(roomSnapshot.getLocationTitle());
+        prototype.setDesc(roomSnapshot.getLocationDesc());
+
+        List<Location> locations = _persister.loadLocation(prototype);
+        Location newLocation = null;
+
+        if (locations.size() > 1)
+            throw new IllegalStateException(locations.size() + " rooms, titled \"" + prototype.getTitle() + "\" found");
+
+        if (locations.size() == 1)
+            newLocation = locations.get(0);
+
         if (newLocation == null) {
             newLocation = new Location();
-            newLocation.setTitle(locationTitle);
+            newLocation.setTitle(roomSnapshot.getLocationTitle());
+            newLocation.setDesc(roomSnapshot.getLocationDesc());
             _graph.addVertex(newLocation);
             System.out.println("NEW ROOM");
         } else {
-            System.out.println("ROOM: " + locationTitle);
+            System.out.println("ROOM: " + roomSnapshot.getLocationTitle());
         }
 
         if (_current.getByDirection(direction) == null) {
@@ -67,18 +80,32 @@ public class MapperImpl extends StatedTask implements Mapper {
     }
 
     private void updateMap(RoomSnapshot roomSnapshot) {
-        String locationTitle = roomSnapshot.getLocationTitle();
         if (_current == null) {
-            _current = _persister.loadLocation(locationTitle);
+            Location prototype = new Location();
+            prototype.setTitle(roomSnapshot.getLocationTitle());
+            prototype.setDesc(roomSnapshot.getLocationDesc());
+
+            List<Location> locations = _persister.loadLocation(prototype);
+            if (locations.isEmpty())
+                _current = null;
+
+            if (locations.size() > 1)
+                throw new IllegalStateException(locations.size() + " rooms, titled \"" + prototype.getTitle() + "\" found");
+
+            if (locations.size() == 1)
+                _current = locations.get(0);
+
             if (_current == null) {
                 _current = new Location();
-                _current.setTitle(locationTitle);
+                _current.setTitle(roomSnapshot.getLocationTitle());
+                _current.setDesc(roomSnapshot.getLocationDesc());
                 _persister.persistLocation(_current);
                 _graph.addVertex(_current);
             }
         } else {
             if (_current.getTitle() == null) {
-                _current.setTitle(locationTitle);
+                _current.setTitle(roomSnapshot.getLocationTitle());
+                _current.setDesc(roomSnapshot.getLocationDesc());
                 _persister.persistLocation(_current);
             }
         }
@@ -107,15 +134,6 @@ public class MapperImpl extends StatedTask implements Mapper {
                 _graph.addEdge(location, location.getByDirection(direction), new Direction(direction));
             }
         }
-    }
-
-    @Override
-    public List<Direction> pathTo(final String locationTitle) throws MapperException {
-        final Location target = _persister.loadLocation(locationTitle);
-        if (target == null)
-            throw new MapperException("location not found");
-
-        return pathTo(target);
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.tort.mudai.task;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.tort.mudai.RoomSnapshot;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.command.MoveCommand;
 import com.tort.mudai.command.OpenCommand;
@@ -43,7 +44,7 @@ public class TravelTask extends StatedTask {
     }
 
     @Override
-    public void move(String direction, String locationTitle) {
+    public void move(String direction, RoomSnapshot roomSnapshot) {
         //TODO check current location has same title as planned, abort task otherwise
         if (_path.isEmpty()) {
             succeed();

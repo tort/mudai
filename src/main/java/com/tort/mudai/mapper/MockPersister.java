@@ -11,7 +11,7 @@ public class MockPersister implements Persister {
     }
 
     @Override
-    public Location loadLocation(final String title) {
+    public List<Location> loadLocation(Location prototype) {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 

@@ -7,7 +7,7 @@ import java.util.List;
 public interface Persister {
     void persistLocation(Location current);
 
-    Location loadLocation(String title);
+    List<Location> loadLocation(Location prototype);
 
     List<Location> enlistLocations();
 
