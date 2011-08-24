@@ -1,33 +1,18 @@
-package com.tort
+package com.tort.mudai.mapper
 
-import mudai.mapper.{Direction, Directions, MapperImpl, MapperTestModule}
-import mudai.RoomSnapshot
 import com.google.inject.{Injector, Guice}
 import java.util.List
 import java.io.File
 import org.scalatest.{BeforeAndAfterEach, FeatureSpec}
+import com.tort.mudai.RoomSnapshot
 
 class MapperTest extends FeatureSpec with BeforeAndAfterEach {
+  val room3: String = "room 3"
+
   feature("mapping") {
     scenario("map three locations, pass back, check way forth") {
-      val mapper: MapperImpl = createMapper
-      mapTerrain(mapper)
-      checkPathBack(mapper)
-      moveBack(mapper)
-      checkForth(mapper)
+      checkPathForth(mapper())
     }
-  }
-
-  def createMapper(): MapperImpl = {
-    val injector: Injector = Guice.createInjector(new MapperTestModule)
-    val mapper: MapperImpl = injector.getInstance(classOf[MapperImpl])
-    assert(mapper != null)
-
-    mapper
-  }
-
-  def room3: String = {
-    "room 3"
   }
 
   def mapTerrain(mapper: MapperImpl) {
@@ -41,19 +26,33 @@ class MapperTest extends FeatureSpec with BeforeAndAfterEach {
   }
 
   def checkPathBack(mapper: MapperImpl) {
+    mapTerrain(mapper)
+
     val pathBack: List[Direction] = mapper.pathTo("room 1")
     assert(pathBack.size() == 2)
   }
 
   def moveBack(mapper: MapperImpl) {
+    checkPathBack(mapper)
+
     mapper.move(Directions.NORTH.getName, "room 2")
     mapper.move(Directions.NORTH.getName, "room 1")
     assert(mapper.currentLocation().getTitle == "room 1")
   }
 
-  def checkForth(mapper: MapperImpl) {
+  def checkPathForth(mapper: MapperImpl) {
+    moveBack(mapper)
+
     val pathForth: List[Direction] = mapper.pathTo(room3)
     assert(pathForth.size == 2)
+  }
+
+  def mapper(): MapperImpl = {
+    val injector: Injector = Guice.createInjector(new MapperTestModule)
+    val mapper: MapperImpl = injector.getInstance(classOf[MapperImpl])
+    assert(mapper != null)
+
+    mapper
   }
 
   override protected def afterEach() {
