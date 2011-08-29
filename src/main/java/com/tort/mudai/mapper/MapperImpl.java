@@ -38,7 +38,7 @@ public class MapperImpl extends StatedTask implements Mapper {
         List<Location> locations = _persister.loadLocation(prototype);
         Location newLocation = null;
 
-        if (locations.size() > 1)
+        if (locations.size() > 1 && surroundingRoomsMatchToo(locations, prototype, direction))
             throw new IllegalStateException(locations.size() + " rooms, titled \"" + prototype.getTitle() + "\" found");
 
         if (locations.size() == 1)
@@ -66,6 +66,19 @@ public class MapperImpl extends StatedTask implements Mapper {
         }
 
         _current = newLocation;
+    }
+
+    private boolean surroundingRoomsMatchToo(List<Location> locations, Location prototype, String direction) {
+        String titleOfRoomWeCameFrom = _current.getTitle();
+
+        for (Location location : locations) {
+            final Location room = location.getByDirection(_directionHelper.getOppositeDirection(direction));
+            if(room.getTitle().equals(titleOfRoomWeCameFrom)){
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
