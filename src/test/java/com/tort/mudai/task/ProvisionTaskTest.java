@@ -116,7 +116,7 @@ public class ProvisionTaskTest {
         _provisionTask = new ProvisionTask(_eventDistributor,
                 _drinkTaskFactory,
                 null,
-                _pulseDistributor);
+                null);
     }
 
     private ScheduledExecutorService nullExecutor() {
