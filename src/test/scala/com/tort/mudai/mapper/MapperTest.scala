@@ -20,10 +20,36 @@ class MapperTest extends FeatureSpec with BeforeAndAfterEach with ShouldMatchers
     }
 
     scenario("when identifying room, take description into account") {
-      locationsNumber() should equal (3)
+      val injector: Injector = Guice.createInjector(new MapperTestModule)
+      val persister: Persister = injector.getInstance(classOf[Persister])
+      val mapper: MapperImpl = injector.getInstance(classOf[MapperImpl])
+
+      assert(persister.enlistLocations().size() == 0)
+
+      mapper.lookAround(room("title", "desc 1"))
+      mapper.move(Directions.SOUTH.getName(), room("title", "desc 2"))
+      mapper.move(Directions.SOUTH.getName(), room("title", "desc 3"))
+
+      persister.enlistLocations().size() should equal(3)
     }
 
-    scenario("when identifying room, take available directions into account")(pending)
+    scenario("when identifying room, take available directions into account") {
+      val injector: Injector = Guice.createInjector(new MapperTestModule)
+      val persister: Persister = injector.getInstance(classOf[Persister])
+      val mapper: MapperImpl = injector.getInstance(classOf[MapperImpl])
+
+      assert(persister.enlistLocations().size() == 0)
+
+      val exits: java.util.Set[Directions] = new java.util.HashSet()
+      exits.add(Directions.SOUTH)
+      mapper.lookAround(room("title", "desc", exits))
+      exits.add(Directions.NORTH)
+      mapper.move(Directions.SOUTH.getName(), room("title", "desc", exits))
+      exits.add(Directions.EAST)
+      mapper.move(Directions.SOUTH.getName(), room("title", "desc", exits))
+
+      persister.enlistLocations().size() should equal(3)
+    }
     scenario("when identifying room, take neighbornship into account")(pending)
   }
 
@@ -39,6 +65,13 @@ class MapperTest extends FeatureSpec with BeforeAndAfterEach with ShouldMatchers
     mapper.move(Directions.SOUTH.getName, room(room3, desc));
 
     firstRoom
+  }
+
+  def room(title: String, desc: String, exits: java.util.Set[Directions]): RoomSnapshot = {
+    val roomSnapshot: RoomSnapshot = room(title, desc)
+    roomSnapshot.setExits(exits)
+
+    roomSnapshot
   }
 
   def room(title: String, desc: String): RoomSnapshot = {
@@ -73,19 +106,5 @@ class MapperTest extends FeatureSpec with BeforeAndAfterEach with ShouldMatchers
 
     val pathForth: List[Direction] = mapper.pathTo(lastRoom)
     assert(pathForth.size == 2)
-  }
-
-  def locationsNumber(): Int = {
-    val injector: Injector = Guice.createInjector(new MapperTestModule)
-    val persister: Persister = injector.getInstance(classOf[Persister])
-    val mapper: MapperImpl = injector.getInstance(classOf[MapperImpl])
-
-    assert(persister.enlistLocations().size() == 0)
-
-    mapper.lookAround(room("title", "desc 1"))
-    mapper.move(Directions.SOUTH.getName(), room("title", "desc 2"))
-    mapper.move(Directions.SOUTH.getName(), room("title", "desc 3"))
-
-    persister.enlistLocations().size()
   }
 }

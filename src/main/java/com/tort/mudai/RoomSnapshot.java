@@ -1,10 +1,15 @@
 package com.tort.mudai;
 
+import com.tort.mudai.mapper.Directions;
+
+import java.util.Set;
+
 public class RoomSnapshot {
     private String _locationTitle;
     private String[] _objectsPresent = new String[]{};
     private String[] _mobs = new String[]{};
     private String _locationDesc;
+    private Set<Directions> _exits;
 
     public void setLocationTitle(String locationTitle) {
         _locationTitle = locationTitle;
@@ -36,5 +41,13 @@ public class RoomSnapshot {
 
     public String getLocationDesc() {
         return _locationDesc;
+    }
+
+    public Set<Directions> getExits() {
+        return _exits;
+    }
+
+    public void setExits(Set<Directions> exits) {
+        _exits = exits;
     }
 }

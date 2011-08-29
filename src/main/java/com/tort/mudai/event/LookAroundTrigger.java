@@ -2,9 +2,12 @@ package com.tort.mudai.event;
 
 import com.tort.mudai.Handler;
 import com.tort.mudai.RoomSnapshot;
+import com.tort.mudai.mapper.Directions;
 import com.tort.mudai.task.AbstractTask;
 import com.tort.mudai.task.EventDistributor;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,7 +18,7 @@ public class LookAroundTrigger implements EventTrigger {
             "(?:\u001B\\[1\\;37mСнежный ковер лежит у Вас под ногами.\u001B\\[0\\;37m\r?\n)?" +
             "\u001B\\[1\\;33m(?:(.*)\r?\n)?" +
             "\u001B\\[1\\;31m(?:(.*)\r?\n)?" +
-            "\u001B\\[0\\;37m\r?\n?\u001B\\[0\\;32m[^\n]*$");
+            "\u001B\\[0\\;37m\r?\n?\u001B\\[0\\;32m[^\n]*Вых\\:([^\n]*)\\> $");
 
     private final EventDistributor _eventDistributor;
 
@@ -38,8 +41,15 @@ public class LookAroundTrigger implements EventTrigger {
         final String locationTitle = matcher.group(1);
         final String locationDesc = matcher.group(2);
         final String objectsGroup = matcher.group(3);
+        final String availableExits = matcher.group(5);
+        Set<Directions> exits = new HashSet<Directions>();
+        for (Directions exit : Directions.values()) {
+            if (availableExits.contains(exit.getAlias())) {
+                exits.add(exit);
+            }
+        }
         String[] objects = new String[]{};
-        if(objectsGroup != null){
+        if (objectsGroup != null) {
             objects = objectsGroup.split("\n");
         }
 
@@ -54,6 +64,7 @@ public class LookAroundTrigger implements EventTrigger {
         roomSnapshot.setObjectsPresent(objects);
         roomSnapshot.setMobs(mobs);
         roomSnapshot.setLocationDesc(locationDesc);
+        roomSnapshot.setExits(exits);
 
         _eventDistributor.invoke(new Handler<LookAroundEvent>() {
             @Override

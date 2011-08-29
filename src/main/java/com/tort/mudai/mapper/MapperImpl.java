@@ -33,6 +33,7 @@ public class MapperImpl extends StatedTask implements Mapper {
         Location prototype = new Location();
         prototype.setTitle(roomSnapshot.getLocationTitle());
         prototype.setDesc(roomSnapshot.getLocationDesc());
+        prototype.setAvailableExits(roomSnapshot.getExits());
 
         List<Location> locations = _persister.loadLocation(prototype);
         Location newLocation = null;
@@ -47,6 +48,7 @@ public class MapperImpl extends StatedTask implements Mapper {
             newLocation = new Location();
             newLocation.setTitle(roomSnapshot.getLocationTitle());
             newLocation.setDesc(roomSnapshot.getLocationDesc());
+            newLocation.setAvailableExits(roomSnapshot.getExits());
             _graph.addVertex(newLocation);
             System.out.println("NEW ROOM");
         } else {
@@ -99,6 +101,7 @@ public class MapperImpl extends StatedTask implements Mapper {
                 _current = new Location();
                 _current.setTitle(roomSnapshot.getLocationTitle());
                 _current.setDesc(roomSnapshot.getLocationDesc());
+                _current.setAvailableExits(roomSnapshot.getExits());
                 _persister.persistLocation(_current);
                 _graph.addVertex(_current);
             }
@@ -106,6 +109,7 @@ public class MapperImpl extends StatedTask implements Mapper {
             if (_current.getTitle() == null) {
                 _current.setTitle(roomSnapshot.getLocationTitle());
                 _current.setDesc(roomSnapshot.getLocationDesc());
+                _current.setAvailableExits(roomSnapshot.getExits());
                 _persister.persistLocation(_current);
             }
         }

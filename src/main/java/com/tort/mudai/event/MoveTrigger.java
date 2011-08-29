@@ -2,16 +2,19 @@ package com.tort.mudai.event;
 
 import com.tort.mudai.Handler;
 import com.tort.mudai.RoomSnapshot;
+import com.tort.mudai.mapper.Directions;
 import com.tort.mudai.task.AbstractTask;
 import com.tort.mudai.task.EventDistributor;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MoveTrigger implements EventTrigger {
     public static final DirectionLister lister = new DirectionLister();
     public static final Pattern PATTERN = PatternUtil.compile("^Вы поплелись (?:на )?(" + lister.listDirections() + ")\\.\r?\n" +
-            "\u001B\\[1\\;36m(.*)\u001B\\[0\\;37m$\\s\\s\\s(.*)\r?\n\r?\n.*");
+            "\u001B\\[1\\;36m(.*)\u001B\\[0\\;37m$\\s\\s\\s(.*)\r?\n\r?\n.*Вых:([^\n]*)> ");
     private final EventDistributor _eventDistributor;
 
     public MoveTrigger(final EventDistributor eventDistributor) {
@@ -25,9 +28,18 @@ public class MoveTrigger implements EventTrigger {
         final String direction = matcher.group(1);
         final String locationTitle = matcher.group(2);
         final String desc = matcher.group(3);
+        final String availableExits = matcher.group(4);
+        Set<Directions> exits = new HashSet<Directions>();
+        for (Directions exit : Directions.values()) {
+            if(availableExits.contains(exit.getAlias())){
+                exits.add(exit);
+            }
+        }
+
         final RoomSnapshot roomSnapshot = new RoomSnapshot();
         roomSnapshot.setLocationTitle(locationTitle);
         roomSnapshot.setLocationDesc(desc);
+        roomSnapshot.setExits(exits);
 
         _eventDistributor.invoke(new Handler(){
             @Override

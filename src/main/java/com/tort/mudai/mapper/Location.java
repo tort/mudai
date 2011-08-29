@@ -11,6 +11,7 @@ public class Location {
     private boolean _isShop = false;
     private boolean _isTavern = false;
     private String _desc;
+    private Set<Directions> _availableExits;
 
     public String getTitle() {
         return _title;
@@ -62,5 +63,13 @@ public class Location {
 
     public String getDesc() {
         return _desc;
+    }
+
+    public void setAvailableExits(Set<Directions> availableExits) {
+        _availableExits = availableExits;
+    }
+
+    public Set<Directions> getAvailableExits() {
+        return _availableExits;
     }
 }
