@@ -29,4 +29,19 @@ public class MockPersister implements Persister {
     public ObjectSet<Mob> enlistMobs() {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
+
+    @Override
+    public void mob(String mob) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public Mob findMob(String mobLongName) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public void persistMob(Mob mob) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
 }

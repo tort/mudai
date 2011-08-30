@@ -39,13 +39,14 @@ public class MudaiModule extends AbstractModule {
         bind(EventDistributor.class).in(Scopes.SINGLETON);
 
         bind(new TypeLiteral<BlockingQueue<Command>>(){}).to(new TypeLiteral<PriorityBlockingQueue<Command>>(){}).in(Scopes.SINGLETON);
-        bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(5));
+        bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(20));
         bind(ScheduledExecutorService.class).toInstance(Executors.newScheduledThreadPool(20));
         bind(new TypeLiteral<DirectedGraph<Location, Direction>>(){}).toInstance(new DefaultDirectedGraph<Location, Direction>(Direction.class));
         bind(Persister.class).to(Db4oPersister.class).in(Scopes.SINGLETON);
 
         final EmbeddedConfiguration configuration = Db4oEmbedded.newConfiguration();
         configuration.common().objectClass(Location.class).cascadeOnUpdate(true);
+        configuration.common().objectClass(Mob.class).cascadeOnUpdate(true);
         final EmbeddedObjectContainer db = Db4oEmbedded.openFile(configuration, "mapper.db");
         bind(ObjectContainer.class).toInstance(db);
     }

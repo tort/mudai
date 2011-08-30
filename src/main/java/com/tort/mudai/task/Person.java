@@ -29,6 +29,7 @@ public class Person extends StatedTask {
     private Mapper _mapper;
     private final EventDistributor _eventDistributor;
     private PulseDistributor _pulseDistributor;
+    private final Provider<RoamingTask> _roamingTaskProvider;
 
     @Inject
     private Person(final Provider<SessionTask> sessionProvider,
@@ -38,7 +39,9 @@ public class Person extends StatedTask {
                    final CommandExecutor commandExecutor,
                    final EventDistributor eventDistributor,
                    final Provider<ProvisionTask> provisionTask,
-                   final TravelTaskFactory travelTaskFactory, PulseDistributor pulseDistributor) {
+                   final TravelTaskFactory travelTaskFactory,
+                   final Provider<RoamingTask> roamingTaskProvider,
+                   final PulseDistributor pulseDistributor) {
 
         _sessionProvider = sessionProvider;
         _commandExecutor = commandExecutor;
@@ -49,6 +52,7 @@ public class Person extends StatedTask {
         _provisionTask = provisionTask;
         _travelTaskFactory = travelTaskFactory;
         _pulseDistributor = pulseDistributor;
+        _roamingTaskProvider = roamingTaskProvider;
         run();
     }
 
@@ -60,18 +64,22 @@ public class Person extends StatedTask {
         final SessionTask sessionTask = _sessionProvider.get();
         final AbstractTask mapperTask = _mapperTaskProvider.get();
         final ProvisionTask provisionTask = _provisionTask.get();
+        final RoamingTask roamingTask = _roamingTaskProvider.get();
 
         _eventDistributor.subscribe(sessionTask);
         _eventDistributor.subscribe(mapperTask);
         _eventDistributor.subscribe(provisionTask);
+        _eventDistributor.subscribe(roamingTask);
 
         _pulseDistributor.subscribe(sessionTask);
         _pulseDistributor.subscribe(mapperTask);
         _pulseDistributor.subscribe(provisionTask);
+        _pulseDistributor.subscribe(roamingTask);
 
         _pulseExecutor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
+<<<<<<< HEAD
                 try {
                     final Command pulse = pulse();
                     if (pulse != null) {
@@ -79,6 +87,12 @@ public class Person extends StatedTask {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+=======
+                try{
+                pulse();
+                } catch(Exception ex){
+                    ex.printStackTrace();
+>>>>>>> before continuing with roam task, MUST fix mapper(cycling rooms, enter existing room from unmapped side create new room), opening doors, provisioning light, generalize subtask handling & logging.
                 }
             }
         }, 1, 1, TimeUnit.SECONDS);

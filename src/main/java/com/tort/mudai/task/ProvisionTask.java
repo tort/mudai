@@ -32,12 +32,16 @@ public class ProvisionTask extends StatedTask {
 
     @Override
     public Command pulse() {
+        if (isInitializing())
+            run();
+
         return _pulseDistributor.pulse();
     }
 
     private class DrinkTaskCallback implements TaskTerminateCallback {
         @Override
         public void succeeded() {
+
         }
 
         @Override

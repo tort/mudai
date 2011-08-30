@@ -38,6 +38,7 @@ public class MapperImpl extends StatedTask implements Mapper {
         List<Location> locations = _persister.loadLocation(prototype);
         Location newLocation = null;
 
+        //TODO add mapper termination and dependent tasks
         if (locations.size() > 1 && surroundingRoomsMatchToo(locations, prototype, direction))
             throw new IllegalStateException(locations.size() + " rooms, titled \"" + prototype.getTitle() + "\" found");
 
@@ -87,10 +88,20 @@ public class MapperImpl extends StatedTask implements Mapper {
         updateMobs(roomSnapshot);
     }
 
+    @Override
+    public void kill(String target) {
+        final Mob mob = _persister.findOrCreateMob(target);
+        mob.updateHabitationArea(_current);
+        _persister.persistMob(mob);
+    }
+
     private void updateMobs(RoomSnapshot roomSnapshot) {
         for (String mobLongName : roomSnapshot.getMobs()) {
-            Mob mob = _persister.findOrCreateMob(mobLongName);
-            mob.updateHabitationArea(_current);
+            Mob mob = _persister.findMob(mobLongName);
+            if (mob != null){
+                mob.updateHabitationArea(_current);
+                _persister.persistMob(mob);
+            }
         }
     }
 
@@ -104,6 +115,7 @@ public class MapperImpl extends StatedTask implements Mapper {
             if (locations.isEmpty())
                 _current = null;
 
+            //TODO add mapper termination and dependent tasks
             if (locations.size() > 1)
                 throw new IllegalStateException(locations.size() + " rooms, titled \"" + prototype.getTitle() + "\" found");
 

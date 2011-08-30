@@ -38,20 +38,20 @@ public class Db4oPersister implements Persister {
         ObjectSet<Mob> query = _db.query(new Predicate<Mob>() {
             @Override
             public boolean match(Mob mob) {
-                return mob.getLongName().equals(mobLongName);
+                return mob.getName().equals(mobLongName);
             }
         });
 
-        if(query.size() > 1)
+        if (query.size() > 1)
             throw new IllegalStateException("two mobs with same long name found");
 
         Mob mob = null;
-        
-        if(query.size() == 1){
+
+        if (query.size() == 1) {
             mob = query.get(0);
         }
 
-        if(query.size() < 1){
+        if (query.size() < 1) {
             mob = new Mob();
             mob.setName(mobLongName);
             _db.store(mob);
@@ -61,7 +61,40 @@ public class Db4oPersister implements Persister {
     }
 
     @Override
+    public Mob findMob(final String mobLongName) {
+        ObjectSet<Mob> query = _db.query(new Predicate<Mob>() {
+            @Override
+            public boolean match(Mob mob) {
+                return mobLongName.startsWith(mob.getName()) || mobLongName.startsWith("(летит) " + mob.getName());
+            }
+        });
+
+        if (query.size() > 1)
+            throw new IllegalStateException("two mobs with same long name found");
+
+        Mob mob = null;
+
+        if (query.size() == 1) {
+            mob = query.get(0);
+        }
+
+        return mob;
+    }
+
+    @Override
+    public void persistMob(Mob mob) {
+        _db.store(mob);
+        _db.commit();
+    }
+
+    @Override
     public ObjectSet<Mob> enlistMobs() {
         return _db.query(Mob.class);
+    }
+
+    @Override
+    public void mob(String mob) {
+        _db.store(mob);
+        _db.commit();
     }
 }

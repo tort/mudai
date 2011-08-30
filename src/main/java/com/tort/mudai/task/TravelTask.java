@@ -30,6 +30,7 @@ public class TravelTask extends StatedTask {
             _callback.failed();
         } else {
             if (!_path.isEmpty()) {
+                System.out.println("PATH LENGTH: " + _path.size());
                 goNext(_path.get(0));
             } else {
                 System.out.println("EMPTY PATH");

@@ -56,7 +56,7 @@ public class SimpleMudClient {
                 } else if (command.startsWith(ENLIST_MOBS_COMMAND)) {
                     ObjectSet<Mob> mobs = _persister.enlistMobs();
                     for (Mob mob : mobs) {
-                        System.out.println("MOB: " + mob.getLongName());
+                        System.out.println("MOB: " + mob.getName());
                     }
                 } else if (command.startsWith(TRAVEL_COMMAND)) {
                     handleTravelCommand(command);

@@ -10,7 +10,7 @@ public class Mob {
     public Mob() {
     }
 
-    public String getLongName() {
+    public String getName() {
         return _name;
     }
 
@@ -20,5 +20,9 @@ public class Mob {
 
     public void setName(String _name) {
         this._name = _name;
+    }
+
+    public Set<Location> habitationArea() {
+        return _habitationArea;
     }
 }

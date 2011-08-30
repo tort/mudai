@@ -1,6 +1,9 @@
 package com.tort.mudai.mapper;
 
+import com.sun.xml.internal.bind.v2.util.QNameMap;
+
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -12,6 +15,7 @@ public class Location {
     private boolean _isTavern = false;
     private String _desc;
     private Set<Directions> _availableExits;
+    private Set _knownMobs = new HashSet();
 
     public String getTitle() {
         return _title;
@@ -45,11 +49,11 @@ public class Location {
         _isShop = true;
     }
 
-    public void markTavern(){
+    public void markTavern() {
         _isTavern = true;
     }
 
-    public boolean isShop(){
+    public boolean isShop() {
         return _isShop;
     }
 
@@ -71,5 +75,9 @@ public class Location {
 
     public Set<Directions> getAvailableExits() {
         return _availableExits;
+    }
+
+    public void discoverMob(String mob) {
+        _knownMobs.add(mob);
     }
 }

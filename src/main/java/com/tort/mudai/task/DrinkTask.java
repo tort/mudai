@@ -114,6 +114,7 @@ public class DrinkTask extends StatedTask {
                 to = _mapper.nearestWaterSource();
             } catch (MapperException e) {
                 System.out.println("NO PATH TO WATER SOURCE");
+                return;
             }
 
             final TravelTask fillContainerTask = _goAndDoTaskFactory.create(to, new TravelForContainerTerminateCallback());

@@ -79,8 +79,11 @@ public abstract class AbstractTask implements Task {
 
     }
 
-
     public void discoverObstacle(String obstacle) {
+
+    }
+
+    public void kill(String target) {
 
     }
 }

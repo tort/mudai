@@ -58,6 +58,7 @@ public class AdapterImpl implements Adapter {
         _eventTriggers.add(new EatTrigger(eventDistributor));
         _eventTriggers.add(new DrinkTrigger(eventDistributor));
         _eventTriggers.add(new DiscoverObstacleTrigger(eventDistributor));
+        _eventTriggers.add(new KillTrigger(eventDistributor));
 
         _simpleTriggers.add(new SimpleTrigger(".*^\\* В связи с проблемами перевода фразы ANYKEY нажмите ENTER.*", new String[]{"", "смотр"}));
         _simpleTriggers.add(new SimpleTrigger(".*^Select one : $", new String[]{ENCODING}));
