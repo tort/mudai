@@ -6,18 +6,12 @@ import com.google.inject.name.Named;
 import com.tort.mudai.CommandExecutor;
 import com.tort.mudai.PulseDistributor;
 import com.tort.mudai.command.Command;
-import com.tort.mudai.mapper.Direction;
 import com.tort.mudai.mapper.Location;
-import com.tort.mudai.mapper.Mapper;
-import com.tort.mudai.mapper.MapperException;
 
-import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class Person extends StatedTask {
-    private static final Command EMPTY_COMMAND = null;
-
     private final Provider<SessionTask> _sessionProvider;
     private final Provider<AbstractTask> _mapperTaskProvider;
     private final Provider<ProvisionTask> _provisionTask;
@@ -26,7 +20,6 @@ public class Person extends StatedTask {
 
     private ScheduledExecutorService _pulseExecutor;
 
-    private Mapper _mapper;
     private final EventDistributor _eventDistributor;
     private PulseDistributor _pulseDistributor;
     private final Provider<RoamingTask> _roamingTaskProvider;
@@ -34,7 +27,6 @@ public class Person extends StatedTask {
     @Inject
     private Person(final Provider<SessionTask> sessionProvider,
                    @Named("mapperTask") final Provider<AbstractTask> mapperTask,
-                   final Mapper mapper,
                    final ScheduledExecutorService executor,
                    final CommandExecutor commandExecutor,
                    final EventDistributor eventDistributor,
@@ -45,7 +37,6 @@ public class Person extends StatedTask {
 
         _sessionProvider = sessionProvider;
         _commandExecutor = commandExecutor;
-        _mapper = mapper;
         _mapperTaskProvider = mapperTask;
         _pulseExecutor = executor;
         _eventDistributor = eventDistributor;
@@ -79,7 +70,6 @@ public class Person extends StatedTask {
         _pulseExecutor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-<<<<<<< HEAD
                 try {
                     final Command pulse = pulse();
                     if (pulse != null) {
@@ -87,12 +77,6 @@ public class Person extends StatedTask {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-=======
-                try{
-                pulse();
-                } catch(Exception ex){
-                    ex.printStackTrace();
->>>>>>> before continuing with roam task, MUST fix mapper(cycling rooms, enter existing room from unmapped side create new room), opening doors, provisioning light, generalize subtask handling & logging.
                 }
             }
         }, 1, 1, TimeUnit.SECONDS);
