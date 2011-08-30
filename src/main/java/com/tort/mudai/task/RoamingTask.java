@@ -1,6 +1,7 @@
 package com.tort.mudai.task;
 
 import com.google.inject.Inject;
+import com.tort.mudai.RoomSnapshot;
 import com.tort.mudai.command.Command;
 import com.tort.mudai.mapper.Location;
 import com.tort.mudai.mapper.Mapper;
@@ -20,6 +21,30 @@ public class RoamingTask extends StatedTask {
     private volatile Queue<Location> _locations;
     private volatile TravelTask _travelTask;
     private volatile TravelTask _finishRoamTask;
+    private volatile KillTask _killTask;
+
+    @Override
+    public void lookAround(RoomSnapshot roomSnapshot) {
+        for (String mobName : roomSnapshot.getMobs()) {
+            final Mob mob = _persister.findMob(mobName);
+            if (mob != null) {
+                _killTask = new KillTask(mob, new TaskTerminateCallback(){
+                    @Override
+                    public void succeeded() {
+                        _killTask = null;
+                    }
+
+                    @Override
+                    public void failed() {
+                        fail();
+                    }
+                });
+                _eventDispatcher.subscribe(_killTask);
+
+                return;
+            }
+        }
+    }
 
     @Inject
     public RoamingTask(Persister persister, TravelTaskFactory travelTaskFactory, EventDistributor eventDispatcher, Mapper mapper) {
@@ -43,6 +68,10 @@ public class RoamingTask extends StatedTask {
         if (isTerminated())
             return null;
 
+        if (_killTask != null) {
+            return _killTask.pulse();
+        }
+
         if (_travelTask == null && _finishRoamTask == null) {
             _beforeRoamLocation = _mapper.currentLocation();
             final Location to = _locations.poll();
@@ -59,7 +88,7 @@ public class RoamingTask extends StatedTask {
         if (_travelTask != null)
             command = _travelTask.pulse();
 
-        if(_finishRoamTask != null)
+        if (_finishRoamTask != null)
             command = _finishRoamTask.pulse();
 
         return command;
