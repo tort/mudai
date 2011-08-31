@@ -94,9 +94,9 @@ public class SimpleMudClient {
 
             StringBuilder result = new StringBuilder();
             for (Direction direction : path) {
-                result.append(direction.getName());
+                result.append(direction.getName() + " ");
             }
-            System.out.println("PATH: " + path);
+            System.out.println("PATH: " + result);
         }
     }
 
