@@ -84,6 +84,10 @@ public class SimpleMudClient {
         Location prototype = new Location();
         prototype.setTitle(to);
         final List<Location> locations = _persister.loadLocation(prototype);
+        if (locations.isEmpty()) {
+            System.out.println("NO LOCATION FOUND: " + to);
+            return;
+        }
         if (locations.size() > 1) {
             System.out.println(locations.size() + " locations found, titled " + prototype.getTitle());
             for (Location location : locations) {
@@ -91,6 +95,10 @@ public class SimpleMudClient {
             }
         } else {
             final List<Direction> path = _mapper.pathTo(locations.get(0));
+            if(path == null){
+                System.out.println("NO PATH FOUND");
+                return;
+            }
 
             StringBuilder result = new StringBuilder();
             for (Direction direction : path) {
