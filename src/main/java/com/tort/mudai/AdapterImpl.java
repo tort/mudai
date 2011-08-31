@@ -128,6 +128,7 @@ public class AdapterImpl implements Adapter {
 
     private void send(final Command command) {
         final String commandText = command.render() + "\n";
+        System.out.print(commandText);
         final byte[] bytes = commandText.getBytes(_charset);
         try {
             _outByteBuffer.flip();

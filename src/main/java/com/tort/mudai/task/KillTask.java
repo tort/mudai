@@ -10,7 +10,7 @@ public class KillTask extends StatedTask {
     public KillTask(Mob mob, TaskTerminateCallback callback) {
         _mob = mob;
         _callback = callback;
-        _command = new KillCommand();
+        _command = new KillCommand(_mob.getName());
     }
 
     @Override

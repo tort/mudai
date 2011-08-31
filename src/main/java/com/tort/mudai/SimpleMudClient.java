@@ -113,6 +113,11 @@ public class SimpleMudClient {
         Location prototype = new Location();
         prototype.setTitle(to);
         final List<Location> locations = _persister.loadLocation(prototype);
+        if(locations.isEmpty()){
+            System.out.println("ROOM UNKNOWN");
+            return;
+        }
+
         if (locations.size() > 1) {
             System.out.println(locations.size() + " locations found, titled " + prototype.getTitle());
             for (Location location : locations) {

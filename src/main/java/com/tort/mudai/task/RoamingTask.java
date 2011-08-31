@@ -53,7 +53,7 @@ public class RoamingTask extends StatedTask {
         _eventDispatcher = eventDispatcher;
         _mapper = mapper;
 
-        final Mob mob = _persister.findMob("Маленький муравей");
+        final Mob mob = _persister.findMob("Моль");
         if (mob == null) {
             System.out.println("NO SUCH MOB");
             fail();

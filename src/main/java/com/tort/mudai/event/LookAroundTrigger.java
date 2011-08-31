@@ -15,11 +15,13 @@ public class LookAroundTrigger implements EventTrigger {
     public static final DirectionLister lister = new DirectionLister();
     public static final Pattern PATTERN = PatternUtil.compile("^(?:Вы поплелись (?:на )?(?:" + lister.listDirections() + ")\\.\r?\n)?" +
             "\u001B\\[1\\;36m(.*)\u001B\\[0\\;37m$\\s\\s\\s(.*)\r?\n\r?\n" +
+            "\u001B\\[0\\;36m\\[ Exits: ([nsewudNSEWUD\\s\\(\\)]*) \\]\u001B\\[0\\;37m\r?\n" +
             "(?:\u001B\\[1\\;37mСнежный ковер лежит у Вас под ногами.\u001B\\[0\\;37m\r?\n)?" +
             "(?:\u001B\\[1\\;30mВы просто увязаете в грязи.\u001B\\[0\\;37m\r?\n)?" +
             "\u001B\\[1\\;33m(?:(.*)\r?\n)?" +
             "\u001B\\[1\\;31m(?:(.*)\r?\n)?" +
-            "\u001B\\[0\\;37m\r?\n?\u001B\\[0\\;32m[^\n]*Вых\\:([^\n]*)\\> $");
+            "\u001B\\[0\\;37m\r?\n" +
+            "[^\n]*> ЪЫ$");
 
     private final EventDistributor _eventDistributor;
 
@@ -35,17 +37,17 @@ public class LookAroundTrigger implements EventTrigger {
     }
 
     @Override
-    public Event fireEvent(final String text) {
+    public LookAroundEvent fireEvent(final String text) {
         final Matcher matcher = PATTERN.matcher(text);
         matcher.find();
 
         final String locationTitle = matcher.group(1);
         final String locationDesc = matcher.group(2);
-        final String objectsGroup = matcher.group(3);
-        final String availableExits = matcher.group(5);
+        final String objectsGroup = matcher.group(4);
+        final String availableExits = matcher.group(3);
         Set<Directions> exits = new HashSet<Directions>();
         for (Directions exit : Directions.values()) {
-            if (availableExits.contains(exit.getAlias())) {
+            if (availableExits.contains(exit.getAlias()) || availableExits.contains(exit.getAlias().toLowerCase())) {
                 exits.add(exit);
             }
         }
@@ -54,7 +56,7 @@ public class LookAroundTrigger implements EventTrigger {
             objects = objectsGroup.split("\n");
         }
 
-        String mobsGroup = matcher.group(4);
+        String mobsGroup = matcher.group(5);
         String[] mobs = new String[]{};
         if (mobsGroup != null) {
             mobs = mobsGroup.split("\n");
@@ -74,7 +76,10 @@ public class LookAroundTrigger implements EventTrigger {
             }
         });
 
-        return null;
+        final LookAroundEvent lookAroundEvent = new LookAroundEvent();
+        lookAroundEvent.setObjects(objects);
+        lookAroundEvent.setMobs(mobs);
+        return lookAroundEvent;
     }
 
 }

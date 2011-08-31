@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 public class Person extends StatedTask {
     private final Provider<SessionTask> _sessionProvider;
     private final Provider<AbstractTask> _mapperTaskProvider;
-    private final Provider<ProvisionTask> _provisionTask;
+    private final Provider<ProvisionTask> _provisionTaskProvider;
     private final CommandExecutor _commandExecutor;
     private final TravelTaskFactory _travelTaskFactory;
 
@@ -30,7 +30,7 @@ public class Person extends StatedTask {
                    final ScheduledExecutorService executor,
                    final CommandExecutor commandExecutor,
                    final EventDistributor eventDistributor,
-                   final Provider<ProvisionTask> provisionTask,
+                   final Provider<ProvisionTask> provisionTaskProvider,
                    final TravelTaskFactory travelTaskFactory,
                    final Provider<RoamingTask> roamingTaskProvider,
                    final PulseDistributor pulseDistributor) {
@@ -40,7 +40,7 @@ public class Person extends StatedTask {
         _mapperTaskProvider = mapperTask;
         _pulseExecutor = executor;
         _eventDistributor = eventDistributor;
-        _provisionTask = provisionTask;
+        _provisionTaskProvider = provisionTaskProvider;
         _travelTaskFactory = travelTaskFactory;
         _pulseDistributor = pulseDistributor;
         _roamingTaskProvider = roamingTaskProvider;
@@ -54,7 +54,7 @@ public class Person extends StatedTask {
     public void start() {
         final SessionTask sessionTask = _sessionProvider.get();
         final AbstractTask mapperTask = _mapperTaskProvider.get();
-        final ProvisionTask provisionTask = _provisionTask.get();
+        final ProvisionTask provisionTask = _provisionTaskProvider.get();
         final RoamingTask roamingTask = _roamingTaskProvider.get();
 
         _eventDistributor.subscribe(sessionTask);

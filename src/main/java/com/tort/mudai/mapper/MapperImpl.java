@@ -42,8 +42,19 @@ public class MapperImpl extends StatedTask implements Mapper {
         if (locations.size() > 1 && surroundingRoomsMatchToo(locations, prototype, direction))
             throw new IllegalStateException(locations.size() + " rooms, titled \"" + prototype.getTitle() + "\" found");
 
-        if (locations.size() == 1)
+        if (locations.size() == 1) {
             newLocation = locations.get(0);
+            if(!newLocation.getTitle().equals(roomSnapshot.getLocationTitle()))
+                throw new IllegalStateException("room title doesn't match");
+
+            if(!newLocation.getDesc().equals(roomSnapshot.getLocationDesc())){
+                throw new IllegalStateException("room desc doesn't match");
+            }
+
+            if(!newLocation.getAvailableExits().equals(roomSnapshot.getExits())){
+                throw new IllegalStateException("room exits doesn't match");
+            }
+        }
 
         if (newLocation == null) {
             newLocation = new Location();
@@ -74,7 +85,7 @@ public class MapperImpl extends StatedTask implements Mapper {
 
         for (Location location : locations) {
             final Location room = location.getByDirection(_directionHelper.getOppositeDirection(direction));
-            if(room.getTitle().equals(titleOfRoomWeCameFrom)){
+            if (room.getTitle().equals(titleOfRoomWeCameFrom)) {
                 return true;
             }
         }
@@ -98,7 +109,7 @@ public class MapperImpl extends StatedTask implements Mapper {
     private void updateMobs(RoomSnapshot roomSnapshot) {
         for (String mobLongName : roomSnapshot.getMobs()) {
             Mob mob = _persister.findMob(mobLongName);
-            if (mob != null){
+            if (mob != null) {
                 mob.updateHabitationArea(_current);
                 _persister.persistMob(mob);
             }

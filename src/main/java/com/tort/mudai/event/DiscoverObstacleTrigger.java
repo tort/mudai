@@ -9,14 +9,14 @@ import java.util.regex.Pattern;
 
 public class DiscoverObstacleTrigger implements EventTrigger {
     private final EventDistributor _eventDistributor;
-    private static final Pattern PATTERN = PatternUtil.compile("^Закрыто \\(([^\n]*)\\)\\..*");
+    private static final Pattern PATTERN = PatternUtil.compile("^(?:Закрыто\\..*)|(?:Закрыто \\(([^\n]*)\\)\\..*)");
 
     public DiscoverObstacleTrigger(EventDistributor eventDistributor) {
         _eventDistributor = eventDistributor;
     }
 
     @Override
-    public Event fireEvent(String text) {
+    public DiscoverObstacleEvent fireEvent(String text) {
         final Matcher matcher = PATTERN.matcher(text);
         matcher.find();
 
@@ -29,7 +29,7 @@ public class DiscoverObstacleTrigger implements EventTrigger {
             }
         });
 
-        return null;
+        return new DiscoverObstacleEvent(obstacle);
     }
 
     @Override
