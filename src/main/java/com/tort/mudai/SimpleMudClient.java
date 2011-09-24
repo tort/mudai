@@ -21,6 +21,7 @@ public class SimpleMudClient {
     private static final String TRAVEL_COMMAND = "/го";
     private static final String ENLIST_MOBS_COMMAND = "/моб";
     private static final String MARK_WATER_SOURCE_COMMAND = "/вода";
+    private static final String ROAM_COMMAND = "/зонинг";
 
     private Person _person;
     private CommandExecutor _commandExecutor;
@@ -60,6 +61,8 @@ public class SimpleMudClient {
                     }
                 } else if (command.startsWith(TRAVEL_COMMAND)) {
                     handleTravelCommand(command);
+                } else if (command.startsWith(ROAM_COMMAND)) {
+                    _person.roam();
                 } else if (command.startsWith(MARK_WATER_SOURCE_COMMAND)) {
                     _mapper.markWaterSource(command.substring(MARK_WATER_SOURCE_COMMAND.length() + 1, command.length() - 1));
                 } else if (command.startsWith(MARK_SHOP_COMMAND)) {

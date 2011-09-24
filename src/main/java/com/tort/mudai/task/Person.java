@@ -55,17 +55,14 @@ public class Person extends StatedTask {
         final SessionTask sessionTask = _sessionProvider.get();
         final AbstractTask mapperTask = _mapperTaskProvider.get();
         final ProvisionTask provisionTask = _provisionTaskProvider.get();
-        final RoamingTask roamingTask = _roamingTaskProvider.get();
 
         _eventDistributor.subscribe(sessionTask);
         _eventDistributor.subscribe(mapperTask);
         _eventDistributor.subscribe(provisionTask);
-        _eventDistributor.subscribe(roamingTask);
 
         _pulseDistributor.subscribe(sessionTask);
         _pulseDistributor.subscribe(mapperTask);
         _pulseDistributor.subscribe(provisionTask);
-        _pulseDistributor.subscribe(roamingTask);
 
         _pulseExecutor.scheduleAtFixedRate(new Runnable() {
             @Override
@@ -86,6 +83,12 @@ public class Person extends StatedTask {
         final TravelTask travelTask = _travelTaskFactory.create(to, new TravelTaskTerminateCallback());
         _eventDistributor.subscribe(travelTask);
         _pulseDistributor.subscribe(travelTask);
+    }
+
+    public void roam(){
+        final RoamingTask roamingTask = _roamingTaskProvider.get();
+        _eventDistributor.subscribe(roamingTask);
+        _pulseDistributor.subscribe(roamingTask);
     }
 
     @Override
