@@ -63,6 +63,8 @@ public class SimpleMudClient {
                     handleTravelCommand(command);
                 } else if (command.startsWith(ROAM_COMMAND)) {
                     _person.roam();
+                } else if (command.startsWith("/затариться")) {
+                    _person.provision();
                 } else if (command.startsWith(MARK_WATER_SOURCE_COMMAND)) {
                     _mapper.markWaterSource(command.substring(MARK_WATER_SOURCE_COMMAND.length() + 1, command.length() - 1));
                 } else if (command.startsWith(MARK_SHOP_COMMAND)) {

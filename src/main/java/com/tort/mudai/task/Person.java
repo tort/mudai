@@ -54,15 +54,12 @@ public class Person extends StatedTask {
     public void start() {
         final SessionTask sessionTask = _sessionProvider.get();
         final AbstractTask mapperTask = _mapperTaskProvider.get();
-        final ProvisionTask provisionTask = _provisionTaskProvider.get();
 
         _eventDistributor.subscribe(sessionTask);
         _eventDistributor.subscribe(mapperTask);
-        _eventDistributor.subscribe(provisionTask);
 
         _pulseDistributor.subscribe(sessionTask);
         _pulseDistributor.subscribe(mapperTask);
-        _pulseDistributor.subscribe(provisionTask);
 
         _pulseExecutor.scheduleAtFixedRate(new Runnable() {
             @Override
@@ -102,6 +99,12 @@ public class Person extends StatedTask {
         }
 
         return command;
+    }
+
+    public void provision() {
+        final ProvisionTask provisionTask = _provisionTaskProvider.get();
+        _eventDistributor.subscribe(provisionTask);
+        _pulseDistributor.subscribe(provisionTask);
     }
 
     private static class TravelTaskTerminateCallback implements TaskTerminateCallback {
