@@ -1,5 +1,6 @@
 package com.tort.mudai.task;
 
+import com.db4o.ObjectSet;
 import com.google.inject.Inject;
 import com.tort.mudai.RoomSnapshot;
 import com.tort.mudai.command.Command;
@@ -10,6 +11,7 @@ import com.tort.mudai.mapper.Persister;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Set;
 
 public class RoamingTask extends StatedTask {
     private final Persister _persister;
@@ -28,7 +30,7 @@ public class RoamingTask extends StatedTask {
         for (String mobName : roomSnapshot.getMobs()) {
             final Mob mob = _persister.findMob(mobName);
             if (mob != null) {
-                _killTask = new KillTask(mob, new TaskTerminateCallback(){
+                _killTask = new KillTask(mob, new TaskTerminateCallback() {
                     @Override
                     public void succeeded() {
                         _killTask = null;
@@ -53,14 +55,22 @@ public class RoamingTask extends StatedTask {
         _eventDispatcher = eventDispatcher;
         _mapper = mapper;
 
-        final Mob mob = _persister.findMob("Моль");
+        _locations = new LinkedList();
+
+        final ObjectSet<Mob> mobs = persister.enlistMobs();
+        for (Mob mob : mobs) {
+            _locations.addAll(mob.habitationArea());
+        }
+    }
+
+    private Mob findMob(final String mobLongName) {
+        final Mob mob = _persister.findMob(mobLongName);
         if (mob == null) {
             System.out.println("NO SUCH MOB");
             fail();
-            return;
+            return null;
         }
-
-        _locations = new LinkedList(mob.habitationArea());
+        return mob;
     }
 
     @Override
