@@ -65,7 +65,7 @@ public class Db4oPersister implements Persister {
         ObjectSet<Mob> query = _db.query(new Predicate<Mob>() {
             @Override
             public boolean match(Mob mob) {
-                return mobLongName.startsWith(mob.getName()) || mobLongName.startsWith("(летит) " + mob.getName());
+                return mobLongName.startsWith(mob.getDescName()) || mobLongName.startsWith("(летит) " + mob.getDescName());
             }
         });
 

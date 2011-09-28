@@ -22,6 +22,8 @@ public class SimpleMudClient {
     private static final String ENLIST_MOBS_COMMAND = "/моб";
     private static final String MARK_WATER_SOURCE_COMMAND = "/вода";
     private static final String ROAM_COMMAND = "/зонинг";
+    private static final String PROVISION_COMMAND = "/затариться";
+    private static final String MOB_ALIAS_COMMAND = "/обозвать";
 
     private Person _person;
     private CommandExecutor _commandExecutor;
@@ -63,7 +65,14 @@ public class SimpleMudClient {
                     handleTravelCommand(command);
                 } else if (command.startsWith(ROAM_COMMAND)) {
                     _person.roam();
-                } else if (command.startsWith("/затариться")) {
+                } else if (command.startsWith(MOB_ALIAS_COMMAND)) {
+                    String[] args = command.substring(MOB_ALIAS_COMMAND.length() + 1, command.length() - 1).split("!");
+                    String name = args[0];
+                    String longName = args[1];
+                    final Mob mob = _persister.findMob(name);
+                    mob.setDescName(longName);
+                    _persister.persistMob(mob);
+                } else if (command.startsWith(PROVISION_COMMAND)) {
                     _person.provision();
                 } else if (command.startsWith(MARK_WATER_SOURCE_COMMAND)) {
                     _mapper.markWaterSource(command.substring(MARK_WATER_SOURCE_COMMAND.length() + 1, command.length() - 1));
