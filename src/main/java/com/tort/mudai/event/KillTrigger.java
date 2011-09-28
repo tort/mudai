@@ -7,29 +7,29 @@ import com.tort.mudai.task.EventDistributor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class DiscoverObstacleTrigger implements EventTrigger {
+public class KillTrigger implements EventTrigger {
     private final EventDistributor _eventDistributor;
-    private static final Pattern PATTERN = PatternUtil.compile("^(?:Закрыто\\..*)|(?:Закрыто \\(([^\n]*)\\)\\..*)");
+    private static final Pattern PATTERN = PatternUtil.compile(".*\u001B\\[0\\;37m([^\n]*) (?:мертв|мертва|мертвы), (?:его|ее) душа медленно подымается в небеса.\r?\n" +
+            "Ваш опыт повысился на ([1234567890]*) (?:очка|очков)\\.\r?\n.*");
 
-    public DiscoverObstacleTrigger(EventDistributor eventDistributor) {
+    public KillTrigger(EventDistributor eventDistributor) {
         _eventDistributor = eventDistributor;
     }
 
     @Override
-    public DiscoverObstacleEvent fireEvent(String text) {
+    public Event fireEvent(String text) {
         final Matcher matcher = PATTERN.matcher(text);
         matcher.find();
-
-        final String obstacle = matcher.group(1);
+        final String target = matcher.group(1);
 
         _eventDistributor.invoke(new Handler(){
             @Override
             public void handle(AbstractTask task) {
-                task.discoverObstacle(obstacle);
+                task.kill(target);
             }
         });
 
-        return new DiscoverObstacleEvent(obstacle);
+        return null;
     }
 
     @Override

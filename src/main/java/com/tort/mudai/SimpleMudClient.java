@@ -21,6 +21,9 @@ public class SimpleMudClient {
     private static final String TRAVEL_COMMAND = "/го";
     private static final String ENLIST_MOBS_COMMAND = "/моб";
     private static final String MARK_WATER_SOURCE_COMMAND = "/вода";
+    private static final String ROAM_COMMAND = "/зонинг";
+    private static final String PROVISION_COMMAND = "/затариться";
+    private static final String MOB_ALIAS_COMMAND = "/обозвать";
 
     private Person _person;
     private CommandExecutor _commandExecutor;
@@ -56,10 +59,21 @@ public class SimpleMudClient {
                 } else if (command.startsWith(ENLIST_MOBS_COMMAND)) {
                     ObjectSet<Mob> mobs = _persister.enlistMobs();
                     for (Mob mob : mobs) {
-                        System.out.println("MOB: " + mob.getLongName());
+                        System.out.println("MOB: " + mob.getName());
                     }
                 } else if (command.startsWith(TRAVEL_COMMAND)) {
                     handleTravelCommand(command);
+                } else if (command.startsWith(ROAM_COMMAND)) {
+                    _person.roam();
+                } else if (command.startsWith(MOB_ALIAS_COMMAND)) {
+                    String[] args = command.substring(MOB_ALIAS_COMMAND.length() + 1, command.length() - 1).split("!");
+                    String name = args[0];
+                    String longName = args[1];
+                    final Mob mob = _persister.findMob(name);
+                    mob.setDescName(longName);
+                    _persister.persistMob(mob);
+                } else if (command.startsWith(PROVISION_COMMAND)) {
+                    _person.provision();
                 } else if (command.startsWith(MARK_WATER_SOURCE_COMMAND)) {
                     _mapper.markWaterSource(command.substring(MARK_WATER_SOURCE_COMMAND.length() + 1, command.length() - 1));
                 } else if (command.startsWith(MARK_SHOP_COMMAND)) {
@@ -84,6 +98,10 @@ public class SimpleMudClient {
         Location prototype = new Location();
         prototype.setTitle(to);
         final List<Location> locations = _persister.loadLocation(prototype);
+        if (locations.isEmpty()) {
+            System.out.println("NO LOCATION FOUND: " + to);
+            return;
+        }
         if (locations.size() > 1) {
             System.out.println(locations.size() + " locations found, titled " + prototype.getTitle());
             for (Location location : locations) {
@@ -91,12 +109,16 @@ public class SimpleMudClient {
             }
         } else {
             final List<Direction> path = _mapper.pathTo(locations.get(0));
+            if(path == null){
+                System.out.println("NO PATH FOUND");
+                return;
+            }
 
             StringBuilder result = new StringBuilder();
             for (Direction direction : path) {
-                result.append(direction.getName());
+                result.append(direction.getName() + " ");
             }
-            System.out.println("PATH: " + path);
+            System.out.println("PATH: " + result);
         }
     }
 
@@ -105,6 +127,11 @@ public class SimpleMudClient {
         Location prototype = new Location();
         prototype.setTitle(to);
         final List<Location> locations = _persister.loadLocation(prototype);
+        if(locations.isEmpty()){
+            System.out.println("ROOM UNKNOWN");
+            return;
+        }
+
         if (locations.size() > 1) {
             System.out.println(locations.size() + " locations found, titled " + prototype.getTitle());
             for (Location location : locations) {

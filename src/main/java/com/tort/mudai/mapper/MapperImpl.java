@@ -25,6 +25,7 @@ public class MapperImpl extends StatedTask implements Mapper {
     public void move(String direction, RoomSnapshot roomSnapshot) {
         Location location = _current.getByDirection(direction);
         if (location != null) {
+            checkMapConsistency(roomSnapshot, location);
             System.out.println("ROOM: " + location.getTitle());
             _current = location;
             return;
@@ -38,11 +39,14 @@ public class MapperImpl extends StatedTask implements Mapper {
         List<Location> locations = _persister.loadLocation(prototype);
         Location newLocation = null;
 
-        if (locations.size() > 1 && surroundingRoomsMatchToo(locations, prototype, direction))
+        //TODO add mapper termination and dependent tasks
+        if (locations.size() > 1 && atLeastOneCounterExitNotMapped(locations, direction))
             throw new IllegalStateException(locations.size() + " rooms, titled \"" + prototype.getTitle() + "\" found");
 
-        if (locations.size() == 1)
+        if (locations.size() == 1 && counterExitNotMapped(locations.get(0), direction) && !locations.get(0).equals(_current)) {
             newLocation = locations.get(0);
+            checkMapConsistency(roomSnapshot, newLocation);
+        }
 
         if (newLocation == null) {
             newLocation = new Location();
@@ -68,12 +72,40 @@ public class MapperImpl extends StatedTask implements Mapper {
         _current = newLocation;
     }
 
+    private boolean atLeastOneCounterExitNotMapped(final List<Location> locations, final String direction) {
+        for (Location location : locations) {
+            if(counterExitNotMapped(location, direction) && !location.equals(_current))
+                return true;
+        }
+
+        return false;
+    }
+
+    private boolean counterExitNotMapped(final Location location, final String direction) {
+        final Location room = location.getByDirection(_directionHelper.getOppositeDirection(direction));
+
+        return room == null;
+    }
+
+    private void checkMapConsistency(final RoomSnapshot roomSnapshot, final Location location) {
+        if(!location.getTitle().equals(roomSnapshot.getLocationTitle()))
+            throw new IllegalStateException("room title doesn't match: wait " + location.getTitle() + " but found " + roomSnapshot.getLocationTitle());
+
+        if(!location.getDesc().equals(roomSnapshot.getLocationDesc())){
+            throw new IllegalStateException("room desc doesn't match");
+        }
+
+        if(!location.getAvailableExits().equals(roomSnapshot.getExits())){
+            throw new IllegalStateException("room exits doesn't match");
+        }
+    }
+
     private boolean surroundingRoomsMatchToo(List<Location> locations, Location prototype, String direction) {
         String titleOfRoomWeCameFrom = _current.getTitle();
 
         for (Location location : locations) {
             final Location room = location.getByDirection(_directionHelper.getOppositeDirection(direction));
-            if(room.getTitle().equals(titleOfRoomWeCameFrom)){
+            if (room.getTitle().equals(titleOfRoomWeCameFrom)) {
                 return true;
             }
         }
@@ -87,10 +119,20 @@ public class MapperImpl extends StatedTask implements Mapper {
         updateMobs(roomSnapshot);
     }
 
+    @Override
+    public void kill(String target) {
+        final Mob mob = _persister.findOrCreateMob(target);
+        mob.updateHabitationArea(_current);
+        _persister.persistMob(mob);
+    }
+
     private void updateMobs(RoomSnapshot roomSnapshot) {
         for (String mobLongName : roomSnapshot.getMobs()) {
-            Mob mob = _persister.findOrCreateMob(mobLongName);
-            mob.updateHabitationArea(_current);
+            Mob mob = _persister.findMob(mobLongName);
+            if (mob != null) {
+                mob.updateHabitationArea(_current);
+                _persister.persistMob(mob);
+            }
         }
     }
 
@@ -104,6 +146,7 @@ public class MapperImpl extends StatedTask implements Mapper {
             if (locations.isEmpty())
                 _current = null;
 
+            //TODO add mapper termination and dependent tasks
             if (locations.size() > 1)
                 throw new IllegalStateException(locations.size() + " rooms, titled \"" + prototype.getTitle() + "\" found");
 

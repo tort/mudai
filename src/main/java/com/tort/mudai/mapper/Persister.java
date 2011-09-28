@@ -19,4 +19,10 @@ public interface Persister {
     Mob findOrCreateMob(String mobLongName);
 
     ObjectSet<Mob> enlistMobs();
+
+    void mob(String mob);
+
+    Mob findMob(String mobLongName);
+
+    void persistMob(Mob mob);
 }

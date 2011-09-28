@@ -27,8 +27,8 @@ public class RoomSnapshot {
         return _objectsPresent;
     }
 
-    public void setMobs(String[] _mobs) {
-        this._mobs = _mobs;
+    public void setMobs(String[] mobs) {
+        _mobs = mobs;
     }
 
     public String[] getMobs() {

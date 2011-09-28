@@ -13,8 +13,9 @@ public class ProvisionTask extends StatedTask {
 
     @Inject
     public ProvisionTask(final EventDistributor eventDistributor,
+                         final PulseDistributor pulseDistributor,
                          final DrinkTaskFactory drinkTaskFactory,
-                         final EatTaskFactory eatTaskFactory, PulseDistributor pulseDistributor) {
+                         final EatTaskFactory eatTaskFactory) {
         _eventDistributor = eventDistributor;
         _drinkTaskFactory = drinkTaskFactory;
         _eatTaskFactory = eatTaskFactory;
@@ -31,12 +32,16 @@ public class ProvisionTask extends StatedTask {
 
     @Override
     public Command pulse() {
-        return _pulseDistributor.invoke();
+        if (isInitializing())
+            run();
+
+        return _pulseDistributor.pulse();
     }
 
     private class DrinkTaskCallback implements TaskTerminateCallback {
         @Override
         public void succeeded() {
+
         }
 
         @Override

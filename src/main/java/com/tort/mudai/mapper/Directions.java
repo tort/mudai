@@ -1,17 +1,17 @@
 package com.tort.mudai.mapper;
 
 public enum Directions {
-    WEST("запад", "З"),
-    EAST("восток", "В"),
-    NORTH("север", "С"),
-    SOUTH("юг", "Ю"),
-    UP("вверх", "^"),
-    DOWN("вниз", "v");
+    WEST("запад", "W"),
+    EAST("восток", "E"),
+    NORTH("север", "N"),
+    SOUTH("юг", "S"),
+    UP("вверх", "U"),
+    DOWN("вниз", "D");
 
     private final String _name;
-    private CharSequence _alias;
+    private String _alias;
 
-    private Directions(String name, CharSequence alias) {
+    private Directions(String name, String alias) {
         _name = name;
         _alias = alias;
     }
@@ -20,7 +20,7 @@ public enum Directions {
         return _name;
     }
 
-    public CharSequence getAlias() {
+    public String getAlias() {
         return _alias;
     }
 }

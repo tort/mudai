@@ -14,7 +14,9 @@ import java.util.regex.Pattern;
 public class MoveTrigger implements EventTrigger {
     public static final DirectionLister lister = new DirectionLister();
     public static final Pattern PATTERN = PatternUtil.compile("^Вы поплелись (?:на )?(" + lister.listDirections() + ")\\.\r?\n" +
-            "\u001B\\[1\\;36m(.*)\u001B\\[0\\;37m$\\s\\s\\s(.*)\r?\n\r?\n.*Вых:([^\n]*)> ");
+            "\u001B\\[1\\;36m(.*)\u001B\\[0\\;37m$\\s\\s\\s(.*)\r?\n\r?\n" +
+            "\u001B\\[0\\;36m\\[ Exits: ([nsewudNSEWUD\\s\\(\\)]*) \\]\u001B\\[0\\;37m\r?\n" +
+            ".*> ЪЫ$");
     private final EventDistributor _eventDistributor;
 
     public MoveTrigger(final EventDistributor eventDistributor) {
@@ -31,7 +33,7 @@ public class MoveTrigger implements EventTrigger {
         final String availableExits = matcher.group(4);
         Set<Directions> exits = new HashSet<Directions>();
         for (Directions exit : Directions.values()) {
-            if(availableExits.contains(exit.getAlias())){
+            if(availableExits.contains(exit.getAlias()) || availableExits.contains(exit.getAlias().toLowerCase())){
                 exits.add(exit);
             }
         }
