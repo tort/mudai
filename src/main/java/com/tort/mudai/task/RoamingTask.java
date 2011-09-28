@@ -63,16 +63,6 @@ public class RoamingTask extends StatedTask {
         }
     }
 
-    private Mob findMob(final String mobLongName) {
-        final Mob mob = _persister.findMob(mobLongName);
-        if (mob == null) {
-            System.out.println("NO SUCH MOB");
-            fail();
-            return null;
-        }
-        return mob;
-    }
-
     @Override
     public Command pulse() {
         if (isTerminated())
