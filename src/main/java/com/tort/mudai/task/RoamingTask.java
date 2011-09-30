@@ -9,9 +9,7 @@ import com.tort.mudai.mapper.Mapper;
 import com.tort.mudai.mapper.Mob;
 import com.tort.mudai.mapper.Persister;
 
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 
 public class RoamingTask extends StatedTask {
     private final Persister _persister;
@@ -27,6 +25,20 @@ public class RoamingTask extends StatedTask {
 
     @Override
     public void lookAround(RoomSnapshot roomSnapshot) {
+        killMob(roomSnapshot);
+        removeVisitedFromRoamPath();
+    }
+
+    private void removeVisitedFromRoamPath() {
+        for (Iterator<Location> iterator = _locations.iterator(); iterator.hasNext(); ) {
+            Location location = iterator.next();
+            if (_mapper.currentLocation().equals(location)) {
+                iterator.remove();
+            }
+        }
+    }
+
+    private void killMob(final RoomSnapshot roomSnapshot) {
         for (String mobName : roomSnapshot.getMobs()) {
             final Mob mob = _persister.findMob(mobName);
             if (mob != null) {
@@ -58,9 +70,12 @@ public class RoamingTask extends StatedTask {
         _locations = new LinkedList();
 
         final ObjectSet<Mob> mobs = persister.enlistMobs();
+        Set<Location> locations = new HashSet();
         for (Mob mob : mobs) {
-            _locations.addAll(mob.habitationArea());
+            locations.addAll(mob.habitationArea());
         }
+
+        _locations.addAll(locations);
     }
 
     @Override
