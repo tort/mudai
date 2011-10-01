@@ -1,29 +1,62 @@
 package com.tort.mudai.mapper
 
 import com.google.inject.{Injector, Guice}
-import java.util.List
-import com.tort.mudai.RoomSnapshot
 import org.scalatest.{BeforeAndAfterEach, FeatureSpec}
 import org.scalatest.matchers.ShouldMatchers
+import com.tort.mudai.RoomSnapshot
 
 class MapperTest extends FeatureSpec with BeforeAndAfterEach with ShouldMatchers {
   val room3: String = "room 3"
   val desc: String = "desc"
+  var injector: Injector = _
+  var persister: Persister = _
+  var mapper: MapperImpl = _
+
+  override protected def beforeEach() {
+    injector = Guice.createInjector(new MapperTestModule)
+    persister = injector.getInstance(classOf[Persister])
+    mapper = injector.getInstance(classOf[MapperImpl])
+  }
 
   feature("mapping") {
-    scenario("map two equal locations, fall on third") {
-      val injector: Injector = Guice.createInjector(new MapperTestModule)
-      val persister: Persister = injector.getInstance(classOf[Persister])
-      val mapper: MapperImpl = injector.getInstance(classOf[MapperImpl])
+    scenario("map several equal locations in same direction") {
+      val startRoomExits = Set(Directions.SOUTH)
+      mapper.glance(RoomSnapshot("title", "desc", startRoomExits))
+      //TODO eliminate getName
+      persister.enlistLocations.size should equal(1)
+      mapper.glance(Directions.SOUTH.getName, room("title", "desc", exits))
+      persister.enlistLocations.size should equal(2)
+      mapper.glance(Directions.SOUTH.getName, room("title", "desc", exits))
+      persister.enlistLocations.size should equal(3)
+      mapper.glance(Directions.SOUTH.getName, room("title", "desc", exits))
+      persister.enlistLocations.size should equal(4)
+      mapper.glance(Directions.SOUTH.getName, room("title", "desc", exits))
 
-      val startRoomExits: java.util.Set[Directions] = new java.util.HashSet()
-      startRoomExits.add(Directions.SOUTH)
-      mapper.lookAround(room("title", "desc", startRoomExits))
-      mapper.move(Directions.SOUTH.getName, room("title", "desc", exits))
-      mapper.move(Directions.SOUTH.getName, room("title", "desc", exits))
-      mapper.move(Directions.SOUTH.getName, room("anotherTitle", "desc", exits))
+      persister.enlistLocations.size should equal(5)
+    }
 
-      persister.enlistLocations().size() should equal(4)
+    scenario("lose map, then continue mapping when known room found") {
+      val startRoomExits = Set(Directions.SOUTH, Directions.EAST, Directions.WEST)
+      mapper.glance(RoomSnapshot("first", "desc", startRoomExits))
+      val startLocation = mapper.currentLocation
+
+      persister.enlistLocations.size should equal(1)
+      mapper.glance(Directions.SOUTH.getName, RoomSnapshot("title", "desc", exitsAll))
+      persister.enlistLocations.size should equal(2)
+      mapper.glance(Directions.SOUTH.getName, room("title", "desc", exitsAll))
+      persister.enlistLocations.size should equal(3)
+      mapper.glance(Directions.SOUTH.getName, room("title", "desc", exitsAll))
+      persister.enlistLocations.size should equal(4)
+      mapper.glance(Directions.SOUTH.getName, room("title", "desc", exitsAll))
+      persister.enlistLocations.size should equal(5)
+      // unable to detect unique targetLocation. map lost
+      mapper.glance(Directions.EAST.getName, room("title", "desc", exitsAll))
+      persister.enlistLocations.size should equal(5)
+      // unique room identified. mapping works again
+      mapper.glance(Directions.EAST.getName, room("first", "desc", startRoomExits))
+      persister.enlistLocations.size should equal(5)
+      val cur = mapper.currentLocation
+      assert(cur == startLocation)
     }
 
     scenario("map three locations, pass back, check way forth") {
@@ -39,13 +72,13 @@ class MapperTest extends FeatureSpec with BeforeAndAfterEach with ShouldMatchers
       val persister: Persister = injector.getInstance(classOf[Persister])
       val mapper: MapperImpl = injector.getInstance(classOf[MapperImpl])
 
-      assert(persister.enlistLocations().size() == 0)
+      assert(persister.enlistLocations.size == 0)
 
-      mapper.lookAround(room("title", "desc 1", exits))
-      mapper.move(Directions.SOUTH.getName(), room("title", "desc 2", exits))
-      mapper.move(Directions.SOUTH.getName(), room("title", "desc 3", exits))
+      mapper.glance(room("title", "desc 1", exits))
+      mapper.glance(Directions.SOUTH.getName, room("title", "desc 2", exits))
+      mapper.glance(Directions.SOUTH.getName, room("title", "desc 3", exits))
 
-      persister.enlistLocations().size() should equal(3)
+      persister.enlistLocations.size should equal(3)
     }
 
     scenario("when identifying room, take available directions into account") {
@@ -53,76 +86,65 @@ class MapperTest extends FeatureSpec with BeforeAndAfterEach with ShouldMatchers
       val persister: Persister = injector.getInstance(classOf[Persister])
       val mapper: MapperImpl = injector.getInstance(classOf[MapperImpl])
 
-      assert(persister.enlistLocations().size() == 0)
+      assert(persister.enlistLocations.size == 0)
 
-      val exits: java.util.Set[Directions] = new java.util.HashSet()
-      exits.add(Directions.SOUTH)
-      mapper.lookAround(room("title", "desc", exits))
-      exits.add(Directions.NORTH)
-      mapper.move(Directions.SOUTH.getName(), room("title", "desc", exits))
-      exits.add(Directions.EAST)
-      mapper.move(Directions.SOUTH.getName(), room("title", "desc", exits))
+      mapper.glance(RoomSnapshot("title", "desc", Set(Directions.SOUTH)))
+      mapper.glance(Directions.SOUTH.getName, RoomSnapshot("title", "desc", Set(Directions.SOUTH, Directions.NORTH)))
+      mapper.glance(Directions.SOUTH.getName, RoomSnapshot("title", "desc", Set(Directions.SOUTH, Directions.NORTH, Directions.EAST)))
 
-      persister.enlistLocations().size() should equal(3)
+      persister.enlistLocations.size should equal(3)
     }
-    scenario("when identifying room, take neighbornship into account")(pending)
   }
 
   def exits = {
-    val exits: java.util.Set[Directions] = new java.util.HashSet()
-    exits.add(Directions.SOUTH)
-    exits.add(Directions.NORTH)
-    exits
+    Set(Directions.SOUTH, Directions.NORTH)
+  }
+
+  def exitsAll = {
+    Set(Directions.SOUTH, Directions.NORTH, Directions.EAST, Directions.WEST)
   }
 
   def mapTerrain(mapper: MapperImpl): Location = {
-    val roomSnapshot: RoomSnapshot = new RoomSnapshot()
-    roomSnapshot.setLocationTitle("room 1")
-    roomSnapshot.setLocationDesc(desc)
-    roomSnapshot.setExits(exits)
-    mapper.lookAround(roomSnapshot)
-    assert(mapper.currentLocation() != null)
-    val firstRoom = mapper.currentLocation()
+    val roomSnapshot: RoomSnapshot = new RoomSnapshot(
+    "room 1",
+    desc,
+    exits)
+    mapper.glance(roomSnapshot)
+    assert(mapper.currentLocation != null)
+    val firstRoom = mapper.currentLocation
 
-    mapper.move(Directions.SOUTH.getName, room("room 2", desc, exits))
-    mapper.move(Directions.SOUTH.getName, room(room3, desc, exits));
+    mapper.glance(Directions.SOUTH.getName, room("room 2", desc, exits))
+    mapper.glance(Directions.SOUTH.getName, room(room3, desc, exits));
 
     firstRoom
   }
 
-  def room(title: String, desc: String, exits: java.util.Set[Directions]): RoomSnapshot = {
-    val roomSnapshot: RoomSnapshot = room(title, desc)
-    roomSnapshot.setExits(exits)
+  def room(title: String, desc: String, exits: Set[Directions]): RoomSnapshot = {
+    val roomSnapshot: RoomSnapshot = new RoomSnapshot(title, desc, exits)
 
     roomSnapshot
   }
 
   def room(title: String, desc: String): RoomSnapshot = {
-    val snapshot = new RoomSnapshot
-    snapshot.setLocationTitle(title)
-    snapshot.setLocationDesc(desc)
-
-    snapshot
+    new RoomSnapshot(title, desc, Set())
   }
 
   def checkPathBack(mapper: MapperImpl) {
     val firstRoom: Location = mapTerrain(mapper)
 
-    val pathBack: List[Direction] = mapper.pathTo(firstRoom)
-    assert(pathBack.size() == 2)
+    val pathBack = mapper.pathTo(firstRoom)
+    assert(pathBack.size == 2)
   }
 
   def moveBack(mapper: MapperImpl): Location = {
     checkPathBack(mapper)
 
-    val lastRoom: Location = mapper.currentLocation()
+    val lastRoom: Location = mapper.currentLocation
 
-    val exits: java.util.Set[Directions] = new java.util.HashSet()
-    exits.add(Directions.SOUTH)
-    exits.add(Directions.NORTH)
-    mapper.move(Directions.NORTH.getName, room("room 2", desc, exits))
-    mapper.move(Directions.NORTH.getName, room("room 1", desc, exits))
-    assert(mapper.currentLocation().getTitle == "room 1")
+    val exits = Set(Directions.SOUTH, Directions.NORTH)
+    mapper.glance(Directions.NORTH.getName, room("room 2", desc, exits))
+    mapper.glance(Directions.NORTH.getName, room("room 1", desc, exits))
+    assert(mapper.currentLocation.title == "room 1")
 
     lastRoom
   }
@@ -130,7 +152,7 @@ class MapperTest extends FeatureSpec with BeforeAndAfterEach with ShouldMatchers
   def checkPathForth(mapper: MapperImpl) {
     val lastRoom: Location = moveBack(mapper)
 
-    val pathForth: List[Direction] = mapper.pathTo(lastRoom)
+    val pathForth = mapper.pathTo(lastRoom)
     assert(pathForth.size == 2)
   }
 }
