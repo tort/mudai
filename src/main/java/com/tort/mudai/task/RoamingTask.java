@@ -4,6 +4,7 @@ import com.db4o.ObjectSet;
 import com.google.inject.Inject;
 import com.tort.mudai.RoomSnapshot;
 import com.tort.mudai.command.Command;
+import com.tort.mudai.command.SimpleCommand;
 import com.tort.mudai.mapper.Location;
 import com.tort.mudai.mapper.Mapper;
 import com.tort.mudai.mapper.Mob;
@@ -22,6 +23,7 @@ public class RoamingTask extends StatedTask {
     private volatile TravelTask _travelTask;
     private volatile TravelTask _finishRoamTask;
     private volatile KillTask _killTask;
+    private Command _command;
 
     @Override
     public void lookAround(RoomSnapshot roomSnapshot) {
@@ -46,6 +48,7 @@ public class RoamingTask extends StatedTask {
                     @Override
                     public void succeeded() {
                         _killTask = null;
+                        _command = new SimpleCommand("смотр");
                     }
 
                     @Override
@@ -83,6 +86,12 @@ public class RoamingTask extends StatedTask {
         if (isTerminated())
             return null;
 
+        if(_command != null){
+            Command command = _command;
+            _command = null;
+            return command;
+        }
+
         if (_killTask != null) {
             return _killTask.pulse();
         }
@@ -99,14 +108,13 @@ public class RoamingTask extends StatedTask {
             }
         }
 
-        Command command = null;
         if (_travelTask != null)
-            command = _travelTask.pulse();
+            return _travelTask.pulse();
 
         if (_finishRoamTask != null)
-            command = _finishRoamTask.pulse();
+            return _finishRoamTask.pulse();
 
-        return command;
+        return null;
     }
 
     private class TravelTerminateCallback implements TaskTerminateCallback {
