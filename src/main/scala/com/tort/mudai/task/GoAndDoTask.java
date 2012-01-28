@@ -7,20 +7,19 @@ import com.tort.mudai.mapper.Location;
 
 public class GoAndDoTask extends StatedTask {
     private RenderableCommand _command;
-    private TravelTask _travelTask;
+    private AbstractTask _travelTask;
     private final RenderableCommand _afterTravelCommand;
     private final TaskTerminateCallback _callback;
 
     @Inject
     public GoAndDoTask(final EventDistributor eventDistributor,
-                                   final TravelTaskFactory travelTaskFactory,
                                    @Assisted final Location to,
                                    @Assisted final RenderableCommand command,
                                    @Assisted final TaskTerminateCallback callback) {
         _afterTravelCommand = command;
         _callback = callback;
 
-        _travelTask = travelTaskFactory.create(to, new TravelTaskTerminateCallback());
+        _travelTask = TravelActor.apply(to);
         eventDistributor.subscribe(_travelTask);
     }
 
@@ -46,17 +45,5 @@ public class GoAndDoTask extends StatedTask {
         _command = null;
 
         return command;
-    }
-
-    private class TravelTaskTerminateCallback implements TaskTerminateCallback {
-        @Override
-        public void succeeded() {
-
-        }
-
-        @Override
-        public void failed() {
-            fail();
-        }
     }
 }

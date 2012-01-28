@@ -21,9 +21,13 @@ public interface Task {
 
     boolean isSucceeded();
 
+    boolean isPaused();
+
+    boolean isRunning();
+
     public enum Status{
         NEW,
-        RUNNABLE,
+        RUNNING,
         PAUSED,
         SUCCEEDED,
         FAILED

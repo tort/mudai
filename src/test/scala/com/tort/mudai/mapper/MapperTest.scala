@@ -16,78 +16,39 @@ class MapperTest extends FeatureSpec with BeforeAndAfterEach with ShouldMatchers
     injector = Guice.createInjector(new MapperTestModule)
     persister = injector.getInstance(classOf[Persister])
     mapper = injector.getInstance(classOf[MapperImpl])
+    assert(persister.enlistLocations.size == 0)
   }
 
   feature("mapping") {
     scenario("map several equal locations in same direction") {
-      val startRoomExits = Set(Directions.SOUTH)
-      mapper.glance(RoomSnapshot("title", "desc", startRoomExits))
-      //TODO eliminate getName
-      persister.enlistLocations.size should equal(1)
-      mapper.glance(Directions.SOUTH.getName, room("title", "desc", exits))
-      persister.enlistLocations.size should equal(2)
-      mapper.glance(Directions.SOUTH.getName, room("title", "desc", exits))
-      persister.enlistLocations.size should equal(3)
-      mapper.glance(Directions.SOUTH.getName, room("title", "desc", exits))
-      persister.enlistLocations.size should equal(4)
-      mapper.glance(Directions.SOUTH.getName, room("title", "desc", exits))
-
-      persister.enlistLocations.size should equal(5)
+      mapLocation(Set(Directions.SOUTH))
+      mapSomeRooms(Directions.SOUTH, southAndNorthExits)
     }
 
     scenario("lose map, then continue mapping when known room found") {
       val startRoomExits = Set(Directions.SOUTH, Directions.EAST, Directions.WEST)
-      mapper.glance(RoomSnapshot("first", "desc", startRoomExits))
-      val startLocation = mapper.currentLocation
+      val startLocation = mapStartLocation(startRoomExits)
 
-      persister.enlistLocations.size should equal(1)
-      mapper.glance(Directions.SOUTH.getName, RoomSnapshot("title", "desc", exitsAll))
-      persister.enlistLocations.size should equal(2)
-      mapper.glance(Directions.SOUTH.getName, room("title", "desc", exitsAll))
-      persister.enlistLocations.size should equal(3)
-      mapper.glance(Directions.SOUTH.getName, room("title", "desc", exitsAll))
-      persister.enlistLocations.size should equal(4)
-      mapper.glance(Directions.SOUTH.getName, room("title", "desc", exitsAll))
-      persister.enlistLocations.size should equal(5)
-      // unable to detect unique targetLocation. map lost
-      mapper.glance(Directions.EAST.getName, room("title", "desc", exitsAll))
-      persister.enlistLocations.size should equal(5)
-      // unique room identified. mapping works again
-      mapper.glance(Directions.EAST.getName, room("first", "desc", startRoomExits))
-      persister.enlistLocations.size should equal(5)
-      val cur = mapper.currentLocation
-      assert(cur == startLocation)
+      mapSomeRooms(Directions.SOUTH, exitsAll)
+      loseMap(Directions.EAST)
+      walkThroughUnknownTerrain
+      findKnownRoom(startRoomExits, startLocation)
+      mapLocation(Directions.SOUTH, southAndNorthExits)
     }
 
     scenario("map three locations, pass back, check way forth") {
-      val injector: Injector = Guice.createInjector(new MapperTestModule)
-      val mapper: MapperImpl = injector.getInstance(classOf[MapperImpl])
-      assert(mapper != null)
-
       checkPathForth(mapper)
     }
 
     scenario("when identifying room, take description into account") {
-      val injector: Injector = Guice.createInjector(new MapperTestModule)
-      val persister: Persister = injector.getInstance(classOf[Persister])
-      val mapper: MapperImpl = injector.getInstance(classOf[MapperImpl])
-
-      assert(persister.enlistLocations.size == 0)
-
-      mapper.glance(room("title", "desc 1", exits))
-      mapper.glance(Directions.SOUTH.getName, room("title", "desc 2", exits))
-      mapper.glance(Directions.SOUTH.getName, room("title", "desc 3", exits))
+      mapper.glance(room("title", "desc 1", southAndNorthExits))
+      mapper.glance(Directions.SOUTH.getName, room("title", "desc 2", southAndNorthExits))
+      mapper.glance(Directions.SOUTH.getName, room("title", "desc 3", southAndNorthExits))
 
       persister.enlistLocations.size should equal(3)
     }
 
     scenario("when identifying room, take available directions into account") {
-      val injector: Injector = Guice.createInjector(new MapperTestModule)
-      val persister: Persister = injector.getInstance(classOf[Persister])
-      val mapper: MapperImpl = injector.getInstance(classOf[MapperImpl])
-
-      assert(persister.enlistLocations.size == 0)
-
       mapper.glance(RoomSnapshot("title", "desc", Set(Directions.SOUTH)))
       mapper.glance(Directions.SOUTH.getName, RoomSnapshot("title", "desc", Set(Directions.SOUTH, Directions.NORTH)))
       mapper.glance(Directions.SOUTH.getName, RoomSnapshot("title", "desc", Set(Directions.SOUTH, Directions.NORTH, Directions.EAST)))
@@ -96,25 +57,21 @@ class MapperTest extends FeatureSpec with BeforeAndAfterEach with ShouldMatchers
     }
   }
 
-  def exits = {
-    Set(Directions.SOUTH, Directions.NORTH)
-  }
+  def southAndNorthExits = Set(Directions.SOUTH, Directions.NORTH)
 
-  def exitsAll = {
-    Set(Directions.SOUTH, Directions.NORTH, Directions.EAST, Directions.WEST)
-  }
+  def exitsAll = Set(Directions.SOUTH, Directions.NORTH, Directions.EAST, Directions.WEST)
 
   def mapTerrain(mapper: MapperImpl): Location = {
     val roomSnapshot: RoomSnapshot = new RoomSnapshot(
-    "room 1",
-    desc,
-    exits)
+      "room 1",
+      desc,
+      southAndNorthExits)
     mapper.glance(roomSnapshot)
     assert(mapper.currentLocation != null)
     val firstRoom = mapper.currentLocation
 
-    mapper.glance(Directions.SOUTH.getName, room("room 2", desc, exits))
-    mapper.glance(Directions.SOUTH.getName, room(room3, desc, exits));
+    mapper.glance(Directions.SOUTH.getName, room("room 2", desc, southAndNorthExits))
+    mapper.glance(Directions.SOUTH.getName, room(room3, desc, southAndNorthExits));
 
     firstRoom
   }
@@ -154,5 +111,57 @@ class MapperTest extends FeatureSpec with BeforeAndAfterEach with ShouldMatchers
 
     val pathForth = mapper.pathTo(lastRoom)
     assert(pathForth.size == 2)
+  }
+
+  def mapLocation(direction: Directions, exits: Set[Directions]) {
+    val roomCount = persister.enlistLocations.size
+    //TODO eliminate getName
+    mapper.glance(direction.getName, room("title", "desc", exits))
+    val size = persister.enlistLocations.size
+    size should equal(roomCount + 1)
+  }
+
+  def mapLocation(exits: Set[Directions]) {
+    val roomCount = persister.enlistLocations.size
+    //TODO eliminate getName
+    mapper.glance(room("title", "desc", exits))
+    val size = persister.enlistLocations.size
+    size should equal(roomCount + 1)
+  }
+
+  def mapSomeRooms(direction: Directions, exits: Set[Directions]) {
+    (1 to 4).foreach(i => mapLocation(direction, exits))
+  }
+
+  def loseMap(direction: Directions) {
+    // unable to detect unique targetLocation. map lost
+    val roomCount = persister.enlistLocations.size
+    mapper.glance(direction.getName, room("title", "desc", exitsAll))
+    persister.enlistLocations.size should equal(roomCount)
+    assert(mapper.isPaused)
+  }
+
+  def walkThroughUnknownTerrain {
+    //do not map new rooms until find known
+    val roomCount = persister.enlistLocations.size
+    mapper.glance(Directions.EAST.getName, room("unknownTitle", "unknownDesc", exitsAll))
+    persister.enlistLocations.size should equal(roomCount)
+    assert(mapper.isPaused)
+  }
+
+  def findKnownRoom(startRoomExits: Set[Directions], startLocation: Location) {
+    // unique room identified. mapping works again
+    val roomCount = persister.enlistLocations.size
+    mapper.glance(Directions.EAST.getName, room("first", "desc", startRoomExits))
+    persister.enlistLocations.size should equal(roomCount)
+    assert(mapper.isRunning)
+
+    val cur = mapper.currentLocation
+    assert(cur == startLocation)
+  }
+
+  def mapStartLocation(startRoomExits: Set[Directions]) = {
+    mapper.glance(RoomSnapshot("first", "desc", startRoomExits))
+    mapper.currentLocation
   }
 }

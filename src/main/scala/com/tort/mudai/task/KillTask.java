@@ -4,7 +4,8 @@ import com.tort.mudai.command.RenderableCommand;
 import com.tort.mudai.command.KillCommand;import com.tort.mudai.mapper.Mob;
 
 public class KillTask extends StatedTask {
-    private RenderableCommand _command;private final Mob _mob;
+    private RenderableCommand _command;
+    private final Mob _mob;
     private final TaskTerminateCallback _callback;
 
     public KillTask(Mob mob, TaskTerminateCallback callback) {

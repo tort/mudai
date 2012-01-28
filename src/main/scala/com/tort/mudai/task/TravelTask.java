@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+@Deprecated
 public class TravelTask extends StatedTask {
     private static final String DEFAULT_OBSTACLE = "дверь";
     private List<Direction> _path;

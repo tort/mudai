@@ -5,46 +5,44 @@ import com.google.inject.Provider
 import com.google.inject.name.Named
 import com.tort.mudai.CommandExecutor
 import com.tort.mudai.PulseDistributor
-import scala.collection.JavaConversions._
 
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
-import com.tort.mudai.mapper.{Mapper, Location, MapZoneTaskFactory}
+import com.tort.mudai.mapper.{MapZoneTask, Mapper, Location}
 
-class Person @Inject()(val _sessionProvider: Provider[SessionTask],
-                       @Named("mapperTask") val _mapperTaskProvider: Provider[AbstractTask],
-                       val _provisionTaskProvider: Provider[ProvisionTask],
-                       val _commandExecutor: CommandExecutor,
-                       val _pulseExecutor: ScheduledExecutorService,
-                       val _eventDistributor: EventDistributor,
-                       val _pulseDistributor: PulseDistributor,
-                       val _roamingTaskProvider: Provider[RoamingTask],
-                       val _mapZoneTaskFactory: MapZoneTaskFactory,
+class Person @Inject()(val sessionProvider: Provider[SessionTask],
+                       @Named("mapperTask") val mapperTaskProvider: Provider[AbstractTask],
+                       val provisionTaskProvider: Provider[ProvisionTask],
+                       val commandExecutor: CommandExecutor,
+                       val pulseExecutor: ScheduledExecutorService,
+                       val eventDistributor: EventDistributor,
+                       val pulseDistributor: PulseDistributor,
+                       val roamingTaskProvider: Provider[RoamingTask],
                        val mapper: Mapper
                        ) extends StatedTask {
 
   run()
 
   def subscribe(task: AbstractTask) {
-    _eventDistributor.subscribe(task)
+    eventDistributor.subscribe(task)
   }
 
   def start() {
-    val sessionTask = _sessionProvider.get()
-    val mapperTask = _mapperTaskProvider.get()
+    val sessionTask = sessionProvider.get()
+    val mapperTask = mapperTaskProvider.get()
 
-    _eventDistributor.subscribe(sessionTask)
-    _eventDistributor.subscribe(mapperTask)
+    eventDistributor.subscribe(sessionTask)
+    eventDistributor.subscribe(mapperTask)
 
-    _pulseDistributor.subscribe(sessionTask)
-    _pulseDistributor.subscribe(mapperTask)
+    pulseDistributor.subscribe(sessionTask)
+    pulseDistributor.subscribe(mapperTask)
 
-    _pulseExecutor.scheduleAtFixedRate(new Runnable() {
+    pulseExecutor.scheduleAtFixedRate(new Runnable() {
       override def run() {
         try {
           val p = pulse()
           if (p != null) {
-            _commandExecutor.submit(p)
+            commandExecutor.submit(p)
           }
         } catch {
           case e: Exception => e.printStackTrace() //To change body of catch statement use File | Settings | File Templates.
@@ -55,21 +53,21 @@ class Person @Inject()(val _sessionProvider: Provider[SessionTask],
 
   def travel(to: Location) {
     val travelTask = TravelActor(to)
-    _eventDistributor.subscribe(travelTask)
-    _pulseDistributor.subscribe(travelTask)
+    eventDistributor.subscribe(travelTask)
+    pulseDistributor.subscribe(travelTask)
   }
 
   def roam() {
-    val roamingTask = _roamingTaskProvider.get()
-    _eventDistributor.subscribe(roamingTask)
-    _pulseDistributor.subscribe(roamingTask)
+    val roamingTask = roamingTaskProvider.get()
+    eventDistributor.subscribe(roamingTask)
+    pulseDistributor.subscribe(roamingTask)
   }
 
   override def pulse() = {
-    val command = _pulseDistributor.pulse()
-    for (task <- _eventDistributor.getTargets) {
+    val command = pulseDistributor.pulse()
+    for (task <- eventDistributor.getTargets) {
       if (task.isTerminated) {
-        _eventDistributor.unsubscribe(task)
+        eventDistributor.unsubscribe(task)
       }
     }
 
@@ -77,14 +75,14 @@ class Person @Inject()(val _sessionProvider: Provider[SessionTask],
   }
 
   def provision() {
-    val provisionTask = _provisionTaskProvider.get()
-    _eventDistributor.subscribe(provisionTask)
-    _pulseDistributor.subscribe(provisionTask)
+    val provisionTask = provisionTaskProvider.get()
+    eventDistributor.subscribe(provisionTask)
+    pulseDistributor.subscribe(provisionTask)
   }
 
   def mapZone(zoneName: String) {
-    val mapZoneTask = _mapZoneTaskFactory.create(zoneName)
-    _eventDistributor.subscribe(mapZoneTask)
-    _pulseDistributor.subscribe(mapZoneTask)
+    val mapZoneTask = MapZoneTask(zoneName)
+    eventDistributor.subscribe(mapZoneTask)
+    pulseDistributor.subscribe(mapZoneTask)
   }
 }

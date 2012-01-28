@@ -21,11 +21,11 @@ public abstract class AbstractTask implements Task {
 //        throw new NotImplementedException();
     }
 
-    public void glance(String direction, RoomSnapshot locationTitle){
+    public void glance(String direction, RoomSnapshot roomSnapshot){
 //        throw new NotImplementedException();
     }
 
-    public void glance(RoomSnapshot locationTitle){
+    public void glance(RoomSnapshot roomSnapshot){
 //        throw new NotImplementedException();
     }
 
@@ -84,6 +84,10 @@ public abstract class AbstractTask implements Task {
     }
 
     public void kill(String target) {
+
+    }
+    
+    public void takeItem(String item) {
 
     }
 }

@@ -22,8 +22,6 @@ public class MudaiModule extends AbstractModule {
         install(new FactoryModuleBuilder().implement(Task.class, FillLiquidContainerTask.class).build(FillLiquidContainerTaskFactory.class));
         install(new FactoryModuleBuilder().implement(Task.class, DrinkTask.class).build(DrinkTaskFactory.class));
         install(new FactoryModuleBuilder().implement(Task.class, EatTask.class).build(EatTaskFactory.class));
-        install(new FactoryModuleBuilder().implement(Task.class, GoAndMapTask.class).build(GoAndMapTaskFactory.class));
-        install(new FactoryModuleBuilder().implement(Task.class, MapZoneTask.class).build(MapZoneTaskFactory.class));
 
         bind(AbstractTask.class).annotatedWith(Names.named("mapperTask")).to(MapperImpl.class);
         bind(Mapper.class).to(MapperImpl.class);

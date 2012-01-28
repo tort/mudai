@@ -16,6 +16,6 @@ class DiscoverObstacleTriggerTest extends FunSuite {
     val eventDistributor = Mockito.mock(classOf[EventDistributor])
     val trigger = new DiscoverObstacleTrigger(eventDistributor)
     val event = trigger.fireEvent(input)
-    assert(event.getObstacle() == null)
+    assert(event.obstacle == null)
   }
 }

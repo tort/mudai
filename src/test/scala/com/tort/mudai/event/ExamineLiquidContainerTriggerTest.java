@@ -6,9 +6,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import static org.mockito.Mockito.mock;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
 public class ExamineLiquidContainerTriggerTest {
     private static final String FULL_LIQUID_CONT = "Вы видите слегка помятую флягу из тонкого\n" +

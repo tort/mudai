@@ -14,7 +14,7 @@ public abstract class StatedTask extends AbstractTask {
             throw new IllegalStateException("cannot apply when task is not initializing");
 
         Status oldStatus = _status;
-        _status = Status.RUNNABLE;
+        _status = Status.RUNNING;
         logStateChange(oldStatus);
     }
 
@@ -27,6 +27,11 @@ public abstract class StatedTask extends AbstractTask {
     @Override
     public boolean isTerminated() {
         return _status == Status.SUCCEEDED || _status == Status.FAILED;
+    }
+    
+    @Override
+    public boolean isPaused() {
+        return _status == Status.PAUSED;
     }
 
     private void logStateChange(Status oldStatus) {
@@ -60,6 +65,11 @@ public abstract class StatedTask extends AbstractTask {
     }
 
     @Override
+    public boolean isRunning() {
+        return _status == Status.RUNNING;
+    }
+
+    @Override
     public void pause() {
         Status oldStatus = _status;
         _status = Status.PAUSED;
@@ -69,7 +79,7 @@ public abstract class StatedTask extends AbstractTask {
     @Override
     public void resume() {
         Status oldStatus = _status;
-        _status = Status.RUNNABLE;
+        _status = Status.RUNNING;
         logStateChange(oldStatus);
     }
 }

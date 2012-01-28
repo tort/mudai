@@ -22,7 +22,7 @@ public class LoginPromptTrigger implements EventTrigger {
 
     @Override
     public Event fireEvent(final String text) {
-        _eventDistributor.invoke(new Handler<LoginPromptEvent>() {
+        _eventDistributor.invoke(new Handler() {
             @Override
             public void handle(AbstractTask task) {
                 task.loginPrompt();

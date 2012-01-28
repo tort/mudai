@@ -47,7 +47,7 @@ class GlanceTrigger @Inject()(eventDistributor: EventDistributor) extends EventT
       mobs
     )
 
-    eventDistributor.invoke(new Handler[GlanceEvent]() {
+    eventDistributor.invoke(new Handler() {
       override def handle(task: AbstractTask) {
         if (direction.isDefined) {
           task.glance(direction.get, roomSnapshot)
