@@ -1,12 +1,12 @@
 package com.tort.mudai.mapper
 
-import org.jgrapht.DirectedGraph
 import com.google.inject.Inject
 import com.tort.mudai.RoomSnapshot
 import com.tort.mudai.task.{EventDistributor, StatedTask}
-import org.jgrapht.alg.DijkstraShortestPath
-import java.util.{List => JList}
-import collection.JavaConversions
+import scalax.collection.mutable.Graph
+import scalax.collection.edge.Implicits._
+import scalax.collection.edge.LUnDiEdge
+import com.tort.mudai.Metadata.Direction._
 
 trait Mapper {
   def currentLocation: Location
@@ -15,20 +15,21 @@ trait Mapper {
 
   def nearestWaterSource: Option[Location]
 
-  def pathTo(target: Location): Seq[Direction]
+  def pathTo(target: Location): List[Direction]
 
   def nearestShop: Option[Location]
 
   def nearestTavern: Option[Location]
 }
 
-class MapperImpl @Inject()(graph: DirectedGraph[Location, Direction],
+class MapperImpl @Inject()(
                            persister: Persister,
                            directionHelper: DirectionHelper,
                            eventDistributor: EventDistributor) extends StatedTask with Mapper with LocationHelper {
   private var current: Option[Location] = None
+  private val graph: Graph[Location, LUnDiEdge] = Graph.empty
 
-  override def glance(direction: String, roomSnapshot: RoomSnapshot) {
+  override def glance(direction: Direction, roomSnapshot: RoomSnapshot) {
     synchronized {
       val newCurrent = current match {
         case Some(x) =>
@@ -65,8 +66,7 @@ class MapperImpl @Inject()(graph: DirectedGraph[Location, Direction],
   }
 
   def mapNewLocation(location: Location): Some[Location] = {
-    persister.persistLocation(location)
-    graph.addVertex(location)
+    graph += location
     Some(location)
   }
 
@@ -74,27 +74,24 @@ class MapperImpl @Inject()(graph: DirectedGraph[Location, Direction],
     mapNewLocation(createLocation(roomSnapshot))
   }
 
-  def mapExits(fromLocation: Location, direction: String, toLocation: Location) {
-    fromLocation.addDirection(direction, toLocation)
-    val oppositeDirection = directionHelper.getOppositeDirectionName(direction);
-    toLocation.addDirection(oppositeDirection, fromLocation);
-    graph.addEdge(fromLocation, toLocation, new Direction(direction));
-    graph.addEdge(toLocation, fromLocation, new Direction(oppositeDirection));
-    println("persisted path from " + fromLocation.title + " to " + toLocation.title)
+  def mapExits(fromLocation: Location, direction: Direction, toLocation: Location) {
+    val edge = (fromLocation ~+ toLocation)(direction.id)
+    graph += edge
+    println("persisted path between " + fromLocation.title + " and " + toLocation.title)
   }
 
-  private def criterion(currentLocation: Location, direction: String): (Location) => Boolean = {
+  private def criterion(currentLocation: Location, direction: Direction): (Location) => Boolean = {
     loc => loc != currentLocation && counterExitNotMapped(loc, direction)
   }
 
-  private def mapLocationWithExits(currentLocation: Location, roomSnapshot: RoomSnapshot, direction: String) = {
+  private def mapLocationWithExits(currentLocation: Location, roomSnapshot: RoomSnapshot, direction: Direction) = {
     val persistentLocation = findOrMapLocation(roomSnapshot, criterion(currentLocation, direction))
     persistentLocation.foreach(mapExits(currentLocation, direction, _))
     persistentLocation
   }
 
-  private def locationFromMap(currentLocation: Location, direction: String, roomSnapshot: RoomSnapshot): Option[Location] = {
-    val locOption = currentLocation.getByDirection(direction)
+  private def locationFromMap(currentLocation: Location, direction: Direction, roomSnapshot: RoomSnapshot): Option[Location] = {
+    val locOption: Option[Location] = locationByDirection(currentLocation, direction)
     locOption.flatMap(loc => {
       if (matchSnapshot(loc, roomSnapshot))
         Some(loc)
@@ -105,28 +102,25 @@ class MapperImpl @Inject()(graph: DirectedGraph[Location, Direction],
     })
   }
 
-  private def findOrMapLocation(roomSnapshot: RoomSnapshot, criterion: (Location) => Boolean = (Location) => true) = {
-    //TODO use RoomKey
-    val location = createLocation(roomSnapshot)
 
-    val locations = persister.loadLocations(location)
-    locations.isEmpty match {
-      case true =>
-        mapNewLocation(location)
-
-      case _ => None
-    }
+  private def locationByDirection(currentLocation: Location, direction: Direction): Option[Location] = {
+    node(currentLocation).outgoing.find(_.label == direction.id).map(_._2)
   }
 
-  private def findLocation(roomSnapshot: RoomSnapshot, criterion: (Location) => Boolean = (Location) => true) = {
-    //TODO use RoomKey
-    val location = createLocation(roomSnapshot)
+  private def findOrMapLocation(roomSnapshot: RoomSnapshot, criterion: (Location) => Boolean = (Location) => true) = {
+    val similar = graph.nodes.find((n: Location) => n.title == roomSnapshot.title && n.desc == roomSnapshot.desc && n.exits == roomSnapshot.exits)
+    if (similar.isEmpty)
+        mapNewLocation(createLocation(roomSnapshot))
+    else
+      None
+  }
 
-    val locations = persister.loadLocations(location)
+  private def findLocation(roomSnapshot: RoomSnapshot, criterion: (Location) => Boolean = (Location) => true): Option[Location] = {
+    val locations = graph.nodes.filter((n: Location) => n.title == roomSnapshot.title && n.desc == roomSnapshot.desc && n.exits == roomSnapshot.exits)
     println("location TITLE " + roomSnapshot.title + "CNT: " + locations.size)
     locations.size match {
       case 1 =>
-        locations.headOption
+        locations.headOption.map[Location](x => x)
 
       case _ =>
         println("NONE")
@@ -134,14 +128,13 @@ class MapperImpl @Inject()(graph: DirectedGraph[Location, Direction],
     }
   }
 
-  private def counterExitNotMapped(location: Location, direction: String) = {
-    val room = location.getByDirection(directionHelper.getOppositeDirectionName(direction))
+  private def counterExitNotMapped(location: Location, direction: Direction) = {
+    val room = locationByDirection(location, oppositeDirection(direction))
 
     room == None
   }
 
   private def updateHabitation(currentLocation: Location, mob: Mob) {
-
     persister.persistMob(mob.habitationArea(mob.habitationArea + currentLocation))
   }
 
@@ -164,15 +157,14 @@ class MapperImpl @Inject()(graph: DirectedGraph[Location, Direction],
     }
   }
 
-  private def pathTo(currentLocation: Location, target: Location) = {
-    val algorythm = new DijkstraShortestPath[Location, Direction](graph, currentLocation, target)
-
-    val result = algorythm.getPathEdgeList
-    JavaConversions.iterableAsScalaIterable(result).toSeq
+  private def pathTo(currentLocation: Location, target: Location): Option[List[Direction]] = {
+    (node(currentLocation) shortestPathTo node(target)).map(_.edges.map(_.label.toString).map(aliasToDirection(_)))
   }
 
-  override def pathTo(target: Location) = {
-    current.map(pathTo(_, target)).getOrElse(Seq())
+  private def node(location: Location) = graph.get(location)
+
+  override def pathTo(target: Location)  = {
+    current.flatMap(curr => pathTo(curr, target)).getOrElse(List())
   }
 
   //TODO eliminate null. use option itself
@@ -182,7 +174,6 @@ class MapperImpl @Inject()(graph: DirectedGraph[Location, Direction],
 
   private def markWaterSource(currentLocation: Location, waterSource: String) {
     currentLocation.waterSource = Some(waterSource)
-    persister.persistLocation(currentLocation)
   }
 
   override def markWaterSource(waterSource: String) {
@@ -190,10 +181,7 @@ class MapperImpl @Inject()(graph: DirectedGraph[Location, Direction],
   }
 
   private def nearest(condition: (Location) => Boolean): Option[Location] = {
-    val locations = persister.locationsByCondition(condition)
-
-    //TODO replace with searching for nearest
-    locations.headOption
+    graph.nodes.find((n: Location) => condition(n)).map[Location](x => x)
   }
 
   override def nearestWaterSource = nearest(location => location.waterSource != null)
@@ -222,9 +210,9 @@ class JMapperWrapper @Inject()(val mapper: Mapper) {
 
   def nearestWaterSource: Location = mapper.nearestWaterSource.get
 
-  def pathTo(target: Location): JList[Direction] = {
+  def pathTo(target: Location): Seq[Direction] = {
     val path = mapper.pathTo(target)
-    JavaConversions.seqAsJavaList(path)
+    Seq()//TODO implement
   }
 }
 

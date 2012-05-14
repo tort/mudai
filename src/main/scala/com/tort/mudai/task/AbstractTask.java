@@ -3,6 +3,7 @@ package com.tort.mudai.task;
 import com.tort.mudai.RoomSnapshot;
 import com.tort.mudai.command.RenderableCommand;
 import com.tort.mudai.event.LiquidContainer;
+import com.tort.mudai.mapper.Direction;
 
 public abstract class AbstractTask implements Task {
     public void adapterException(Exception e){
@@ -21,7 +22,7 @@ public abstract class AbstractTask implements Task {
 //        throw new NotImplementedException();
     }
 
-    public void glance(String direction, RoomSnapshot roomSnapshot){
+    public void glance(Direction direction, RoomSnapshot roomSnapshot){
 //        throw new NotImplementedException();
     }
 

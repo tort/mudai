@@ -1,10 +1,10 @@
 package com.tort.mudai.event
 
-import com.tort.mudai.mapper.Directions;
-
 import com.google.inject.Inject
 import com.tort.mudai.{Handler, RoomSnapshot}
 import com.tort.mudai.task.{AbstractTask, EventDistributor}
+import com.tort.mudai.Metadata.Direction._
+import com.tort.mudai.mapper.{Exit, Direction, Directions}
 
 class GlanceTrigger @Inject()(eventDistributor: EventDistributor) extends EventTrigger[GlanceEvent] {
   val lister = new DirectionLister()
@@ -24,9 +24,9 @@ class GlanceTrigger @Inject()(eventDistributor: EventDistributor) extends EventT
     text.matches(GlancePattern.toString())
   }
 
-  private def extractDirection(text: String) = {
+  private def extractDirection(text: String): Option[Direction] = {
     text match {
-      case MovePattern(direction) => Some(direction)
+      case MovePattern(directionName) => Some(nameToDirection(directionName))
       case _ => None
     }
   }
@@ -35,7 +35,7 @@ class GlanceTrigger @Inject()(eventDistributor: EventDistributor) extends EventT
     val direction = extractDirection(text)
     val GlancePattern(locationTitle, locationDesc, availableExits, objectsGroup, mobsGroup) = text
 
-    val exits = Directions.values().filter(exit => availableExits.contains(exit.getAlias)).toSet
+    val exits = availableExits.map(alias => Exit(aliasToDirection(alias.toString), alias.isUpper)).toSet
     val objects = Option(objectsGroup).map(_.split("\n")).getOrElse(Array[String]())
     val mobs = Option(mobsGroup).map(_.split("\n")).getOrElse(Array[String]())
 

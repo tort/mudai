@@ -1,11 +1,12 @@
 package com.tort.mudai
 
-import com.tort.mudai.mapper.Directions
+import mapper.Exit
+
 
 case class RoomSnapshot(
                          title: String,
                          desc: String,
-                         exits: Set[Directions],
+                         exits: Set[Exit],
                          objectsPresent: Seq[String] = Seq(),
                          mobs: Seq[String] = Seq()
                          ) extends RoomKey
@@ -19,5 +20,5 @@ trait RoomKey {
 
   def desc: String
 
-  def exits: Set[Directions]
+  def exits: Set[Exit]
 }

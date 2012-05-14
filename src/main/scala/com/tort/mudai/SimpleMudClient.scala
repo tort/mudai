@@ -101,7 +101,7 @@ class SimpleMudClient @Inject()(val person: Person,
 
             val result = new StringBuilder()
             for (direction <- path) {
-                result.append(direction.getName + " ")
+                result.append(direction.id + " ")
             }
             System.out.println("PATH: " + result)
         }

@@ -1,6 +1,7 @@
 package com.tort.mudai.mapper
 
 import com.google.inject.Inject
+import com.tort.mudai.Metadata.Direction._
 import com.google.inject.assistedinject.Assisted
 import com.tort.mudai.{SimpleMudClient, PulseDistributor, RoomSnapshot}
 import com.tort.mudai.task._
@@ -20,7 +21,7 @@ class MapZoneTask @Inject()(@Assisted val zoneName: String,
     taskActor ! GlanceEvent(roomSnapshot, None)
   }
 
-  override def glance(direction: String, roomSnapshot: RoomSnapshot) {
+  override def glance(direction: Direction, roomSnapshot: RoomSnapshot) {
     taskActor ! GlanceEvent(roomSnapshot, Some(direction))
   }
 
@@ -43,7 +44,7 @@ class MapZoneTask @Inject()(@Assisted val zoneName: String,
   private def goAndLook(target: Target, mapped: Set[Target]): Set[Target] = {
     travelTo(mapper, target.location)
     move(target)
-    memAndVisit(Some(target), mapped + target + Target(mapper.currentLocation, directionHelper.getOppositeDirection(target.direction)))
+    memAndVisit(Some(target), mapped + target + Target(mapper.currentLocation, oppositeDirection(target.direction)))
   }
 
   private def memAndVisit(from: Option[Target], mapped: Set[Target]): Set[Target] = {
@@ -73,23 +74,25 @@ class MapZoneTask @Inject()(@Assisted val zoneName: String,
         travelTo(mapper, loc).map(snapshot =>
           snapshot.objectsPresent.find(obj => 
             obj.startsWith("Одна куна лежит здесь.")
-          ).map(x => {mapper.mapExits(target.location, target.direction.getName, mapper.currentLocation); true}).getOrElse(false)
+          ).map(x => {mapper.mapExits(target.location, target.direction, mapper.currentLocation); true}).getOrElse(false)
         ).getOrElse(false)
     }.reduce((acc, item) => acc || item)
   }
 
   private def waitForMove(target: Target, commands: Seq[RenderableCommand]) {
+    import com.tort.mudai.Metadata.Direction._
     receive {
-      case DiscoverObstacleEvent(obstacle) => waitForMove(target, Seq(new OpenCommand(new Direction(target.direction.getName), obstacle), new MoveCommand(new Direction(target.direction.getName))))
+      case DiscoverObstacleEvent(obstacle) =>
+        waitForMove(target, Seq(new OpenCommand(target.direction, obstacle), new MoveCommand(target.direction)))
       case GlanceEvent(roomSnapshot, Some(direction)) =>
         if (mapper.isPaused) {
           dropCoin()
-          back(new Direction(directionHelper.getOppositeDirection(target.direction).getName))
+          back(oppositeDirection(target.direction))
           mapper.current(target.location)
           val locations = persister.loadLocations(createLocation(roomSnapshot))
           if (!findMarkedRoomBetweenSimilar(locations, target)) {
             val newLocation = mapper.mapNewLocation(roomSnapshot)
-            mapper.mapExits(target.location, target.direction.getName, newLocation.get)
+            mapper.mapExits(target.location, target.direction, newLocation.get)
             println("MAPPED NEW")
           }
           travelTo(mapper, target.location)
@@ -116,7 +119,7 @@ class MapZoneTask @Inject()(@Assisted val zoneName: String,
   private def move(target: Target) {
     receive {
       case _: GetCommand =>
-        sender ! new CommandEvent(new MoveCommand(new Direction(target.direction.getName))) //TODO shit. get rid of this
+        sender ! new CommandEvent(new MoveCommand(target.direction)) //TODO shit. get rid of this
         waitForMove(target, Seq())
     }
   }
@@ -125,11 +128,14 @@ class MapZoneTask @Inject()(@Assisted val zoneName: String,
     mapper.currentLocation.zone = Some(zone)
 
     val dirs = mapper.currentLocation.exits
-    val targetsToMap = dirs.filterNot(_.border()).filterNot(d => from.map(directionHelper.getOppositeDirection(d) == _.direction).getOrElse(false)).map(Target(mapper.currentLocation, _)).filterNot(mapped.contains(_))
+    val targetsToMap = dirs.filterNot(_.border)
+                           .filterNot(exit => from.map(oppositeDirection(exit.direction) == _.direction).getOrElse(false))
+                           .map(exit => Target(mapper.currentLocation, exit.direction))
+                           .filterNot(mapped.contains(_))
     targetsToMap
   }
 
-  case class Target(location: Location, direction: Directions)
+  case class Target(location: Location, direction: Direction)
 
 }
 

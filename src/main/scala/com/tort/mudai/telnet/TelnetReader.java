@@ -1,7 +1,6 @@
 package com.tort.mudai.telnet;
 
 import java.io.IOException;
-import java.nio.CharBuffer;
 
 public class TelnetReader {
 

@@ -13,6 +13,6 @@ public class OpenCommand implements RenderableCommand {
 
     @Override
     public String render() {
-        return "открыть " + _obstacle + " " + _direction.getName();
+        return "открыть " + _obstacle + " " + _direction.id();
     }
 }

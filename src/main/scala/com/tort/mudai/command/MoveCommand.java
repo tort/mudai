@@ -11,6 +11,6 @@ public class MoveCommand implements RenderableCommand {
 
     @Override
     public String render() {
-        return _direction.getName();
+        return _direction.id();
     }
 }

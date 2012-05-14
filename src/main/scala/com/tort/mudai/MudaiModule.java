@@ -8,8 +8,6 @@ import com.google.inject.name.Names;
 import com.tort.mudai.command.RenderableCommand;
 import com.tort.mudai.mapper.*;
 import com.tort.mudai.task.*;
-import org.jgrapht.DirectedGraph;
-import org.jgrapht.graph.DefaultDirectedGraph;
 
 import java.util.concurrent.*;
 
@@ -38,6 +36,5 @@ public class MudaiModule extends AbstractModule {
         bind(new TypeLiteral<BlockingQueue<RenderableCommand>>(){}).to(new TypeLiteral<PriorityBlockingQueue<RenderableCommand>>(){}).in(Scopes.SINGLETON);
         bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(20));
         bind(ScheduledExecutorService.class).toInstance(Executors.newScheduledThreadPool(20));
-        bind(new TypeLiteral<DirectedGraph<Location, Direction>>(){}).toInstance(new DefaultDirectedGraph<Location, Direction>(Direction.class));
     }
 }

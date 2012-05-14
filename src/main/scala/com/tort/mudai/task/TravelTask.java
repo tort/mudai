@@ -25,7 +25,7 @@ public class TravelTask extends StatedTask {
     @Inject
     public TravelTask(@Assisted final Location to, @Assisted TaskTerminateCallback callback, final JMapperWrapper mapper) {
         _callback = callback;
-        _path = mapper.pathTo(to);
+//        _path = mapper.pathTo(to);
         if (_path == null) {
             System.out.println("NO PATH FOUND");
             fail();
@@ -43,10 +43,9 @@ public class TravelTask extends StatedTask {
     }
 
     private void goNext(final Direction direction) {
-        _commands.add(new SimpleCommand(direction.getName()));
+        _commands.add(new SimpleCommand(direction.id()));
     }
 
-    @Override
     public void glance(String direction, RoomSnapshot roomSnapshot) {
         //TODO check current currentLocation has same title as planned, abort task otherwise
         if (_path.isEmpty()) {

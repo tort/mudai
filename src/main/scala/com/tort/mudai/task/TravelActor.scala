@@ -20,7 +20,7 @@ class TravelActor(val location: Location,
     actor ! GlanceEvent(roomSnapshot, None)
   }
 
-  override def glance(direction: String, roomSnapshot: RoomSnapshot) {
+  override def glance(direction: Direction, roomSnapshot: RoomSnapshot) {
     actor ! GlanceEvent(roomSnapshot, Option(direction))
   }
 
@@ -74,8 +74,8 @@ trait TravelHelper {
     }
   }
 
-  private def checkStepExpected(path: scala.Seq[Direction], direction: String) {
-    val expectedDirection = path.head.getName
+  private def checkStepExpected(path: scala.Seq[Direction], direction: Direction) {
+    val expectedDirection = path.head.id
     if (direction != expectedDirection) {
       println("path lost, expected direction " + expectedDirection + ", but found " + direction)
       exit()
