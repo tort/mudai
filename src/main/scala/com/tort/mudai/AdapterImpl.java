@@ -19,13 +19,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 public class AdapterImpl implements Adapter {
     private static final String ENCODING = "0";
 
     private final ByteBuffer _outByteBuffer = ByteBuffer.allocate(OUT_BUF_SIZE);
     private final Charset _charset = Charset.forName("KOI8-R");
-    private SocketChannel _channel;
+    private volatile SocketChannel _channel;
     private BlockingQueue<RenderableCommand> _commands;
     private final ExecutorService _executor;
     private List<EventTrigger> _eventTriggers = new ArrayList<EventTrigger>();
@@ -33,6 +34,7 @@ public class AdapterImpl implements Adapter {
     public static final int OUT_BUF_SIZE = 128;
     private TelnetReader _telnetReader;
     private EventDistributor _eventDistributor;
+    private volatile Future telnetReaderFuture;
 
     @Inject
     public AdapterImpl(final BlockingQueue<RenderableCommand> commands,
@@ -76,17 +78,17 @@ public class AdapterImpl implements Adapter {
         });
     }
 
-    private void start() {
+    private void start(String host, int port) {
         try {
             _channel = SocketChannel.open();
-            _channel.connect(new InetSocketAddress("mud.ru", 4000));
+            _channel.connect(new InetSocketAddress(host, port));
             ChannelReader channelReader = new ChannelReader(_channel, _charset);
             _telnetReader = new TelnetReader(channelReader);
         } catch (IOException e) {
             _eventDistributor.adapterException(e);
         }
 
-        _executor.submit(new Runnable() {
+        telnetReaderFuture = _executor.submit(new Runnable() {
             public void run() {
                 try {
                     String[] message;
@@ -112,7 +114,11 @@ public class AdapterImpl implements Adapter {
             try {
                 final RenderableCommand command = _commands.take();
                 if (command instanceof StartSessionCommand) {
-                    start();
+                    StartSessionCommand cmd = (StartSessionCommand) command;
+                    start(cmd.getHost(), cmd.getPort());
+                } else if(command instanceof CloseSessionCommand) {
+                    telnetReaderFuture.cancel(true);
+                    _channel.close();
                 } else if(command instanceof MultiCommand) {
                     MultiCommand multiCommand = (MultiCommand) command;
                     for (RenderableCommand comm : multiCommand.getCommands()) {
@@ -123,13 +129,14 @@ public class AdapterImpl implements Adapter {
                 }
             } catch (InterruptedException e) {
                 _eventDistributor.adapterException(e);
+            } catch (IOException e) {
+                _eventDistributor.adapterException(e);
             }
         } while (true);
     }
 
     private void send(final RenderableCommand command) {
         final String commandText = command.render() + "\n";
-        System.out.print(commandText);
         final byte[] bytes = commandText.getBytes(_charset);
         try {
             _outByteBuffer.flip();

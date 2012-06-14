@@ -14,6 +14,8 @@ public class SessionTask extends StatedTask {
     private final PersonProperties _properties;
     private CommandExecutor _executor;
     private RenderableCommand _command;
+    String host = "bylins.su";
+    int port = 4000;
 
     @Inject
     public SessionTask(final PersonProperties properties, final CommandExecutor executor) {
@@ -24,7 +26,7 @@ public class SessionTask extends StatedTask {
             @Override
             public void run() {
                 System.out.println("CONNECTING");
-                _executor.submit(new StartSessionCommand());
+                _executor.submit(new StartSessionCommand(host, port));
             }
         }, 1, TimeUnit.SECONDS);
     }
@@ -58,7 +60,7 @@ public class SessionTask extends StatedTask {
             @Override
             public void run() {
                 System.out.println("RECONNECTING");
-                _executor.submit(new StartSessionCommand());
+                _executor.submit(new StartSessionCommand(host, port));
             }
         }, 5, 10, TimeUnit.SECONDS);
     }

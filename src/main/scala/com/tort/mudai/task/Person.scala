@@ -28,13 +28,13 @@ class Person @Inject()(val sessionProvider: Provider[SessionTask],
   }
 
   def start() {
-    val sessionTask = sessionProvider.get()
+//    val sessionTask = sessionProvider.get()
     val mapperTask = mapperTaskProvider.get()
 
-    eventDistributor.subscribe(sessionTask)
+//    eventDistributor.subscribe(sessionTask)
     eventDistributor.subscribe(mapperTask)
 
-    pulseDistributor.subscribe(sessionTask)
+//    pulseDistributor.subscribe(sessionTask)
     pulseDistributor.subscribe(mapperTask)
 
     pulseExecutor.scheduleAtFixedRate(new Runnable() {

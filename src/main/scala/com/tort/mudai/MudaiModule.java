@@ -6,9 +6,13 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Names;
 import com.tort.mudai.command.RenderableCommand;
-import com.tort.mudai.mapper.*;
+import com.tort.mudai.mapper.Mapper;
+import com.tort.mudai.mapper.MapperImpl;
+import com.tort.mudai.mapper.MemPersister;
+import com.tort.mudai.mapper.Persister;
 import com.tort.mudai.task.*;
 
+import java.awt.event.KeyListener;
 import java.util.concurrent.*;
 
 public class MudaiModule extends AbstractModule {
@@ -20,6 +24,7 @@ public class MudaiModule extends AbstractModule {
         install(new FactoryModuleBuilder().implement(Task.class, FillLiquidContainerTask.class).build(FillLiquidContainerTaskFactory.class));
         install(new FactoryModuleBuilder().implement(Task.class, DrinkTask.class).build(DrinkTaskFactory.class));
         install(new FactoryModuleBuilder().implement(Task.class, EatTask.class).build(EatTaskFactory.class));
+        install(new FactoryModuleBuilder().implement(KeyListener.class, InputKeyListener.class).build(InputKeyListenerFactory.class));
 
         bind(AbstractTask.class).annotatedWith(Names.named("mapperTask")).to(MapperImpl.class);
         bind(Mapper.class).to(MapperImpl.class);
