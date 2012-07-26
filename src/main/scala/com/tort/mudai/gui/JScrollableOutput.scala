@@ -22,14 +22,18 @@ class JScrollableOutput extends JScrollPane {
   val coloredTextStyle = styleContext.addStyle("colored text", defaultTextStyle)
   coloredTextStyle.addAttribute(StyleConstants.Foreground, Color.GREEN)
 
-  def print(text: String) {
-    val greenPresent = text.indexOf(ANSI.GREEN)
-    val style = greenPresent match {
-      case -1 => defaultTextStyle
-      case _ => coloredTextStyle
-    }
+  var currentStyle = defaultTextStyle
 
-    textPane.getStyledDocument.insertString(textPane.getCaretPosition, text, style)
+  def print(text: String) {
+    text.indexOf('\u001B') match {
+      case -1 =>
+        textPane.getStyledDocument.insertString(textPane.getCaretPosition, text, currentStyle)
+      case 0 =>
+        print(text.drop(text.indexOf('m') + 1))
+      case x =>
+        textPane.getStyledDocument.insertString(textPane.getCaretPosition, text.substring(0, x), currentStyle)
+        print(text.drop(x))
+    }
   }
 }
 
