@@ -1,11 +1,10 @@
 package com.tort.mudai.gui
 
 import javax.swing._
-import text.{StyleConstants, StyleContext, DefaultCaret}
+import text.{Style, StyleConstants, StyleContext, DefaultCaret}
 import java.awt.Color
 
 class JScrollableOutput extends JScrollPane {
-  val textColor = ANSI.DARK_WHITE
   val textPane = new JTextPane()
   val caret: DefaultCaret = textPane.getCaret.asInstanceOf[DefaultCaret]
   caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE)
@@ -16,20 +15,52 @@ class JScrollableOutput extends JScrollPane {
 
   val styleContext = new StyleContext()
   val defaultTextStyle = styleContext.addStyle("main text", null)
-  defaultTextStyle.addAttribute(StyleConstants.Foreground, Color.LIGHT_GRAY)
+  defaultTextStyle.addAttribute(StyleConstants.Foreground, Color.WHITE.darker())
   defaultTextStyle.addAttribute(StyleConstants.Background, Color.BLACK)
 
-  val coloredTextStyle = styleContext.addStyle("colored text", defaultTextStyle)
-  coloredTextStyle.addAttribute(StyleConstants.Foreground, Color.GREEN)
+  val ANSIColorToStyle = Map(
+    ANSI.WHITE -> foregroundStyle(Color.WHITE.darker()),
+    ANSI.RED -> foregroundStyle(Color.RED),
+    ANSI.GREEN -> foregroundStyle(Color.GREEN),
+    ANSI.YELLOW -> foregroundStyle(Color.YELLOW),
+    ANSI.BLUE -> foregroundStyle(Color.BLUE),
+    ANSI.MAGENTA -> foregroundStyle(Color.MAGENTA),
+    ANSI.CYAN -> foregroundStyle(Color.CYAN),
+    ANSI.BLACK -> foregroundStyle(Color.BLACK),
+    ANSI.LIGHT_BLACK -> foregroundStyle(Color.BLACK.brighter()),
+    ANSI.LIGHT_RED -> foregroundStyle(Color.RED.brighter()),
+    ANSI.LIGHT_GREEN -> foregroundStyle(Color.GREEN.brighter()),
+    ANSI.LIGHT_BLUE -> foregroundStyle(Color.BLUE.brighter()),
+    ANSI.LIGHT_YELLOW -> foregroundStyle(Color.YELLOW.brighter()),
+    ANSI.LIGHT_MAGENTA -> foregroundStyle(Color.MAGENTA.brighter()),
+    ANSI.LIGHT_CYAN -> foregroundStyle(Color.CYAN.brighter()),
+    ANSI.LIGHT_WHITE -> foregroundStyle(Color.WHITE)
+  )
+
+  def foregroundStyle(color: Color): Style = {
+    val style = styleContext.addStyle(color.toString + " foreground", defaultTextStyle)
+    style.addAttribute(StyleConstants.Foreground, color)
+    style
+  }
+
 
   var currentStyle = defaultTextStyle
 
   def print(text: String) {
-    text.indexOf('\u001B') match {
+    val escapeIndex = text.indexOf('\u001B')
+    escapeIndex match {
       case -1 =>
         textPane.getStyledDocument.insertString(textPane.getCaretPosition, text, currentStyle)
       case 0 =>
-        print(text.drop(text.indexOf('m') + 1))
+        val colorCodeEnd = text.indexOf('m', escapeIndex) + 1
+        val colorCode = text.substring(escapeIndex, colorCodeEnd)
+        val ansiColor = ANSI.colors.find(color => color == colorCode).getOrElse {
+          println("color not found: " + colorCode); ANSI.LIGHT_WHITE
+        }
+        currentStyle = ANSIColorToStyle.get(ansiColor).getOrElse({
+          println("style not found for " + ansiColor.drop(1)); defaultTextStyle
+        })
+        print(text.drop(colorCodeEnd))
       case x =>
         textPane.getStyledDocument.insertString(textPane.getCaretPosition, text.substring(0, x), currentStyle)
         print(text.drop(x))
@@ -49,14 +80,14 @@ object ANSI {
   val CYAN = "\u001B[0;36m";
   val WHITE = "\u001B[0;37m";
 
-  val DARK_BLACK = "\u001B[1;30m";
-  val DARK_RED = "\u001B[1;31m";
-  val DARK_GREEN = "\u001B[1;32m";
-  val DARK_YELLOW = "\u001B[1;33m";
-  val DARK_BLUE = "\u001B[1;34m";
-  val DARK_MAGENTA = "\u001B[1;35m";
-  val DARK_CYAN = "\u001B[1;36m";
-  val DARK_WHITE = "\u001B[1;37m";
+  val LIGHT_BLACK = "\u001B[1;30m";
+  val LIGHT_RED = "\u001B[1;31m";
+  val LIGHT_GREEN = "\u001B[1;32m";
+  val LIGHT_YELLOW = "\u001B[1;33m";
+  val LIGHT_BLUE = "\u001B[1;34m";
+  val LIGHT_MAGENTA = "\u001B[1;35m";
+  val LIGHT_CYAN = "\u001B[1;36m";
+  val LIGHT_WHITE = "\u001B[1;37m";
 
   val BACKGROUND_BLACK = "\u001B[40m";
   val BACKGROUND_RED = "\u001B[41m";
@@ -66,4 +97,7 @@ object ANSI {
   val BACKGROUND_MAGENTA = "\u001B[45m";
   val BACKGROUND_CYAN = "\u001B[46m";
   val BACKGROUND_WHITE = "\u001B[47m";
+
+  val colors = Set(SANE, BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE,
+    LIGHT_BLACK, LIGHT_RED, LIGHT_GREEN, LIGHT_YELLOW, LIGHT_BLUE, LIGHT_MAGENTA, LIGHT_CYAN, LIGHT_WHITE)
 }
