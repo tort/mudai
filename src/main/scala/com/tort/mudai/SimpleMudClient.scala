@@ -10,9 +10,11 @@ import java.awt.event._
 import javax.swing._
 import java.awt.{BorderLayout, Frame, Dimension, TextField}
 import com.google.inject.assistedinject.Assisted
+import sun.org.mozilla.javascript.{ScriptableObject, Context}
 
 class SimpleMudClient @Inject()(val person: Person
                                  ) extends RegexParsers {
+
   def start(console: JScrollableOutput) {
     person.subscribe(new SimpleEventListener(console))
     person.start()
@@ -33,11 +35,25 @@ class SimpleMudClient @Inject()(val person: Person
     }
 
     override def rawRead(buffer: String) {
-      console.print(buffer)
+      console.print(applyJsTransformation(buffer))
     }
 
     override def programmerError(exception: Throwable) {
       exception.printStackTrace();
+    }
+
+    private def applyJsTransformation(text: String): String = {
+      val jsContext = Context.enter
+      val scope = jsContext.initStandardObjects
+      val jsOut = Context.javaToJS(System.out, scope);
+      ScriptableObject.putProperty(scope, "out", jsOut);
+      val strings = text.split("\r?\r?\n")
+      strings.foreach {
+        case str =>
+          jsContext.evaluateString(scope, "out.println('" + str + "');", "errors.log", 1, null)
+      }
+      Context.exit()
+      text
     }
   }
 

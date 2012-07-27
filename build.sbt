@@ -16,6 +16,6 @@ libraryDependencies += "org.mockito" % "mockito-core" % "1.8.5"
 
 libraryDependencies += "org.testng" % "testng" % "6.1.1"
 
+libraryDependencies += "org.mozilla" % "rhino" % "1.7R4"
+
 fork := true
-
-
