@@ -12,7 +12,8 @@ import java.awt.{BorderLayout, Frame, Dimension, TextField}
 import com.google.inject.assistedinject.Assisted
 import sun.org.mozilla.javascript.{ScriptableObject, Context}
 
-class SimpleMudClient @Inject()(val person: Person
+class SimpleMudClient @Inject()(val person: Person,
+                                commandExecutor: CommandExecutor
                                  ) extends RegexParsers {
 
   def start(console: JScrollableOutput) {
@@ -21,6 +22,8 @@ class SimpleMudClient @Inject()(val person: Person
   }
 
   private class SimpleEventListener(console: JScrollableOutput) extends StatedTask {
+    var scope: ScriptableObject = _
+
     def SimpleEventListener() {
       run()
     }
@@ -44,13 +47,18 @@ class SimpleMudClient @Inject()(val person: Person
 
     private def applyJsTransformation(text: String): String = {
       val jsContext = Context.enter
-      val scope = jsContext.initStandardObjects
-      val jsOut = Context.javaToJS(System.out, scope);
-      ScriptableObject.putProperty(scope, "out", jsOut);
+      scope = Option(scope).getOrElse({
+        val scp = jsContext.initStandardObjects
+        val jsOut = Context.javaToJS(System.out, scp)
+        ScriptableObject.putProperty(scp, "out", jsOut)
+        val ce = Context.javaToJS(commandExecutor, scp)
+        ScriptableObject.putProperty(scp, "commandExecutor", ce)
+        scp
+      })
       val strings = text.split("\r?\r?\n")
       strings.foreach {
         case str =>
-          jsContext.evaluateString(scope, "out.println('" + str + "');", "errors.log", 1, null)
+          jsContext.evaluateString(scope, "if ((/^Введите имя персонажа/).test('" + str + "')) commandExecutor.submit(new com.tort.mudai.command.RawWriteCommand('ладень'))", "errors.log", 1, null)
       }
       Context.exit()
       text
