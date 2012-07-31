@@ -24,9 +24,6 @@ class SimpleMudClient @Inject()(val person: Person,
   }
 
   private class SimpleEventListener(console: JScrollableOutput) extends StatedTask {
-    var scope: ScriptableObject = initScope(Context.enter)
-    Context.exit()
-
     def SimpleEventListener() {
       run()
     }
@@ -50,6 +47,7 @@ class SimpleMudClient @Inject()(val person: Person,
 
     private def applyJsTransformation(text: String): String = {
       val jsContext = Context.enter
+      val scope = Scope.getScope(jsContext, commandExecutor)
       val strings = text.split("\r?\r?\n")
       val functionObject = scope.get("onMudEvent", scope);
       val jsFunction: JsFunction = functionObject.asInstanceOf[JsFunction]
@@ -61,19 +59,28 @@ class SimpleMudClient @Inject()(val person: Person,
       Context.exit()
       transformedByJsScript
     }
-
-    private def initScope(jsContext: Context): ScriptableObject = {
-      val scope = jsContext.initStandardObjects
-      val jsOut = Context.javaToJS(System.out, scope)
-      ScriptableObject.putProperty(scope, "out", jsOut)
-      val jsCommandExecutor = Context.javaToJS(commandExecutor, scope)
-      ScriptableObject.putProperty(scope, "commandExecutor", jsCommandExecutor)
-      jsContext.evaluateReader(scope, new InputStreamReader(new FileInputStream("config.js")), "err.log", 1, null)
-
-      scope
-    }
   }
 
+}
+
+object Scope {
+  @volatile
+  var scope: ScriptableObject = _
+
+  def getScope(jsContext: Context, executor: CommandExecutor): ScriptableObject = {
+    Option(scope).getOrElse(init(jsContext, executor))
+  }
+
+  private def init(jsContext: Context, executor: CommandExecutor): ScriptableObject = {
+    val scope = jsContext.initStandardObjects
+    val jsOut = Context.javaToJS(System.out, scope)
+    ScriptableObject.putProperty(scope, "out", jsOut)
+    val jsCommandExecutor = Context.javaToJS(executor, scope)
+    ScriptableObject.putProperty(scope, "commandExecutor", jsCommandExecutor)
+    jsContext.evaluateReader(scope, new InputStreamReader(new FileInputStream("config.js")), "err.log", 1, null)
+
+    scope
+  }
 }
 
 object SimpleMudClient {
@@ -82,7 +89,7 @@ object SimpleMudClient {
   def main(args: Array[String]) {
     javax.swing.SwingUtilities.invokeLater(new Runnable() {
       def run() {
-        val frame = new JFrame();
+        val frame = new JFrame()
         val pane = frame.getContentPane
         frame.setExtendedState(Frame.MAXIMIZED_BOTH)
         val console = new JScrollableOutput()
@@ -95,7 +102,7 @@ object SimpleMudClient {
         pane.add(console, BorderLayout.CENTER)
         pane.add(input, BorderLayout.PAGE_END)
         input.setFocusable(true)
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
         frame.setVisible(true)
         frame.addWindowFocusListener(new WindowAdapter {
           override def windowGainedFocus(e: WindowEvent) {
@@ -115,9 +122,9 @@ object SimpleMudClient {
         })
 
         val simpleMudClient = injector.getInstance(classOf[SimpleMudClient])
-        simpleMudClient.start(console);
+        simpleMudClient.start(console)
       }
-    });
+    })
   }
 }
 
@@ -195,6 +202,13 @@ class InputKeyListener @Inject()(@Assisted input: TextField,
 
       input.setText("")
     }
+
+    val ctx = Context.enter()
+    val scope = Scope.getScope(ctx, commandExecutor)
+    val functionObject = scope.get("onKeyEvent", scope);
+    val jsFunction: JsFunction = functionObject.asInstanceOf[JsFunction]
+    jsFunction.call(ctx, scope, scope, Array(e.getKeyCode.toString))
+    Context.exit()
   }
 
 
