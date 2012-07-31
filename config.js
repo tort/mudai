@@ -4,7 +4,7 @@ function submitCommand(command) {
 
 function trigger(regex, command) {
     return {
-        reply: function (text) {
+        test: function (text) {
             if (regex.test(text)) submitCommand(command)
         }
     }
@@ -19,6 +19,8 @@ function bind(keyCode, command) {
 }
 
 personNameTrigger = trigger(/^Введите имя персонажа/, "ладень");
+disappearTrigger = trigger(/^Вы пропали в пустоте этого мира./, "зев")
+
 northBind = bind(224, 'север')
 westBind = bind(226, 'запад')
 eastBind = bind(227, 'восток')
@@ -26,7 +28,8 @@ southBind = bind(65368, 'юг')
 killTargetBind = bind('116', 'уб пчел')
 
 function onMudEvent(text) {
-    personNameTrigger.reply(text);
+    personNameTrigger.test(text);
+    disappearTrigger.test(text);
 
     if ((/^Персонаж с таким именем уже существует. Введите пароль/).test(text))
         commandExecutor.submit(new com.tort.mudai.command.RawWriteCommand("таганьйорк"));
