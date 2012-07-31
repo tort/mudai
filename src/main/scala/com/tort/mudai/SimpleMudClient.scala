@@ -47,7 +47,7 @@ class SimpleMudClient @Inject()(val person: Person,
 
     private def applyJsTransformation(text: String): String = {
       val jsContext = Context.enter
-      val scope = Scope.getScope(jsContext, commandExecutor)
+      val scope = Scope.get(jsContext, commandExecutor)
       val strings = text.split("\r?\r?\n")
       val functionObject = scope.get("onMudEvent", scope);
       val jsFunction: JsFunction = functionObject.asInstanceOf[JsFunction]
@@ -65,12 +65,14 @@ class SimpleMudClient @Inject()(val person: Person,
 
 object Scope {
   @volatile
-  var scope: ScriptableObject = _
+  private var scope: Option[ScriptableObject] = None
 
-  def getScope(jsContext: Context, executor: CommandExecutor): ScriptableObject = {
-    scope = Option(scope).getOrElse(init(jsContext, executor))
+  def reset() { scope = None }
 
-    scope
+  def get(jsContext: Context, executor: CommandExecutor): ScriptableObject = {
+    scope = scope.orElse(Option(init(jsContext, executor)))
+
+    scope.get
   }
 
   private def init(jsContext: Context, executor: CommandExecutor): ScriptableObject = {
@@ -153,6 +155,7 @@ class InputKeyListener @Inject()(@Assisted input: TextField,
   val StartSessionCommand = "#connect"
   val CloseSessionCommand = "#zap"
   val StartSessionPattern = ("^" + StartSessionCommand + """\s*([^\s]*)\s*(\d*).*$""").r
+  val ReloadCommand = "#reload"
 
   def keyTyped(e: KeyEvent) {}
 
@@ -198,6 +201,8 @@ class InputKeyListener @Inject()(@Assisted input: TextField,
         commandExecutor.submit(new StartSessionCommand(host, port.toInt))
       } else if (command.startsWith(CloseSessionCommand)) {
         commandExecutor.submit(new CloseSessionCommand())
+      } else if (command.startsWith(ReloadCommand)) {
+        Scope.reset
       } else {
         commandExecutor.submit(new RawWriteCommand(command))
       }
@@ -206,7 +211,7 @@ class InputKeyListener @Inject()(@Assisted input: TextField,
     }
 
     val ctx = Context.enter()
-    val scope = Scope.getScope(ctx, commandExecutor)
+    val scope = Scope.get(ctx, commandExecutor)
     val functionObject = scope.get("onKeyEvent", scope);
     val jsFunction: JsFunction = functionObject.asInstanceOf[JsFunction]
     jsFunction.call(ctx, scope, scope, Array(e.getKeyCode.toString))
