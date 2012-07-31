@@ -68,7 +68,9 @@ object Scope {
   var scope: ScriptableObject = _
 
   def getScope(jsContext: Context, executor: CommandExecutor): ScriptableObject = {
-    Option(scope).getOrElse(init(jsContext, executor))
+    scope = Option(scope).getOrElse(init(jsContext, executor))
+
+    scope
   }
 
   private def init(jsContext: Context, executor: CommandExecutor): ScriptableObject = {
