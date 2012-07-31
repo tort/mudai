@@ -19,6 +19,7 @@ class JScrollableOutput extends JScrollPane {
   defaultTextStyle.addAttribute(StyleConstants.Background, Color.BLACK)
 
   val ANSIColorToStyle = Map(
+    ANSI.SANE -> defaultTextStyle,
     ANSI.GRAY -> foregroundStyle(Color.GRAY),
     ANSI.RED -> foregroundStyle(Color.RED),
     ANSI.GREEN -> foregroundStyle(Color.GREEN),
@@ -69,7 +70,7 @@ class JScrollableOutput extends JScrollPane {
 }
 
 object ANSI {
-  val SANE = "\u001B[0m";
+  val SANE = "\u001B[0;0m";
 
   val GRAY = "\u001B[0;30m";
   val RED = "\u001B[0;31m";
