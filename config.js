@@ -18,7 +18,7 @@ function bind(keyCode, command) {
     }
 }
 
-personNameTrigger = trigger(/^Введите имя персонажа/, "веретень");
+personNameTrigger = trigger(/^Введите имя персонажа/, "ладень");
 northBind = bind(224, 'север')
 westBind = bind(226, 'запад')
 eastBind = bind(227, 'восток')

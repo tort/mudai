@@ -19,15 +19,15 @@ class JScrollableOutput extends JScrollPane {
   defaultTextStyle.addAttribute(StyleConstants.Background, Color.BLACK)
 
   val ANSIColorToStyle = Map(
-    ANSI.WHITE -> foregroundStyle(Color.WHITE.darker()),
+    ANSI.GRAY -> foregroundStyle(Color.GRAY),
     ANSI.RED -> foregroundStyle(Color.RED),
     ANSI.GREEN -> foregroundStyle(Color.GREEN),
     ANSI.YELLOW -> foregroundStyle(Color.YELLOW),
     ANSI.BLUE -> foregroundStyle(Color.BLUE),
     ANSI.MAGENTA -> foregroundStyle(Color.MAGENTA),
     ANSI.CYAN -> foregroundStyle(Color.CYAN),
-    ANSI.BLACK -> foregroundStyle(Color.BLACK),
-    ANSI.LIGHT_BLACK -> foregroundStyle(Color.BLACK.brighter()),
+    ANSI.WHITE -> foregroundStyle(Color.WHITE.darker()),
+    ANSI.LIGHT_GRAY -> foregroundStyle(Color.LIGHT_GRAY),
     ANSI.LIGHT_RED -> foregroundStyle(Color.RED.brighter()),
     ANSI.LIGHT_GREEN -> foregroundStyle(Color.GREEN.brighter()),
     ANSI.LIGHT_BLUE -> foregroundStyle(Color.BLUE.brighter()),
@@ -71,7 +71,7 @@ class JScrollableOutput extends JScrollPane {
 object ANSI {
   val SANE = "\u001B[0m";
 
-  val BLACK = "\u001B[0;30m";
+  val GRAY = "\u001B[0;30m";
   val RED = "\u001B[0;31m";
   val GREEN = "\u001B[0;32m";
   val YELLOW = "\u001B[0;33m";
@@ -80,7 +80,7 @@ object ANSI {
   val CYAN = "\u001B[0;36m";
   val WHITE = "\u001B[0;37m";
 
-  val LIGHT_BLACK = "\u001B[1;30m";
+  val LIGHT_GRAY = "\u001B[1;30m";
   val LIGHT_RED = "\u001B[1;31m";
   val LIGHT_GREEN = "\u001B[1;32m";
   val LIGHT_YELLOW = "\u001B[1;33m";
@@ -98,6 +98,6 @@ object ANSI {
   val BACKGROUND_CYAN = "\u001B[46m";
   val BACKGROUND_WHITE = "\u001B[47m";
 
-  val colors = Set(SANE, BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE,
-    LIGHT_BLACK, LIGHT_RED, LIGHT_GREEN, LIGHT_YELLOW, LIGHT_BLUE, LIGHT_MAGENTA, LIGHT_CYAN, LIGHT_WHITE)
+  val colors = Set(SANE, GRAY, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE,
+    LIGHT_GRAY, LIGHT_RED, LIGHT_GREEN, LIGHT_YELLOW, LIGHT_BLUE, LIGHT_MAGENTA, LIGHT_CYAN, LIGHT_WHITE)
 }
