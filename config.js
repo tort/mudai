@@ -23,6 +23,7 @@ northBind = bind(224, 'север')
 westBind = bind(226, 'запад')
 eastBind = bind(227, 'восток')
 southBind = bind(65368, 'юг')
+killTargetBind = bind('116', 'уб пчел')
 
 function onMudEvent(text) {
     personNameTrigger.reply(text);
@@ -34,16 +35,16 @@ function onMudEvent(text) {
 }
 
 function onKeyEvent(keyCode) {
-    if(keyCode == 116) {
-        submitCommand('кол !про! пче')
+    if(keyCode == 123) {
+        commandExecutor.submit(new com.tort.mudai.command.StartSessionCommand("bylins.su", 4000));
     }
 
     northBind.test(keyCode)
     westBind.test(keyCode)
     eastBind.test(keyCode)
     southBind.test(keyCode)
+    killTargetBind.test(keyCode)
 
     out.println(keyCode)
 }
 
-sdghfjsdghfwhjegfwhjegj
