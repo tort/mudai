@@ -1,5 +1,7 @@
+target = ''
+
 function submitCommand(command) {
-        commandExecutor.submit(new com.tort.mudai.command.RawWriteCommand(command));
+    commandExecutor.submit(new com.tort.mudai.command.RawWriteCommand(command));
 }
 
 function trigger(regex, command) {
@@ -13,9 +15,25 @@ function trigger(regex, command) {
 function bind(keyCode, command) {
     return {
         test: function (keyPressed) {
-            if(keyPressed == keyCode) submitCommand(command)
+            if(keyPressed == keyCode) {
+                submitCommand(command)
+            }
         }
     }
+}
+
+function bindFunction(keyCode, commandFunction) {
+    return {
+        test: function (keyPressed) {
+            if(keyPressed == keyCode) {
+                submitCommand(commandFunction(target))
+            }
+        }
+    }
+}
+
+function killTargetCommand(target) {
+    return 'уб ' + target
 }
 
 personNameTrigger = trigger(/^Введите имя персонажа/, "ладень");
@@ -25,7 +43,7 @@ northBind = bind(224, 'север')
 westBind = bind(226, 'запад')
 eastBind = bind(227, 'восток')
 southBind = bind(65368, 'юг')
-killTargetBind = bind('116', 'уб пчел')
+killTargetBind = bindFunction('116', killTargetCommand)
 
 function onMudEvent(text) {
     personNameTrigger.test(text);
@@ -49,4 +67,13 @@ function onKeyEvent(keyCode) {
     killTargetBind.test(keyCode)
 
     out.println(keyCode)
+}
+
+function onInputEvent(text) {
+    //set target
+    if((/^т .*/).test(text)) {
+        res = (/^т (.*)/).exec(text);
+        target = res[1];
+        return [];
+    }
 }

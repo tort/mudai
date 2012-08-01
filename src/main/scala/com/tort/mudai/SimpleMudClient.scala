@@ -160,6 +160,8 @@ class InputKeyListener @Inject()(@Assisted input: TextField,
   def keyTyped(e: KeyEvent) {}
 
   def keyPressed(e: KeyEvent) {
+    val ctx = Context.enter()
+
     if (e.getKeyCode == KeyEvent.VK_ENTER) {
       val command = input.getText
       if (command.startsWith(FIND_PATH_COMMAND)) {
@@ -204,20 +206,29 @@ class InputKeyListener @Inject()(@Assisted input: TextField,
       } else if (command.startsWith(ReloadCommand)) {
         Scope.reset
       } else {
-        commandExecutor.submit(new RawWriteCommand(command))
+        callSingleArgumentJsFunction(ctx, "onInputEvent", input.getText) match {
+          case None => commandExecutor.submit(new RawWriteCommand(command))
+          case Some(Array()) =>
+          case Some(x) => commandExecutor.submit(new RawWriteCommand(x(0)))
+        }
       }
-
       input.setText("")
+    } else {
+      callSingleArgumentJsFunction(ctx, "onKeyEvent", e.getKeyCode.toString)
     }
-
-    val ctx = Context.enter()
-    val scope = Scope.get(ctx, commandExecutor)
-    val functionObject = scope.get("onKeyEvent", scope);
-    val jsFunction: JsFunction = functionObject.asInstanceOf[JsFunction]
-    jsFunction.call(ctx, scope, scope, Array(e.getKeyCode.toString))
     Context.exit()
   }
 
+
+  private def callSingleArgumentJsFunction(ctx: Context, name: String, arg: String): Option[Array[String]] = {
+    val scope = Scope.get(ctx, commandExecutor)
+    val functionObject = scope.get(name, scope);
+    val jsFunction: JsFunction = functionObject.asInstanceOf[JsFunction]
+    jsFunction.call(ctx, scope, scope, Array(arg)) match {
+      case _: org.mozilla.javascript.Undefined => None
+      case result: org.mozilla.javascript.NativeArray => Some(result.toArray.map(_.toString))
+    }
+  }
 
   def keyReleased(e: KeyEvent) {}
 
