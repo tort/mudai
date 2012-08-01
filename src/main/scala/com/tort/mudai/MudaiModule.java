@@ -6,6 +6,8 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Names;
 import com.tort.mudai.command.RenderableCommand;
+import com.tort.mudai.gui.JScrollableOutput;
+import com.tort.mudai.gui.OutputPrinter;
 import com.tort.mudai.mapper.Mapper;
 import com.tort.mudai.mapper.MapperImpl;
 import com.tort.mudai.mapper.MemPersister;
@@ -37,8 +39,11 @@ public class MudaiModule extends AbstractModule {
         bind(Person.class).in(Scopes.SINGLETON);
         bind(EventDistributor.class).in(Scopes.SINGLETON);
         bind(Persister.class).toInstance(new MemPersister());
+        bind(OutputPrinter.class).to(JScrollableOutput.class);
+        bind(JScrollableOutput.class).in(Scopes.SINGLETON);
 
-        bind(new TypeLiteral<BlockingQueue<RenderableCommand>>(){}).to(new TypeLiteral<PriorityBlockingQueue<RenderableCommand>>(){}).in(Scopes.SINGLETON);
+        bind(new TypeLiteral<BlockingQueue<RenderableCommand>>() {
+        }).to(new TypeLiteral<PriorityBlockingQueue<RenderableCommand>>(){}).in(Scopes.SINGLETON);
         bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(20));
         bind(ScheduledExecutorService.class).toInstance(Executors.newScheduledThreadPool(20));
     }

@@ -1,7 +1,7 @@
 package com.tort.mudai
 
 import command.{RenderableCommand, StartSessionCommand, RawWriteCommand}
-import gui.JScrollableOutput
+import gui.{OutputPrinter, JScrollableOutput}
 import mapper.{Persister, Mapper}
 import task.{StatedTask, Person}
 import com.google.inject.{Guice, Inject}
@@ -18,12 +18,12 @@ class SimpleMudClient @Inject()(val person: Person,
                                 commandExecutor: CommandExecutor
                                  ) extends RegexParsers {
 
-  def start(console: JScrollableOutput) {
+  def start(console: OutputPrinter) {
     person.subscribe(new SimpleEventListener(console))
     person.start()
   }
 
-  private class SimpleEventListener(console: JScrollableOutput) extends StatedTask {
+  private class SimpleEventListener(console: OutputPrinter) extends StatedTask {
     def SimpleEventListener() {
       run()
     }
@@ -96,7 +96,7 @@ object SimpleMudClient {
         val frame = new JFrame()
         val pane = frame.getContentPane
         frame.setExtendedState(Frame.MAXIMIZED_BOTH)
-        val console = new JScrollableOutput()
+        val console = injector.getInstance(classOf[JScrollableOutput])
         console.setAutoscrolls(true)
         val input = new TextField()
         input.setMinimumSize(new Dimension(500, 20))

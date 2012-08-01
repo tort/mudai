@@ -6,6 +6,7 @@ import com.tort.mudai.command.RenderableCommand;
 import com.tort.mudai.command.SimpleCommand;
 import com.tort.mudai.command.StartSessionCommand;
 import com.tort.mudai.event.*;
+import com.tort.mudai.gui.OutputPrinter;
 import com.tort.mudai.task.EventDistributor;
 import com.tort.mudai.telnet.ChannelReader;
 import com.tort.mudai.telnet.TelnetReader;
@@ -35,15 +36,18 @@ public class AdapterImpl implements Adapter {
     private TelnetReader _telnetReader;
     private EventDistributor _eventDistributor;
     private volatile Future telnetReaderFuture;
+    private OutputPrinter _outputPrinter;
 
     @Inject
     public AdapterImpl(final BlockingQueue<RenderableCommand> commands,
                           final ExecutorService executor,
-                          final EventDistributor eventDistributor
+                          final EventDistributor eventDistributor,
+                          final OutputPrinter outputPrinter
                           ) {
         _commands = commands;
         _executor = executor;
         _eventDistributor = eventDistributor;
+        _outputPrinter = outputPrinter;
 
         _eventTriggers.add(new LoginPromptTrigger(eventDistributor));
         _eventTriggers.add(new PasswordPromptTrigger(eventDistributor));
@@ -125,6 +129,7 @@ public class AdapterImpl implements Adapter {
                         send(comm);
                     }
                 } else {
+                    _outputPrinter.print(command.render() + "\n");
                     send(command);
                 }
             } catch (InterruptedException e) {

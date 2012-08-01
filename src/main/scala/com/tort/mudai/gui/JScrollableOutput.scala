@@ -4,7 +4,7 @@ import javax.swing._
 import text.{Style, StyleConstants, StyleContext, DefaultCaret}
 import java.awt.Color
 
-class JScrollableOutput extends JScrollPane {
+class JScrollableOutput extends JScrollPane with OutputPrinter {
   val textPane = new JTextPane()
   val caret: DefaultCaret = textPane.getCaret.asInstanceOf[DefaultCaret]
   caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE)
@@ -101,4 +101,8 @@ object ANSI {
 
   val colors = Set(SANE, GRAY, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE,
     LIGHT_GRAY, LIGHT_RED, LIGHT_GREEN, LIGHT_YELLOW, LIGHT_BLUE, LIGHT_MAGENTA, LIGHT_CYAN, LIGHT_WHITE)
+}
+
+trait OutputPrinter {
+  def print(text: String)
 }
