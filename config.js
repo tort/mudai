@@ -1,4 +1,5 @@
 target = ''
+binds = [];
 
 function submitCommand(command) {
     commandExecutor.submit(new com.tort.mudai.command.RawWriteCommand(command));
@@ -13,29 +14,31 @@ function trigger(regex, command) {
 }
 
 function bind(keyCode, command) {
-    return {
+    var res = {
         test: function (keyPressed) {
             if(keyPressed == keyCode) {
                  return command;
             }
         }
-    }
+    };
+
+    binds.push(res);
+
+    return res;
 }
 
 function bindFunction(keyCode, commandFunction) {
-    return {
+    var res = {
         test: function (keyPressed) {
             if(keyPressed == keyCode) {
-                return commandFunction(target);
+                 return commandFunction(command);
             }
         }
-    }
-}
+    };
 
-function pushIfDefined(arr, str) {
-    if(str != undefined) {
-        arr.push(str)
-    }
+    binds.push(res);
+
+    return res;
 }
 
 function killTargetCommand(target) {
@@ -49,7 +52,7 @@ northBind = bind(224, 'север')
 westBind = bind(226, 'запад')
 eastBind = bind(227, 'восток')
 southBind = bind(65368, 'юг')
-killTargetBind = bindFunction('116', killTargetCommand)
+killTargetBind = bindFunction(116, killTargetCommand)
 
 function onMudEvent(text) {
     personNameTrigger.test(text);
@@ -67,11 +70,12 @@ function onKeyEvent(keyCode) {
     }
 
     result = [];
-    pushIfDefined(result, northBind.test(keyCode));
-    pushIfDefined(result, westBind.test(keyCode));
-    pushIfDefined(result, eastBind.test(keyCode));
-    pushIfDefined(result, southBind.test(keyCode));
-    pushIfDefined(result, killTargetBind.test(keyCode));
+    for(i in binds) {
+        var cmd = binds[i].test(keyCode)
+        if(cmd != undefined) {
+            result.push(cmd)
+        }
+    }
 
     out.println(keyCode)
     return result;
