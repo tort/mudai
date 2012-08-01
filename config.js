@@ -1,16 +1,17 @@
-target = ''
+target = '';
 binds = [];
-
-function submitCommand(command) {
-    commandExecutor.submit(new com.tort.mudai.command.RawWriteCommand(command));
-}
+triggers = [];
 
 function trigger(regex, command) {
-    return {
+    var res = {
         test: function (text) {
-            if (regex.test(text)) submitCommand(command)
+            if (regex.test(text)) return command;
         }
-    }
+    };
+
+    triggers.push(res);
+
+    return res;
 }
 
 function bind(keyCode, command) {
@@ -45,18 +46,23 @@ function killTargetCommand(target) {
     return 'уб ' + target
 }
 
-personNameTrigger = trigger(/^Введите имя персонажа/, "ладень");
-disappearTrigger = trigger(/^Вы пропали в пустоте этого мира./, "зев")
+trigger(/^Введите имя персонажа/, "ладень");
+trigger(/^Вы пропали в пустоте этого мира./, "зев")
 
-northBind = bind(224, 'север')
-westBind = bind(226, 'запад')
-eastBind = bind(227, 'восток')
-southBind = bind(65368, 'юг')
-killTargetBind = bindFunction(116, killTargetCommand)
+bind(224, 'север')
+bind(226, 'запад')
+bind(227, 'восток')
+bind(65368, 'юг')
+bindFunction(116, killTargetCommand)
 
 function onMudEvent(text) {
-    personNameTrigger.test(text);
-    disappearTrigger.test(text);
+    result = [];
+    for(i in triggers) {
+        var cmd = triggers[i].test(text)
+        if(cmd != undefined) {
+            commandExecutor.submit(new com.tort.mudai.command.RawWriteCommand(cmd));
+        }
+    }
 
     if ((/^Персонаж с таким именем уже существует. Введите пароль/).test(text))
         commandExecutor.submit(new com.tort.mudai.command.RawWriteCommand("таганьйорк"));
