@@ -129,7 +129,6 @@ public class AdapterImpl implements Adapter {
                         send(comm);
                     }
                 } else {
-                    _outputPrinter.print(command.render() + "\n");
                     send(command);
                 }
             } catch (InterruptedException e) {
@@ -141,6 +140,7 @@ public class AdapterImpl implements Adapter {
     }
 
     private void send(final RenderableCommand command) {
+        _outputPrinter.print(command.render() + "\n");
         final String commandText = command.render() + "\n";
         final byte[] bytes = commandText.getBytes(_charset);
         try {

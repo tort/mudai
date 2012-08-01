@@ -16,7 +16,7 @@ function bind(keyCode, command) {
     return {
         test: function (keyPressed) {
             if(keyPressed == keyCode) {
-                submitCommand(command)
+                 return command;
             }
         }
     }
@@ -26,9 +26,15 @@ function bindFunction(keyCode, commandFunction) {
     return {
         test: function (keyPressed) {
             if(keyPressed == keyCode) {
-                submitCommand(commandFunction(target))
+                return commandFunction(target);
             }
         }
+    }
+}
+
+function pushIfDefined(arr, str) {
+    if(str != undefined) {
+        arr.push(str)
     }
 }
 
@@ -60,13 +66,15 @@ function onKeyEvent(keyCode) {
         commandExecutor.submit(new com.tort.mudai.command.StartSessionCommand("bylins.su", 4000));
     }
 
-    northBind.test(keyCode)
-    westBind.test(keyCode)
-    eastBind.test(keyCode)
-    southBind.test(keyCode)
-    killTargetBind.test(keyCode)
+    result = [];
+    pushIfDefined(result, northBind.test(keyCode));
+    pushIfDefined(result, westBind.test(keyCode));
+    pushIfDefined(result, eastBind.test(keyCode));
+    pushIfDefined(result, southBind.test(keyCode));
+    pushIfDefined(result, killTargetBind.test(keyCode));
 
     out.println(keyCode)
+    return result;
 }
 
 function onInputEvent(text) {

@@ -1,6 +1,6 @@
 package com.tort.mudai
 
-import command.{RenderableCommand, StartSessionCommand, RawWriteCommand}
+import command.{MultiCommand, RenderableCommand, StartSessionCommand, RawWriteCommand}
 import gui.{OutputPrinter, JScrollableOutput}
 import mapper.{Persister, Mapper}
 import task.{StatedTask, Person}
@@ -214,7 +214,10 @@ class InputKeyListener @Inject()(@Assisted input: TextField,
       }
       input.setText("")
     } else {
-      callSingleArgumentJsFunction(ctx, "onKeyEvent", e.getKeyCode.toString)
+        callSingleArgumentJsFunction(ctx, "onKeyEvent", e.getKeyCode.toString) match {
+          case Some(Array()) =>
+          case Some(x) => commandExecutor.submit(new MultiCommand(x.map(c => new RawWriteCommand(c))))
+        }
     }
     Context.exit()
   }
