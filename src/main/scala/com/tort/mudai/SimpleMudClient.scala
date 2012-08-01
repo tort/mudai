@@ -209,12 +209,13 @@ class InputKeyListener @Inject()(@Assisted input: TextField,
         callSingleArgumentJsFunction(ctx, "onInputEvent", input.getText) match {
           case None => commandExecutor.submit(new RawWriteCommand(command))
           case Some(Array()) =>
-          case Some(x) => commandExecutor.submit(new RawWriteCommand(x(0)))
+          case Some(x) => commandExecutor.submit(new MultiCommand(x.map(c => new RawWriteCommand(c))))
         }
       }
       input.setText("")
     } else {
         callSingleArgumentJsFunction(ctx, "onKeyEvent", e.getKeyCode.toString) match {
+          case None =>
           case Some(Array()) =>
           case Some(x) => commandExecutor.submit(new MultiCommand(x.map(c => new RawWriteCommand(c))))
         }
