@@ -10,6 +10,7 @@ class JScrollableOutput extends JScrollPane with OutputPrinter {
   caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE)
 
   textPane.setEditable(false)
+  textPane.setFocusable(false)
   textPane.setBackground(Color.BLACK)
   setViewportView(textPane)
 
