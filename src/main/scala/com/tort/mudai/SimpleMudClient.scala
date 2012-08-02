@@ -164,68 +164,78 @@ class InputKeyListener @Inject()(@Assisted input: TextField,
     val ctx = Context.enter()
 
     if (e.getKeyCode == KeyEvent.VK_ENTER) {
-      val command = input.getText
-      if (command.startsWith(FIND_PATH_COMMAND)) {
-        handleFindPathCommand(command)
-      } else if (command.startsWith(LIST_LOCATIONS_COMMAND)) {
-        for (location <- persister.enlistLocations) {
-          System.out.println("LOCATION: " + location.title)
-        }
-      } else if (command.startsWith(ENLIST_MOBS_COMMAND)) {
-        val mobs = persister.enlistMobs
-        for (mob <- mobs) {
-          System.out.println("MOB: " + mob.name)
-        }
-      } else if (command.startsWith(TRAVEL_COMMAND)) {
-        handleTravelCommand(command)
-      } else if (command.startsWith(MAP_ZONE_COMMAND)) {
-        person.mapZone(command.substring(MAP_ZONE_COMMAND.length() + 1, command.length() - 1))
-      } else if (command.startsWith(ROAM_COMMAND)) {
-        person.roam()
-      } else if (command.startsWith(MOB_ALIAS_COMMAND)) {
-        val args = command.substring(MOB_ALIAS_COMMAND.length() + 1, command.length() - 1).split("!")
-        val name = args(0)
-        val longName = args(1)
-        val mob = persister.findMob(name)
-        mob.descName(longName)
-        persister.persistMob(mob)
-      } else if (command.startsWith(PROVISION_COMMAND)) {
-        person.provision()
-      } else if (command.startsWith(MARK_WATER_SOURCE_COMMAND)) {
-        mapper.markWaterSource(command.substring(MARK_WATER_SOURCE_COMMAND.length() + 1, command.length() - 1))
-      } else if (command.startsWith(MARK_SHOP_COMMAND)) {
-        mapper.currentLocation.markShop()
-        persister.persistLocation(mapper.currentLocation)
-      } else if (command.startsWith(MARK_TAVERN_COMMAND)) {
-        mapper.currentLocation.markTavern()
-        persister.persistLocation(mapper.currentLocation)
-      } else if (command.startsWith(StartSessionCommand)) {
-        val StartSessionPattern(host, port) = command
-        commandExecutor.submit(new StartSessionCommand(host, port.toInt))
-      } else if (command.startsWith(CloseSessionCommand)) {
-        commandExecutor.submit(new CloseSessionCommand())
-      } else if (command.startsWith(ReloadCommand)) {
-        Scope.reset
-      } else {
-        callSingleArgumentJsFunction(ctx, "onInputEvent", input.getText) match {
-          case None => commandExecutor.submit(new RawWriteCommand(command))
-          case Some(Array()) =>
-          case Some(x) => commandExecutor.submit(new MultiCommand(x.map(c => new RawWriteCommand(c))))
-        }
-      }
-      input.setText("")
-    } else if (e.getKeyCode == 61) {
+      handleAliases(ctx)
+    } else if (e.getKeyCode == KeyEvent.VK_EQUALS) {
       output.clear()
+      output.dropStringsWith("Вивиана")
+      callJsOnKeyEvent(ctx, e)
     } else {
-        callSingleArgumentJsFunction(ctx, "onKeyEvent", e.getKeyCode.toString) match {
-          case None =>
-          case Some(Array()) =>
-          case Some(x) => commandExecutor.submit(new MultiCommand(x.map(c => new RawWriteCommand(c))))
-        }
+        callJsOnKeyEvent(ctx, e)
     }
     Context.exit()
   }
 
+
+  def callJsOnKeyEvent(ctx: Context, e: KeyEvent) {
+    callSingleArgumentJsFunction(ctx, "onKeyEvent", e.getKeyCode.toString) match {
+      case None =>
+      case Some(Array()) =>
+      case Some(x) => commandExecutor.submit(new MultiCommand(x.map(c => new RawWriteCommand(c))))
+    }
+  }
+
+  private def handleAliases(ctx: Context) {
+    val command = input.getText
+    if (command.startsWith(FIND_PATH_COMMAND)) {
+      handleFindPathCommand(command)
+    } else if (command.startsWith(LIST_LOCATIONS_COMMAND)) {
+      for (location <- persister.enlistLocations) {
+        System.out.println("LOCATION: " + location.title)
+      }
+    } else if (command.startsWith(ENLIST_MOBS_COMMAND)) {
+      val mobs = persister.enlistMobs
+      for (mob <- mobs) {
+        System.out.println("MOB: " + mob.name)
+      }
+    } else if (command.startsWith(TRAVEL_COMMAND)) {
+      handleTravelCommand(command)
+    } else if (command.startsWith(MAP_ZONE_COMMAND)) {
+      person.mapZone(command.substring(MAP_ZONE_COMMAND.length() + 1, command.length() - 1))
+    } else if (command.startsWith(ROAM_COMMAND)) {
+      person.roam()
+    } else if (command.startsWith(MOB_ALIAS_COMMAND)) {
+      val args = command.substring(MOB_ALIAS_COMMAND.length() + 1, command.length() - 1).split("!")
+      val name = args(0)
+      val longName = args(1)
+      val mob = persister.findMob(name)
+      mob.descName(longName)
+      persister.persistMob(mob)
+    } else if (command.startsWith(PROVISION_COMMAND)) {
+      person.provision()
+    } else if (command.startsWith(MARK_WATER_SOURCE_COMMAND)) {
+      mapper.markWaterSource(command.substring(MARK_WATER_SOURCE_COMMAND.length() + 1, command.length() - 1))
+    } else if (command.startsWith(MARK_SHOP_COMMAND)) {
+      mapper.currentLocation.markShop()
+      persister.persistLocation(mapper.currentLocation)
+    } else if (command.startsWith(MARK_TAVERN_COMMAND)) {
+      mapper.currentLocation.markTavern()
+      persister.persistLocation(mapper.currentLocation)
+    } else if (command.startsWith(StartSessionCommand)) {
+      val StartSessionPattern(host, port) = command
+      commandExecutor.submit(new StartSessionCommand(host, port.toInt))
+    } else if (command.startsWith(CloseSessionCommand)) {
+      commandExecutor.submit(new CloseSessionCommand())
+    } else if (command.startsWith(ReloadCommand)) {
+      Scope.reset
+    } else {
+      callSingleArgumentJsFunction(ctx, "onInputEvent", input.getText) match {
+        case None => commandExecutor.submit(new RawWriteCommand(command))
+        case Some(Array()) =>
+        case Some(x) => commandExecutor.submit(new MultiCommand(x.map(c => new RawWriteCommand(c))))
+      }
+    }
+    input.setText("")
+  }
 
   private def callSingleArgumentJsFunction(ctx: Context, name: String, arg: String): Option[Array[String]] = {
     val scope = Scope.get(ctx, commandExecutor)

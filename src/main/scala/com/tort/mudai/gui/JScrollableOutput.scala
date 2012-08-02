@@ -5,6 +5,8 @@ import text.{Style, StyleConstants, StyleContext, DefaultCaret}
 import java.awt.Color
 
 class JScrollableOutput extends JScrollPane with OutputPrinter {
+  var stringsToDropPattern: Option[String] = None
+
   val textPane = new JTextPane()
   val caret: DefaultCaret = textPane.getCaret.asInstanceOf[DefaultCaret]
   caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE)
@@ -52,7 +54,13 @@ class JScrollableOutput extends JScrollPane with OutputPrinter {
     textPane.setText("")
   }
 
-  def print(text: String) {
+  def dropStringsWith(pattern: String) {
+    stringsToDropPattern = Option(pattern)
+  }
+
+  def print(input: String) {
+    val text = stringsToDropPattern.map(x => input.replace(x, "")).getOrElse(input)//hack, generalize
+
     val escapeIndex = text.indexOf('\u001B')
     escapeIndex match {
       case -1 =>
@@ -75,34 +83,34 @@ class JScrollableOutput extends JScrollPane with OutputPrinter {
 }
 
 object ANSI {
-  val SANE = "\u001B[0;0m";
+  val SANE = "\u001B[0;0m"
 
-  val GRAY = "\u001B[0;30m";
-  val RED = "\u001B[0;31m";
-  val GREEN = "\u001B[0;32m";
-  val YELLOW = "\u001B[0;33m";
-  val BLUE = "\u001B[0;34m";
-  val MAGENTA = "\u001B[0;35m";
-  val CYAN = "\u001B[0;36m";
-  val WHITE = "\u001B[0;37m";
+  val GRAY = "\u001B[0;30m"
+  val RED = "\u001B[0;31m"
+  val GREEN = "\u001B[0;32m"
+  val YELLOW = "\u001B[0;33m"
+  val BLUE = "\u001B[0;34m"
+  val MAGENTA = "\u001B[0;35m"
+  val CYAN = "\u001B[0;36m"
+  val WHITE = "\u001B[0;37m"
 
-  val LIGHT_GRAY = "\u001B[1;30m";
-  val LIGHT_RED = "\u001B[1;31m";
-  val LIGHT_GREEN = "\u001B[1;32m";
-  val LIGHT_YELLOW = "\u001B[1;33m";
-  val LIGHT_BLUE = "\u001B[1;34m";
-  val LIGHT_MAGENTA = "\u001B[1;35m";
-  val LIGHT_CYAN = "\u001B[1;36m";
-  val LIGHT_WHITE = "\u001B[1;37m";
+  val LIGHT_GRAY = "\u001B[1;30m"
+  val LIGHT_RED = "\u001B[1;31m"
+  val LIGHT_GREEN = "\u001B[1;32m"
+  val LIGHT_YELLOW = "\u001B[1;33m"
+  val LIGHT_BLUE = "\u001B[1;34m"
+  val LIGHT_MAGENTA = "\u001B[1;35m"
+  val LIGHT_CYAN = "\u001B[1;36m"
+  val LIGHT_WHITE = "\u001B[1;37m"
 
-  val BACKGROUND_BLACK = "\u001B[40m";
-  val BACKGROUND_RED = "\u001B[41m";
-  val BACKGROUND_GREEN = "\u001B[42m";
-  val BACKGROUND_YELLOW = "\u001B[43m";
-  val BACKGROUND_BLUE = "\u001B[44m";
-  val BACKGROUND_MAGENTA = "\u001B[45m";
-  val BACKGROUND_CYAN = "\u001B[46m";
-  val BACKGROUND_WHITE = "\u001B[47m";
+  val BACKGROUND_BLACK = "\u001B[40m"
+  val BACKGROUND_RED = "\u001B[41m"
+  val BACKGROUND_GREEN = "\u001B[42m"
+  val BACKGROUND_YELLOW = "\u001B[43m"
+  val BACKGROUND_BLUE = "\u001B[44m"
+  val BACKGROUND_MAGENTA = "\u001B[45m"
+  val BACKGROUND_CYAN = "\u001B[46m"
+  val BACKGROUND_WHITE = "\u001B[47m"
 
   val colors = Set(SANE, GRAY, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE,
     LIGHT_GRAY, LIGHT_RED, LIGHT_GREEN, LIGHT_YELLOW, LIGHT_BLUE, LIGHT_MAGENTA, LIGHT_CYAN, LIGHT_WHITE)
