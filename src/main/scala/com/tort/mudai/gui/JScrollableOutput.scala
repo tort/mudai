@@ -39,7 +39,7 @@ class JScrollableOutput extends JScrollPane with OutputPrinter {
     ANSI.LIGHT_WHITE -> foregroundStyle(Color.WHITE)
   )
 
-  def foregroundStyle(color: Color): Style = {
+  private def foregroundStyle(color: Color): Style = {
     val style = styleContext.addStyle(color.toString + " foreground", defaultTextStyle)
     style.addAttribute(StyleConstants.Foreground, color)
     style
@@ -47,6 +47,10 @@ class JScrollableOutput extends JScrollPane with OutputPrinter {
 
 
   var currentStyle = defaultTextStyle
+
+  def clear() {
+    textPane.setText("")
+  }
 
   def print(text: String) {
     val escapeIndex = text.indexOf('\u001B')

@@ -137,7 +137,8 @@ class InputKeyListener @Inject()(@Assisted input: TextField,
                                  val commandExecutor: CommandExecutor,
                                  val persister: Persister,
                                  val person: Person,
-                                 val mapper: Mapper
+                                 val mapper: Mapper,
+                                 val output: JScrollableOutput
                                   ) extends KeyListener {
   val FIND_PATH_COMMAND = "/путь"
   val LIST_LOCATIONS_COMMAND = "/лист"
@@ -213,6 +214,8 @@ class InputKeyListener @Inject()(@Assisted input: TextField,
         }
       }
       input.setText("")
+    } else if (e.getKeyCode == 61) {
+      output.clear()
     } else {
         callSingleArgumentJsFunction(ctx, "onKeyEvent", e.getKeyCode.toString) match {
           case None =>
