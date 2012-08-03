@@ -1,8 +1,13 @@
+import AssemblyKeys._ // put this at the top of the file
+
 name := "mudai"
 
 version := "0.1"
 
 scalaVersion := "2.9.1"
+
+fork := true
+
 
 libraryDependencies += "com.google.inject" % "guice" % "3.0"
 
@@ -18,4 +23,6 @@ libraryDependencies += "org.testng" % "testng" % "6.1.1"
 
 libraryDependencies += "org.mozilla" % "rhino" % "1.7R4"
 
-fork := true
+assemblySettings
+
+test in assembly := {}
