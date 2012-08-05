@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 public class KillTrigger implements EventTrigger {
     private final EventDistributor _eventDistributor;
     private static final Pattern PATTERN = PatternUtil.compile(".*\u001B\\[0\\;37m([^\n]*) (?:мертв|мертва|мертвы), (?:его|ее) душа медленно подымается в небеса.\r?\n" +
-            "Ваш опыт повысился на ([1234567890]*) (?:очка|очков)\\.\r?\n.*");
+            "Ваш опыт повысился на ([1234567890]*) (?:очка|очков?)\\.\r?\n.*");
 
     public KillTrigger(EventDistributor eventDistributor) {
         _eventDistributor = eventDistributor;
