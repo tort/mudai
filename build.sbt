@@ -23,6 +23,10 @@ libraryDependencies += "org.testng" % "testng" % "6.1.1"
 
 libraryDependencies += "org.mozilla" % "rhino" % "1.7R4"
 
+libraryDependencies += "org.squeryl" %% "squeryl" % "0.9.5-2"
+
+libraryDependencies += "com.h2database" % "h2" % "1.3.168"
+
 assemblySettings
 
 test in assembly := {}

@@ -4,10 +4,15 @@ import com.tort.mudai.RoomSnapshot;
 import com.tort.mudai.command.RenderableCommand;
 import com.tort.mudai.event.LiquidContainer;
 import com.tort.mudai.mapper.Direction;
+import com.tort.mudai.persistance.Stat;
 
 public abstract class AbstractTask implements Task {
     public void adapterException(Exception e){
 //        throw new NotImplementedException();
+    }
+
+    public void viewStat(Stat stat) {
+
     }
 
     public void connectionClosed(){

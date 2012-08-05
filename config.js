@@ -46,7 +46,7 @@ function killTargetCommand(target) {
     return 'уб ' + target
 }
 
-trigger(/^Введите имя персонажа/, "ладень");
+trigger(/^Введите имя персонажа/, "веретень");
 trigger(/^Вы пропали в пустоте этого мира./, "зев")
 
 bind(224, 'север')

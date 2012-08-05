@@ -86,3 +86,4 @@ class Person @Inject()(val sessionProvider: Provider[SessionTask],
     pulseDistributor.subscribe(mapZoneTask)
   }
 }
+

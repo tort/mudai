@@ -103,3 +103,4 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
     assert(trigger.matches(input))
   }
 }
+

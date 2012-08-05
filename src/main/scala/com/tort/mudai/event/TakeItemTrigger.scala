@@ -19,3 +19,5 @@ class TakeItemTrigger @Inject()(eventDistributor: EventDistributor) extends Even
     TakeItemEvent(item)
   }
 }
+
+

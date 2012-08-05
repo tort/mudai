@@ -7,6 +7,7 @@ import scalax.collection.mutable.Graph
 import scalax.collection.edge.Implicits._
 import scalax.collection.edge.LUnDiEdge
 import com.tort.mudai.Metadata.Direction._
+import com.tort.mudai.persistance.{Stat, MudaiDb}
 
 trait Mapper {
   def currentLocation: Location
@@ -194,6 +195,10 @@ class MapperImpl @Inject()(
     synchronized {
       current = Some(location)
     }
+  }
+
+  override def viewStat(stat: Stat) {
+    MudaiDb.saveStat(stat)
   }
 }
 
