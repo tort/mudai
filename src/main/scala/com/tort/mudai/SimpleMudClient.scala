@@ -3,6 +3,7 @@ package com.tort.mudai
 import command.{MultiCommand, RenderableCommand, StartSessionCommand, RawWriteCommand}
 import gui.{OutputPrinter, JScrollableOutput}
 import mapper.{Persister, Mapper}
+import persistance.MudaiDb
 import task.{StatedTask, Person}
 import com.google.inject.{Guice, Inject}
 import util.parsing.combinator.RegexParsers
@@ -143,20 +144,12 @@ class InputKeyListener @Inject()(@Assisted input: TextField,
   val FIND_PATH_COMMAND = "/путь"
   val LIST_LOCATIONS_COMMAND = "/лист"
   val TRAVEL_COMMAND = "/го"
-  val ENLIST_MOBS_COMMAND = "/моб"
   val MARK_WATER_SOURCE_COMMAND = "/вода"
-  val ROAM_COMMAND = "/зонинг"
-  val PROVISION_COMMAND = "/затариться"
   val MOB_ALIAS_COMMAND = "/обозвать"
   val MAP_ZONE_COMMAND = "/замапить"
 
-  val MARK_SHOP_COMMAND = "/магазин"
-  val MARK_TAVERN_COMMAND = "/таверна"
-
   val StartSessionCommand = "#connect"
-  val CloseSessionCommand = "#zap"
   val StartSessionPattern = ("^" + StartSessionCommand + """\s*([^\s]*)\s*(\d*).*$""").r
-  val ReloadCommand = "#reload"
 
   def keyTyped(e: KeyEvent) {}
 
@@ -184,55 +177,65 @@ class InputKeyListener @Inject()(@Assisted input: TextField,
     }
   }
 
+  private def like(substr: String): String = {
+    "%" + substr.trim.toLowerCase + "%"
+  }
+
   private def handleAliases(ctx: Context) {
     val command = input.getText
-    if (command.startsWith(FIND_PATH_COMMAND)) {
-      handleFindPathCommand(command)
-    } else if (command.startsWith(LIST_LOCATIONS_COMMAND)) {
-      for (location <- persister.enlistLocations) {
-        System.out.println("LOCATION: " + location.title)
-      }
-    } else if (command.startsWith(ENLIST_MOBS_COMMAND)) {
-      val mobs = persister.enlistMobs
-      for (mob <- mobs) {
-        System.out.println("MOB: " + mob.name)
-      }
-    } else if (command.startsWith(TRAVEL_COMMAND)) {
-      handleTravelCommand(command)
-    } else if (command.startsWith(MAP_ZONE_COMMAND)) {
-      person.mapZone(command.substring(MAP_ZONE_COMMAND.length() + 1, command.length() - 1))
-    } else if (command.startsWith(ROAM_COMMAND)) {
-      person.roam()
-    } else if (command.startsWith(MOB_ALIAS_COMMAND)) {
-      val args = command.substring(MOB_ALIAS_COMMAND.length() + 1, command.length() - 1).split("!")
-      val name = args(0)
-      val longName = args(1)
-      val mob = persister.findMob(name)
-      mob.descName(longName)
-      persister.persistMob(mob)
-    } else if (command.startsWith(PROVISION_COMMAND)) {
-      person.provision()
-    } else if (command.startsWith(MARK_WATER_SOURCE_COMMAND)) {
-      mapper.markWaterSource(command.substring(MARK_WATER_SOURCE_COMMAND.length() + 1, command.length() - 1))
-    } else if (command.startsWith(MARK_SHOP_COMMAND)) {
-      mapper.currentLocation.markShop()
-      persister.persistLocation(mapper.currentLocation)
-    } else if (command.startsWith(MARK_TAVERN_COMMAND)) {
-      mapper.currentLocation.markTavern()
-      persister.persistLocation(mapper.currentLocation)
-    } else if (command.startsWith(StartSessionCommand)) {
-      val StartSessionPattern(host, port) = command
-      commandExecutor.submit(new StartSessionCommand(host, port.toInt))
-    } else if (command.startsWith(CloseSessionCommand)) {
-      commandExecutor.submit(new CloseSessionCommand())
-    } else if (command.startsWith(ReloadCommand)) {
-      Scope.reset
-    } else {
-      callSingleArgumentJsFunction(ctx, "onInputEvent", input.getText) match {
-        case None => commandExecutor.submit(new RawWriteCommand(command))
-        case Some(Array()) =>
-        case Some(x) => commandExecutor.submit(new MultiCommand(x.map(c => new RawWriteCommand(c))))
-      }
+    val splitted = command.split(" ").toList
+    splitted match {
+      case FIND_PATH_COMMAND :: x => handleFindPathCommand(x.mkString(" "))
+      case List(LIST_LOCATIONS_COMMAND) =>
+        for (location <- persister.enlistLocations) {
+          System.out.println("LOCATION: " + location.title)
+        }
+      case List("/моб") =>
+        val mobs = persister.enlistMobs
+        for (mob <- mobs) {
+          System.out.println("MOB: " + mob.name)
+        }
+      case TRAVEL_COMMAND :: x =>
+        handleTravelCommand(x.mkString(" "))
+      case MAP_ZONE_COMMAND :: rest =>
+        val x = rest.mkString(" ")
+        person.mapZone(x.substring(MAP_ZONE_COMMAND.length() + 1, x.length() - 1))
+      case List("/зонинг") =>
+        person.roam()
+      case MOB_ALIAS_COMMAND :: rest =>
+        val x = rest.mkString(" ")
+        val args = x.substring(MOB_ALIAS_COMMAND.length() + 1, x.length() - 1).split("!")
+        val name = args(0)
+        val longName = args(1)
+        val mob = persister.findMob(name)
+        mob.descName(longName)
+        persister.persistMob(mob)
+      case List("/затариться") =>
+        person.provision()
+      case MARK_WATER_SOURCE_COMMAND :: x =>
+        mapper.markWaterSource(x.mkString(" "))
+      case List("/магазин") =>
+        mapper.currentLocation.markShop()
+        persister.persistLocation(mapper.currentLocation)
+      case List("/таверна") =>
+        mapper.currentLocation.markTavern()
+        persister.persistLocation(mapper.currentLocation)
+      case List(StartSessionCommand) =>
+        val StartSessionPattern(host, port) = command
+        commandExecutor.submit(new StartSessionCommand(host, port.toInt))
+      case List("#zap") =>
+        commandExecutor.submit(new CloseSessionCommand())
+      case List("#reload") =>
+        Scope.reset
+      case "/стат" :: rest if(rest.nonEmpty) =>
+        val stats = MudaiDb.statsLike(like(rest.mkString(" ").trim))
+        stats.foreach(s => output.print("\n" + s.desc))
+      case _ =>
+        callSingleArgumentJsFunction(ctx, "onInputEvent", input.getText) match {
+          case None => commandExecutor.submit(new RawWriteCommand(command))
+          case Some(Array()) =>
+          case Some(x) => commandExecutor.submit(new MultiCommand(x.map(c => new RawWriteCommand(c))))
+        }
     }
     input.setText("")
   }

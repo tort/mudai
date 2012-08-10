@@ -6,6 +6,10 @@ import org.squeryl.annotations.Column
 import org.squeryl.adapters.H2Adapter
 
 object MudaiDb extends Schema with H2_Connection {
+  def statsLike(substr: String): Set[Stat] = transaction {
+    from(stats)(s => where(s.name.toLowerCase like substr) select(s)).page(0, 10).toSet
+  }
+
   val stats = table[Stat]
 
   private def updateStat(oldStat: Stat, newStat: Stat) {
