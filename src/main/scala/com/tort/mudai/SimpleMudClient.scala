@@ -12,7 +12,7 @@ import javax.swing._
 import java.awt.{BorderLayout, Frame, Dimension, TextField}
 import com.google.inject.assistedinject.Assisted
 import org.mozilla.javascript.{ScriptableObject, Context}
-import java.io.{FileInputStream, InputStreamReader}
+import java.io.{File, FileInputStream, InputStreamReader}
 import org.mozilla.javascript.{Function => JsFunction}
 
 class SimpleMudClient @Inject()(val person: Person,
@@ -82,7 +82,11 @@ object Scope {
     ScriptableObject.putProperty(scope, "out", jsOut)
     val jsCommandExecutor = Context.javaToJS(executor, scope)
     ScriptableObject.putProperty(scope, "commandExecutor", jsCommandExecutor)
-    jsContext.evaluateReader(scope, new InputStreamReader(new FileInputStream("config.js")), "err.log", 1, null)
+    val jsFiles = new File(".").listFiles.filter(_.getName.endsWith(".js")).map(_.getName).map(name => name.split("\\.")(0) -> name).sortBy(_._1)
+    jsFiles.foreach {
+      case file =>
+        jsContext.evaluateReader(scope, new InputStreamReader(new FileInputStream(file._2)), "err.log", 1, null)
+    }
 
     scope
   }

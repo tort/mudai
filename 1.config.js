@@ -99,4 +99,3 @@ function onInputEvent(text) {
     }
 }
 
-bind(113, 'зач возв вивиана')
