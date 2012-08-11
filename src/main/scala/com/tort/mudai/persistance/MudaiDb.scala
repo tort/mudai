@@ -27,8 +27,8 @@ object MudaiDb extends Schema with H2_Connection {
   SessionFactory.concreteFactory = connectToDb()
 }
 
-class Stat(val name: String, val desc: String) extends KeyedEntity[String] {
-  @Column("name") val id: String = name
+class Stat(@Column("name") val id: String, val desc: String) extends KeyedEntity[String] {
+  def name = id
 }
 
 trait H2_Connection {
