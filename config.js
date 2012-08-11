@@ -46,7 +46,7 @@ function killTargetCommand(target) {
     return 'уб ' + target
 }
 
-trigger(/^Введите имя персонажа/, "веретень");
+trigger(/^Введите имя персонажа/, "ладень");
 trigger(/^Вы пропали в пустоте этого мира./, "зев")
 
 bind(224, 'север')
@@ -70,7 +70,7 @@ function onMudEvent(text) {
     if ((/^Персонаж с таким именем уже существует. Введите пароль/).test(text))
         commandExecutor.submit(new com.tort.mudai.command.RawWriteCommand("таганьйорк"));
 
-    return text.replace("\u001B[0;32m", "\u001B[0;35m");
+    return text;
 }
 
 function onKeyEvent(keyCode) {

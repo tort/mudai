@@ -24,21 +24,21 @@ class JScrollableOutput extends JScrollPane with OutputPrinter {
   val ANSIColorToStyle = Map(
     ANSI.SANE -> defaultTextStyle,
     ANSI.GRAY -> foregroundStyle(Color.GRAY),
-    ANSI.RED -> foregroundStyle(Color.RED),
-    ANSI.GREEN -> foregroundStyle(Color.GREEN),
-    ANSI.YELLOW -> foregroundStyle(Color.YELLOW),
-    ANSI.BLUE -> foregroundStyle(Color.BLUE),
-    ANSI.MAGENTA -> foregroundStyle(Color.MAGENTA),
-    ANSI.CYAN -> foregroundStyle(Color.CYAN),
-    ANSI.WHITE -> foregroundStyle(Color.WHITE.darker()),
+    ANSI.RED -> foregroundStyle(Color.RED.darker),
+    ANSI.GREEN -> foregroundStyle(Color.GREEN.darker),
+    ANSI.YELLOW -> foregroundStyle(Color.YELLOW.darker),
+    ANSI.BLUE -> foregroundStyle(Color.BLUE.darker),
+    ANSI.MAGENTA -> foregroundStyle(Color.MAGENTA.darker),
+    ANSI.CYAN -> foregroundStyle(Color.CYAN.darker),
+    ANSI.WHITE -> foregroundStyle(Color.WHITE.darker),
     ANSI.LIGHT_GRAY -> foregroundStyle(Color.LIGHT_GRAY),
-    ANSI.LIGHT_RED -> foregroundStyle(Color.RED.brighter()),
-    ANSI.LIGHT_GREEN -> foregroundStyle(Color.GREEN.brighter()),
-    ANSI.LIGHT_BLUE -> foregroundStyle(Color.BLUE.brighter()),
-    ANSI.LIGHT_YELLOW -> foregroundStyle(Color.YELLOW.brighter()),
-    ANSI.LIGHT_MAGENTA -> foregroundStyle(Color.MAGENTA.brighter()),
-    ANSI.LIGHT_CYAN -> foregroundStyle(Color.CYAN.brighter()),
-    ANSI.LIGHT_WHITE -> foregroundStyle(Color.WHITE)
+    ANSI.LIGHT_RED -> foregroundStyle(Color.RED.brighter),
+    ANSI.LIGHT_GREEN -> foregroundStyle(Color.GREEN.brighter),
+    ANSI.LIGHT_BLUE -> foregroundStyle(Color.BLUE.brighter),
+    ANSI.LIGHT_YELLOW -> foregroundStyle(Color.YELLOW.brighter),
+    ANSI.LIGHT_MAGENTA -> foregroundStyle(Color.MAGENTA.brighter),
+    ANSI.LIGHT_CYAN -> foregroundStyle(Color.CYAN.brighter),
+    ANSI.LIGHT_WHITE -> foregroundStyle(Color.WHITE.brighter)
   )
 
   private def foregroundStyle(color: Color): Style = {
