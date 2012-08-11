@@ -54,6 +54,9 @@ bind(226, 'запад')
 bind(227, 'восток')
 bind(65368, 'юг')
 bindFunction(116, killTargetCommand)
+bind(112, 'зач возв')
+bind(117, 'копать')
+bind(118, 'поло все.кам сун')
 
 function onMudEvent(text) {
     result = [];
@@ -95,3 +98,5 @@ function onInputEvent(text) {
         return [];
     }
 }
+
+bind(113, 'зач возв вивиана')

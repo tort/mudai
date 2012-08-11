@@ -160,7 +160,7 @@ class InputKeyListener @Inject()(@Assisted input: TextField,
       handleAliases(ctx)
     } else if (e.getKeyCode == KeyEvent.VK_EQUALS) {
       output.clear()
-      output.dropStringsWith("Вивиана")
+      output.dropStringsWith("Вивиан")
       callJsOnKeyEvent(ctx, e)
     } else {
         callJsOnKeyEvent(ctx, e)
