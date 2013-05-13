@@ -32,7 +32,7 @@ public class MudaiModule extends AbstractModule {
         bind(Mapper.class).to(MapperImpl.class);
         bind(MapperImpl.class).in(Scopes.SINGLETON);
 
-        bind(Adapter.class).to(AdapterImpl.class);
+        bind(LegacyAdapter.class).to(AdapterImpl.class);
         bind(CommandExecutor.class).to(AdapterImpl.class);
         bind(AdapterImpl.class).in(Scopes.SINGLETON);
 

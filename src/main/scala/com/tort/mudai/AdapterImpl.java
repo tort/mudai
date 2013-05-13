@@ -22,7 +22,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-public class AdapterImpl implements Adapter {
+public class AdapterImpl implements LegacyAdapter {
     private static final String ENCODING = "0";
 
     private final ByteBuffer _outByteBuffer = ByteBuffer.allocate(OUT_BUF_SIZE);

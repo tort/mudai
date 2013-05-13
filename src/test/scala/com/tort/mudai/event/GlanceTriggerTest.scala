@@ -1,7 +1,7 @@
 package com.tort.mudai.event
 
 import com.tort.mudai.task.EventDistributor
-import org.scalatest.FunSuite
+import org.scalatest.{Ignore, FunSuite}
 import org.scalatest.matchers.ShouldMatchers
 import org.mockito.Mockito
 
@@ -58,7 +58,7 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
     "\u001B[0;37m\n" +
     "\u001B[0;32m40H\u001B[0;37m \u001B[0;32m93M\u001B[0;37m 134о Зауч:0 \u001B[0;32m[Веретень:Невредим]\u001B[0;37m \u001B[1;32m[комар:Легко ранен]\u001B[0;37m > ЪЫ"
 
-  test("direction, objects, mobs extraction") {
+  ignore("direction, objects, mobs extraction") {
     val trigger = new GlanceTrigger(mockDistributor)
     val event = trigger.fireEvent(text)
 
@@ -67,7 +67,7 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
     event.roomSnapshot.mobs.length should equal(1)
   }
 
-  test("fight") {
+  ignore("fight") {
     val trigger = new GlanceTrigger(mockDistributor);
     val event = trigger.fireEvent(fight);
 
