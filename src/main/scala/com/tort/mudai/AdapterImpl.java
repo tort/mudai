@@ -49,8 +49,8 @@ public class AdapterImpl implements LegacyAdapter {
         _eventDistributor = eventDistributor;
         _outputPrinter = outputPrinter;
 
-        _eventTriggers.add(new LoginPromptTrigger(eventDistributor));
-        _eventTriggers.add(new PasswordPromptTrigger(eventDistributor));
+        _eventTriggers.add(new LoginPromptTrigger());
+        _eventTriggers.add(new PasswordPromptTrigger());
         _eventTriggers.add(new GlanceTrigger(eventDistributor));
         _eventTriggers.add(new FeelThirstTrigger(eventDistributor));
         _eventTriggers.add(new FeelHungerTrigger(eventDistributor));
@@ -165,7 +165,7 @@ public class AdapterImpl implements LegacyAdapter {
     private void parseAndFire(final String input) throws InterruptedException {
         for (SimpleTrigger trigger : _simpleTriggers) {
             if (trigger.matches(input)) {
-                final String[] actions = trigger.getAction();
+                final String[] actions = trigger.command();
                 for (String action : actions) {
                     _commands.put(new SimpleCommand(action));
                 }

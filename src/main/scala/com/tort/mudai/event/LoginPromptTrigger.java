@@ -6,13 +6,8 @@ import com.tort.mudai.task.EventDistributor;
 
 import java.util.regex.Pattern;
 
-public class LoginPromptTrigger implements EventTrigger {
+public class LoginPromptTrigger implements EventTrigger<LoginPromptEvent> {
     private final Pattern _pattern = PatternUtil.compile(".*^Введите имя персонажа.*");
-    private final EventDistributor _eventDistributor;
-
-    public LoginPromptTrigger(EventDistributor eventDistributor) {
-        _eventDistributor = eventDistributor;
-    }
 
     @Override
     public boolean matches(String text) {
@@ -21,14 +16,7 @@ public class LoginPromptTrigger implements EventTrigger {
     }
 
     @Override
-    public Event fireEvent(final String text) {
-        _eventDistributor.invoke(new Handler() {
-            @Override
-            public void handle(AbstractTask task) {
-                task.loginPrompt();
-            }
-        });
-
-        return null;
+    public LoginPromptEvent fireEvent(final String text) {
+        return new LoginPromptEvent();
     }
 }

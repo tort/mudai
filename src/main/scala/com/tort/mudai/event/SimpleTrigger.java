@@ -19,7 +19,7 @@ public class SimpleTrigger implements Trigger {
         return _pattern.matcher(text).matches();
     }
 
-    public String[] getAction() {
+    public String[] command() {
         return _action;
     }
 }

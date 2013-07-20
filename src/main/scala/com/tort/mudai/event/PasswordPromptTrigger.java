@@ -6,13 +6,8 @@ import com.tort.mudai.Handler;
 
 import java.util.regex.Pattern;
 
-public class PasswordPromptTrigger implements EventTrigger {
+public class PasswordPromptTrigger implements EventTrigger<PasswordPromptEvent> {
     private final Pattern _pattern = PatternUtil.compile("^Персонаж с таким именем уже существует.*");
-    private final EventDistributor _eventDistributor;
-
-    public PasswordPromptTrigger(final EventDistributor eventDistributor) {
-        _eventDistributor = eventDistributor;
-    }
 
     @Override
     public boolean matches(final String text) {
@@ -21,14 +16,7 @@ public class PasswordPromptTrigger implements EventTrigger {
     }
 
     @Override
-    public Event fireEvent(final String text) {
-        _eventDistributor.invoke(new Handler(){
-            @Override
-            public void handle(final AbstractTask task) {
-                task.passwordPrompt();
-            }
-        });
-
-        return null;
+    public PasswordPromptEvent fireEvent(final String text) {
+        return new PasswordPromptEvent();
     }
 }

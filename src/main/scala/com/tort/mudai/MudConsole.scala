@@ -8,9 +8,9 @@ import com.tort.mudai.person.RawRead
 import com.tort.mudai.person.Snoop
 import com.tort.mudai.person.RawWrite
 
-class MudConsole {
+class MudConsole(login: String, password: String) {
   val system = ActorSystem()
-  val person = system.actorOf(Props(classOf[Person]))
+  val person = system.actorOf(Props(classOf[Person], login, password))
   val writer = actor(system) {
     new Act {
       become {
@@ -45,8 +45,8 @@ class MudConsole {
   }
 }
 
-object MudConsole extends MudConsole {
+object MudConsole {
   def main(args: Array[String]) {
-    userInputLoop()
+    new MudConsole(args(0), args(1)).userInputLoop()
   }
 }
