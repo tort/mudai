@@ -5,7 +5,7 @@ import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder
 import org.jboss.netty.buffer.ChannelBuffers
 
 class ClientHandler(onRawRead: (String) => Unit, onCloseRemote: () => Unit) extends SimpleChannelUpstreamHandler {
-  val markerGA = """В связи с проблемами перевода фразы ANYKEY нажмите ENTER"""
+  val markersGA = Seq("""В связи с проблемами перевода фразы ANYKEY нажмите ENTER""", """Пересоединяемся.""")
   var modeGA = false
 
   override def channelDisconnected(ctx: ChannelHandlerContext, e: ChannelStateEvent) {
@@ -14,7 +14,7 @@ class ClientHandler(onRawRead: (String) => Unit, onCloseRemote: () => Unit) exte
 
   override def messageReceived(ctx: ChannelHandlerContext, e: MessageEvent) {
     val text = e.getMessage.toString
-    if (!modeGA && text.contains(markerGA)) {
+    if (!modeGA && markersGA.exists(m => text.contains(m))) {
       ctx.getPipeline.addFirst("decoder IAC GA", decoderGA)
       modeGA = true
     }
