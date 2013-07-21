@@ -18,6 +18,8 @@ class MudConsole(login: String, password: String) {
       }
     }
   }
+  person ! Snoop(writer)
+  person ! Login
 
   @tailrec
   final def userInputLoop() {
