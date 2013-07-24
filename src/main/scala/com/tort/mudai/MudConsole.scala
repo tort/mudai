@@ -35,19 +35,3 @@ class MudConsole {
     }
   }
 }
-
-object adHocSession {
-  def apply(person: ActorRef, console: MudConsole) = {
-    person ! Login
-    person ! Snoop(console.writer)
-    console.userInputLoop(person)
-  }
-}
-
-object Runner {
-  def main(args: Array[String]) {
-    val system = ActorSystem()
-    val person = system.actorOf(Props(classOf[Person], args(0), args(1)))
-    adHocSession(person, new MudConsole)
-  }
-}
