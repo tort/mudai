@@ -11,9 +11,9 @@ class Person(login: String, password: String) extends Actor {
   val adapter = actorOf(Props[Adapter])
 
   def receive = {
-    case Snoop(snooper) =>
+    case Snoop(onRawRead) =>
       become {
-        case rawRead: RawRead => snooper ! rawRead
+        case rawRead: RawRead => onRawRead(rawRead.text)
         case StopSnoop => unbecome
         case rawWrite: RawWrite => adapter ! rawWrite
         case Login => adapter ! Login
@@ -24,7 +24,7 @@ class Person(login: String, password: String) extends Actor {
   }
 }
 
-case class Snoop(snooper: ActorRef)
+case class Snoop(onRawRead: (String) => Unit)
 
 case object StopSnoop
 

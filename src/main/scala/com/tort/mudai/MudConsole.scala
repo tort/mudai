@@ -1,54 +1,53 @@
 package com.tort.mudai
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import com.tort.mudai.person._
 import akka.actor.ActorDSL._
 import scala.annotation.tailrec
-import com.tort.mudai.person.RawRead
 import com.tort.mudai.person.Snoop
 import com.tort.mudai.person.RawWrite
 
-class MudConsole(login: String, password: String) {
-  val system = ActorSystem()
-  val person = system.actorOf(Props(classOf[Person], login, password))
-  val writer = actor(system) {
-    new Act {
-      become {
-        case RawRead(text) => println(text)
-      }
-    }
-  }
-  person ! Snoop(writer)
-  person ! Login
+class MudConsole {
+  def writer(text: String) = println(text)
 
   @tailrec
-  final def userInputLoop() {
+  final def userInputLoop(person: ActorRef) {
     val string = readLine()
     println("#>" + string)
     string match {
       case "snoop" =>
         person ! Snoop(writer)
-        userInputLoop()
+        userInputLoop(person)
       case "stopsnoop" =>
         person ! StopSnoop
-        userInputLoop()
+        userInputLoop(person)
       case "login" =>
         person ! Login
-        userInputLoop()
+        userInputLoop(person)
       case "zap" =>
         person ! Zap
-        userInputLoop()
+        userInputLoop(person)
       case "quit" =>
         println("exited")
       case line =>
         person ! RawWrite(line + '\n')
-        userInputLoop()
+        userInputLoop(person)
     }
   }
 }
 
-object MudConsole {
+object adHocSession {
+  def apply(person: ActorRef, console: MudConsole) = {
+    person ! Login
+    person ! Snoop(console.writer)
+    console.userInputLoop(person)
+  }
+}
+
+object Runner {
   def main(args: Array[String]) {
-    new MudConsole(args(0), args(1)).userInputLoop()
+    val system = ActorSystem()
+    val person = system.actorOf(Props(classOf[Person], args(0), args(1)))
+    adHocSession(person, new MudConsole)
   }
 }
