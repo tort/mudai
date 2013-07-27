@@ -8,7 +8,7 @@ import com.tort.mudai.PulseDistributor
 
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
-import com.tort.mudai.mapper.{MapZoneTask, Mapper, Location}
+import com.tort.mudai.mapper.{Mapper, Location}
 
 class Person @Inject()(val sessionProvider: Provider[SessionTask],
                        @Named("mapperTask") val mapperTaskProvider: Provider[AbstractTask],
@@ -78,12 +78,6 @@ class Person @Inject()(val sessionProvider: Provider[SessionTask],
     val provisionTask = provisionTaskProvider.get()
     eventDistributor.subscribe(provisionTask)
     pulseDistributor.subscribe(provisionTask)
-  }
-
-  def mapZone(zoneName: String) {
-    val mapZoneTask = MapZoneTask(zoneName)
-    eventDistributor.subscribe(mapZoneTask)
-    pulseDistributor.subscribe(mapZoneTask)
   }
 }
 

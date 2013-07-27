@@ -51,7 +51,7 @@ public class AdapterImpl implements LegacyAdapter {
 
         _eventTriggers.add(new LoginPromptTrigger());
         _eventTriggers.add(new PasswordPromptTrigger());
-        _eventTriggers.add(new GlanceTrigger(eventDistributor));
+        _eventTriggers.add(new GlanceTrigger());
         _eventTriggers.add(new FeelThirstTrigger(eventDistributor));
         _eventTriggers.add(new FeelHungerTrigger(eventDistributor));
         _eventTriggers.add(new InventoryTrigger(eventDistributor));

@@ -1,14 +1,17 @@
 package com.tort.mudai.person
 
-import akka.actor.{ActorRef, Props, Actor}
+import akka.actor.{Props, Actor}
 import com.tort.mudai.event.{PasswordPromptEvent, LoginPromptEvent}
 import com.tort.mudai.command.SimpleCommand
+import com.tort.mudai.mapper.{SQLLocationPersister, MudMapper}
+import scalaz._
 
 class Person(login: String, password: String) extends Actor {
   import context._
 
   val adapter = actorOf(Props[Adapter])
   val snoopable = actorOf(Props[Snoopable])
+  val tasks = Seq(actorOf(Props(classOf[MudMapper], new SQLLocationPersister, new SQLLocationPersister)))
 
   def receive = {
     case snoop: Snoop => snoopable ! snoop
@@ -18,6 +21,7 @@ class Person(login: String, password: String) extends Actor {
     case Zap => adapter ! Zap
     case e: LoginPromptEvent => adapter ! new SimpleCommand(login)
     case e: PasswordPromptEvent => adapter ! new SimpleCommand(password)
+    case e => tasks.foreach(_ ! e)
   }
 }
 
@@ -27,7 +31,7 @@ class Snoopable extends Actor {
   def receive = {
     case Snoop(onRawRead) => become {
       case rawRead: RawRead => onRawRead(rawRead.text)
-      case StopSnoop => unbecome
+      case StopSnoop => unbecome()
     }
   }
 }
@@ -35,5 +39,7 @@ class Snoopable extends Actor {
 case class Snoop(onRawRead: (String) => Unit)
 
 case object StopSnoop
+
+case object CurrentLocation
 
 case class RawWrite(line: String)

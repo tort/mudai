@@ -1,12 +1,10 @@
 package com.tort.mudai.event
 
-import com.google.inject.Inject
-import com.tort.mudai.{Handler, RoomSnapshot}
-import com.tort.mudai.task.{AbstractTask, EventDistributor}
+import com.tort.mudai.RoomSnapshot
 import com.tort.mudai.Metadata.Direction._
-import com.tort.mudai.mapper.{Exit, Direction, Directions}
+import com.tort.mudai.mapper.{Exit, Direction}
 
-class GlanceTrigger @Inject()(eventDistributor: EventDistributor) extends EventTrigger[GlanceEvent] {
+class GlanceTrigger extends EventTrigger[GlanceEvent] {
   val lister = new DirectionLister()
   val MovePattern = ("(?ms).*^Вы поплелись (?:на )?(" + lister.listDirections() + ")\\.\r?\n.*").r
   val GlancePattern = ("(?ms).*" +
@@ -17,8 +15,7 @@ class GlanceTrigger @Inject()(eventDistributor: EventDistributor) extends EventT
     "(?:\u001B\\[1\\;34mУ Вас под ногами толстый лед.\u001B\\[0\\;37m\r?\n)?" +
     "\u001B\\[1\\;33m(?:(.*)\r?\n)?" +
     "\u001B\\[1\\;31m(?:(.*)\r?\n)?" +
-    "\u001B\\[0\\;37m\r?\n" +
-    "[^\n]*> ЪЫ$").r
+    "[^\n]*>.*").r
 
   override def matches(text: String) = {
     text.matches(GlancePattern.toString())
@@ -35,7 +32,8 @@ class GlanceTrigger @Inject()(eventDistributor: EventDistributor) extends EventT
     val direction = extractDirection(text)
     val GlancePattern(locationTitle, locationDesc, availableExits, objectsGroup, mobsGroup) = text
 
-    val exits = availableExits.map(alias => Exit(aliasToDirection(alias.toString), alias.isUpper)).toSet
+    val split = availableExits.split(' ')
+    val exits = split.map(alias => Exit(aliasToDirection(alias.toString), alias.head.isUpper)).toSet
     val objects = Option(objectsGroup).map(_.split("\n")).getOrElse(Array[String]())
     val mobs = Option(mobsGroup).map(_.split("\n")).getOrElse(Array[String]())
 
@@ -46,16 +44,6 @@ class GlanceTrigger @Inject()(eventDistributor: EventDistributor) extends EventT
       objects,
       mobs
     )
-
-    eventDistributor.invoke(new Handler() {
-      override def handle(task: AbstractTask) {
-        if (direction.isDefined) {
-          task.glance(direction.get, roomSnapshot)
-        } else {
-          task.glance(roomSnapshot)
-        }
-      }
-    })
 
     GlanceEvent(roomSnapshot, direction)
   }

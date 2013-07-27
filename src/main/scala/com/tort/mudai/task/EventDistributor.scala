@@ -3,7 +3,6 @@ package com.tort.mudai.task
 import com.tort.mudai.Handler
 
 import java.util.concurrent.atomic.AtomicReference
-import com.tort.mudai.mapper.MapZoneTask
 import actors.Actor
 
 class EventDistributor {
@@ -59,9 +58,5 @@ class EventDistributor {
 
   def unsubscribe(task: Task) {
     tasks.getAndSet(tasks.get().filterNot(_ == task))
-  }
-
-  def subscribeActor(actor: MapZoneTask) {
-    actors.getAndSet(actors.get().filterNot(_ == actor))
   }
 }

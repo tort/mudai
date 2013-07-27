@@ -35,6 +35,8 @@ libraryDependencies += "com.typesafe.akka" % "akka-actor_2.10" % "2.2-M3"
 
 libraryDependencies += "com.typesafe.akka" % "akka-testkit_2.10" % "2.2-M3"
 
+libraryDependencies += "com.typesafe" % "slick_2.10" % "1.0.0-RC2"
+
 assemblySettings
 
 test in assembly := {}

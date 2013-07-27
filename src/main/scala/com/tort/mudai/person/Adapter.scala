@@ -20,7 +20,8 @@ class Adapter extends Actor {
   )
   val triggers: Seq[EventTrigger[Event]] = Seq(
     new LoginPromptTrigger,
-    new PasswordPromptTrigger
+    new PasswordPromptTrigger,
+    new GlanceTrigger
   )
 
   private def parse(text: String) =

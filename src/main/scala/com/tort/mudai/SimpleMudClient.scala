@@ -201,9 +201,6 @@ class InputKeyListener @Inject()(@Assisted input: TextField,
         }
       case TRAVEL_COMMAND :: x =>
         handleTravelCommand(x.mkString(" "))
-      case MAP_ZONE_COMMAND :: rest =>
-        val x = rest.mkString(" ")
-        person.mapZone(x.substring(MAP_ZONE_COMMAND.length() + 1, x.length() - 1))
       case List("/зонинг") =>
         person.roam()
       case MOB_ALIAS_COMMAND :: rest =>

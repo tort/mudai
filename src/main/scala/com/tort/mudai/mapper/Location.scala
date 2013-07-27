@@ -1,24 +1,35 @@
 package com.tort.mudai.mapper
 
-import com.tort.mudai.RoomKey
+import com.tort.mudai.RoomSnapshot
 
-class Location (
-                     val title: String,
-                     val desc: String,
-                     val exits: Set[Exit],
-                     var zone: Option[Zone] = None,
-                     var waterSource: Option[String] = None,
-                     var isShop: Boolean = false,
-                     var isTavern: Boolean = false
-                     ) extends RoomKey  {
+class Location(
+                val id: String,
+                val title: String,
+                val desc: String,
+                var zone: Option[Zone] = None,
+                var waterSource: Option[String] = None,
+                var isShop: Boolean = false,
+                var isTavern: Boolean = false) {
 
-  def markShop() {isShop = true}
+  def markShop() {
+    isShop = true
+  }
 
-  def markTavern() {isTavern = true}
+  def markTavern() {
+    isTavern = true
+  }
 }
 
 case class Exit(direction: Direction, border: Boolean = false)
 
 object Location {
-  def apply(title: String, desc: String,  exits: Set[Exit]) = new Location(title, desc, exits)
+  def apply(room: RoomSnapshot) = new Location("0", room.title, room.desc)
+
+  def apply(id: String, title: String, desc: String) = new Location(id, title, desc)
 }
+
+class Transition(
+                  val id: String,
+                  val from: Location,
+                  val direction: Direction,
+                  val to: Location)

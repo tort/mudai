@@ -26,7 +26,7 @@ trait Mapper {
 class MapperImpl @Inject()(
                            persister: Persister,
                            directionHelper: DirectionHelper,
-                           eventDistributor: EventDistributor) extends StatedTask with Mapper with LocationHelper {
+                           eventDistributor: EventDistributor) extends StatedTask with Mapper {
   private var current: Option[Location] = None
   private val graph: Graph[Location, LUnDiEdge] = Graph.empty
 
@@ -62,8 +62,7 @@ class MapperImpl @Inject()(
 
   def matchSnapshot(location: Location, roomSnapshot: RoomSnapshot) = {
     roomSnapshot.title == location.title &&
-      roomSnapshot.desc == location.desc &&
-      roomSnapshot.exits == location.exits
+      roomSnapshot.desc == location.desc
   }
 
   def mapNewLocation(location: Location): Some[Location] = {
@@ -72,7 +71,7 @@ class MapperImpl @Inject()(
   }
 
   def mapNewLocation(roomSnapshot: RoomSnapshot): Some[Location] = {
-    mapNewLocation(createLocation(roomSnapshot))
+    mapNewLocation(Location(roomSnapshot))
   }
 
   def mapExits(fromLocation: Location, direction: Direction, toLocation: Location) {
@@ -109,15 +108,15 @@ class MapperImpl @Inject()(
   }
 
   private def findOrMapLocation(roomSnapshot: RoomSnapshot, criterion: (Location) => Boolean = (Location) => true) = {
-    val similar = graph.nodes.find((n: Location) => n.title == roomSnapshot.title && n.desc == roomSnapshot.desc && n.exits == roomSnapshot.exits)
+    val similar = graph.nodes.find((n: Location) => n.title == roomSnapshot.title && n.desc == roomSnapshot.desc)
     if (similar.isEmpty)
-        mapNewLocation(createLocation(roomSnapshot))
+        mapNewLocation(Location(roomSnapshot))
     else
       None
   }
 
   private def findLocation(roomSnapshot: RoomSnapshot, criterion: (Location) => Boolean = (Location) => true): Option[Location] = {
-    val locations = graph.nodes.filter((n: Location) => n.title == roomSnapshot.title && n.desc == roomSnapshot.desc && n.exits == roomSnapshot.exits)
+    val locations = graph.nodes.filter((n: Location) => n.title == roomSnapshot.title && n.desc == roomSnapshot.desc)
     println("location TITLE " + roomSnapshot.title + "CNT: " + locations.size)
     locations.size match {
       case 1 =>
@@ -218,15 +217,5 @@ class JMapperWrapper @Inject()(val mapper: Mapper) {
   def pathTo(target: Location): Seq[Direction] = {
     val path = mapper.pathTo(target)
     Seq()//TODO implement
-  }
-}
-
-trait LocationHelper {
-  def createLocation(roomSnapshot: RoomSnapshot): Location = {
-    Location(
-      roomSnapshot.title,
-      roomSnapshot.desc,
-      roomSnapshot.exits
-    )
   }
 }

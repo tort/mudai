@@ -40,7 +40,7 @@ class MemPersister extends Persister {
 
   def persistMob(mob: Mob) { mobs.add(mob) }
 
-  def loadLocations(prototype: RoomKey) = locations.filter(loc => loc.title == prototype.title && loc.desc == prototype.desc && loc.exits == prototype.exits)
+  def loadLocations(prototype: RoomKey) = locations.filter(loc => loc.title == prototype.title && loc.desc == prototype.desc)
 
   def locationsByCondition(condition: (Location) => Boolean) = locations.filter(condition)
 
