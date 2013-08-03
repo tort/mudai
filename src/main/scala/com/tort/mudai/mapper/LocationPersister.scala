@@ -13,16 +13,34 @@ trait LocationPersister {
   def loadLocation(room: RoomKey): Seq[Location]
 
   def saveLocation(room: RoomKey): Location
+
+  def allLocations: Seq[Location]
 }
 
 trait TransitionPersister {
   def loadTransition(prev: Location, direction: Direction, newLocation: Location): Option[Transition]
 
   def saveTransition(prev: Location, direction: Direction, newLocation: Location): Transition
+
+  def allTransitions: Seq[Transition]
 }
 
 class SQLLocationPersister extends LocationPersister with TransitionPersister {
   implicit val getLocationResult = GetResult(l => Location(l.<<, l.<<, l.<<))
+
+  def locationByTitle(title: String): Seq[Location] = DB.db withSession {
+    sql"select * from location where title like '%#$title%'".as[Location].list
+  }
+
+  def allLocations = DB.db withSession {
+    sql"select * from location".as[Location].list
+  }
+
+  def allTransitions = DB.db withSession {
+    sql"select id, locFrom, direction, locTo from transition".as[(String, String, String, String)]
+      .list
+      .map(x => new Transition(x._1, loadLocation(x._2), Direction(x._3), loadLocation(x._4)))
+  }
 
   def loadLocation(room: RoomKey) = DB.db withSession {
     val title = room.title

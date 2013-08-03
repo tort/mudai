@@ -3,7 +3,7 @@ package com.tort.mudai.person
 import akka.actor.{Props, Actor}
 import com.tort.mudai.event.{PasswordPromptEvent, LoginPromptEvent}
 import com.tort.mudai.command.SimpleCommand
-import com.tort.mudai.mapper.{SQLLocationPersister, MudMapper}
+import com.tort.mudai.mapper.{PathTo, SQLLocationPersister, MudMapper}
 import scalaz._
 
 class Person(login: String, password: String) extends Actor {
@@ -21,7 +21,7 @@ class Person(login: String, password: String) extends Actor {
     case Zap => adapter ! Zap
     case e: LoginPromptEvent => adapter ! new SimpleCommand(login)
     case e: PasswordPromptEvent => adapter ! new SimpleCommand(password)
-    case e => tasks.foreach(_ ! e)
+    case e => tasks.filter(_ != sender).foreach(_ ! e)
   }
 }
 
@@ -43,3 +43,4 @@ case object StopSnoop
 case object CurrentLocation
 
 case class RawWrite(line: String)
+

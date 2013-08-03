@@ -1,12 +1,16 @@
 package com.tort.mudai.mapper
 
 import com.tort.mudai.event.GlanceEvent
-import com.tort.mudai.person.CurrentLocation
+import com.tort.mudai.person.{RawRead, CurrentLocation}
 import akka.actor.Actor
 import com.google.inject.Inject
 import com.tort.mudai.RoomSnapshot
 import scalaz._
 import Scalaz._
+import scalax.collection.mutable.Graph
+import scalax.collection.edge.Implicits._
+import scalax.collection.edge.{LDiEdge, LUnDiEdge}
+import com.tort.mudai.Metadata.Direction._
 
 class MudMapper @Inject()(locationPersister: LocationPersister, transitionPersister: TransitionPersister) extends Actor {
 
@@ -24,6 +28,10 @@ class MudMapper @Inject()(locationPersister: LocationPersister, transitionPersis
       val newLocation = location(room)
       transition(current, direction, newLocation)
       become(rec(newLocation))
+    case PathTo(target) =>
+      current.foreach(l => println(l.title))
+      val path = pathTo(current, target)
+      sender ! RawRead(path.map(_.id).mkString)
   }
 
   private def location(room: RoomSnapshot) = loadLocation(room) match {
@@ -38,6 +46,25 @@ class MudMapper @Inject()(locationPersister: LocationPersister, transitionPersis
       curr <- newOption
     } yield loadTransition(prev, direction, curr).getOrElse(saveTransition(prev, direction, curr))
   }
+
+  private def pathTo(current: Option[Location], target: Location): List[Direction] = {
+    current.flatMap(curr => pathTo(curr, target)).getOrElse(List())
+  }
+
+  private def pathTo(currentLocation: Location, target: Location): Option[List[Direction]] = {
+    val graph = Graph.empty[String, LDiEdge]
+
+   allTransitions.foreach {
+      case transition =>
+        val edge = (transition.from.id ~+> transition.to.id)(transition.direction.id)
+        graph += edge
+    }
+
+    def node(location: String) = graph.get(location)
+
+    val shortest = node(currentLocation.id) shortestPathTo node(target.id)
+    shortest.map(_.edges.map(_.label.toString).map(nameToDirection(_)))
+  }
 }
 
-
+case class PathTo(target: Location)

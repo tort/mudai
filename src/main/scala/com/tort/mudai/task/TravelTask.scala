@@ -8,7 +8,7 @@ import com.tort.mudai.event.{DiscoverObstacleEvent, GlanceEvent}
 import com.tort.mudai.command._
 import com.tort.mudai.{SimpleMudClient, RoomSnapshot}
 
-class TravelActor(val location: Location,
+class TravelTask(val location: Location,
                   val mapper: Mapper) extends StatedTask with TravelHelper with PulseHelper {
 
   val actor = Actor.actor({
@@ -43,10 +43,10 @@ trait PulseHelper {
   }
 }
 
-object TravelActor {
+object TravelTask {
   def apply(to: Location) = {
     val mapper = SimpleMudClient.injector.getInstance(classOf[Mapper])
-    new TravelActor(to, mapper)
+    new TravelTask(to, mapper)
   }
 }
 

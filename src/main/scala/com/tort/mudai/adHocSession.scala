@@ -7,6 +7,6 @@ object adHocSession {
   def apply(person: ActorRef, console: MudConsole) = {
     person ! Login
     person ! Snoop(console.writer)
-    console.userInputLoop(person)
+    console.userInputLoop(person, Map())
   }
 }

@@ -19,7 +19,7 @@ public class GoAndDoTask extends StatedTask {
         _afterTravelCommand = command;
         _callback = callback;
 
-        _travelTask = TravelActor.apply(to);
+        _travelTask = TravelTask.apply(to);
         eventDistributor.subscribe(_travelTask);
     }
 

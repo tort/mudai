@@ -50,7 +50,7 @@ class Person @Inject()(val sessionProvider: Provider[SessionTask],
   }
 
   def travel(to: Location) {
-    val travelTask = TravelActor(to)
+    val travelTask = TravelTask(to)
     eventDistributor.subscribe(travelTask)
     pulseDistributor.subscribe(travelTask)
   }

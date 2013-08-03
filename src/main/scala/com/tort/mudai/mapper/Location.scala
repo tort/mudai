@@ -1,6 +1,8 @@
 package com.tort.mudai.mapper
 
 import com.tort.mudai.RoomSnapshot
+import scalaz._
+import Scalaz._
 
 class Location(
                 val id: String,
@@ -32,4 +34,12 @@ class Transition(
                   val id: String,
                   val from: Location,
                   val direction: Direction,
-                  val to: Location)
+                  val to: Location) {
+  override def hashCode() = 41 + id.hashCode
+
+  override def equals(obj: Any) = obj match {
+    case null => false
+    case t: Transition => id === t.id
+    case _ => false
+  }
+}
