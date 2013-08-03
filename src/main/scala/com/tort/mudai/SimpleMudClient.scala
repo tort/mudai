@@ -201,8 +201,6 @@ class InputKeyListener @Inject()(@Assisted input: TextField,
         }
       case TRAVEL_COMMAND :: x =>
         handleTravelCommand(x.mkString(" "))
-      case List("/зонинг") =>
-        person.roam()
       case MOB_ALIAS_COMMAND :: rest =>
         val x = rest.mkString(" ")
         val args = x.substring(MOB_ALIAS_COMMAND.length() + 1, x.length() - 1).split("!")
@@ -211,8 +209,6 @@ class InputKeyListener @Inject()(@Assisted input: TextField,
         val mob = persister.findMob(name)
         mob.descName(longName)
         persister.persistMob(mob)
-      case List("/затариться") =>
-        person.provision()
       case MARK_WATER_SOURCE_COMMAND :: x =>
         mapper.markWaterSource(x.mkString(" "))
       case List("/магазин") =>

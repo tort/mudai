@@ -12,12 +12,10 @@ import com.tort.mudai.mapper.{Mapper, Location}
 
 class Person @Inject()(val sessionProvider: Provider[SessionTask],
                        @Named("mapperTask") val mapperTaskProvider: Provider[AbstractTask],
-                       val provisionTaskProvider: Provider[ProvisionTask],
                        val commandExecutor: CommandExecutor,
                        val pulseExecutor: ScheduledExecutorService,
                        val eventDistributor: EventDistributor,
                        val pulseDistributor: PulseDistributor,
-                       val roamingTaskProvider: Provider[RoamingTask],
                        val mapper: Mapper
                        ) extends StatedTask {
 
@@ -57,12 +55,6 @@ class Person @Inject()(val sessionProvider: Provider[SessionTask],
     pulseDistributor.subscribe(travelTask)
   }
 
-  def roam() {
-    val roamingTask = roamingTaskProvider.get()
-    eventDistributor.subscribe(roamingTask)
-    pulseDistributor.subscribe(roamingTask)
-  }
-
   override def pulse() = {
     val command = pulseDistributor.pulse()
     for (task <- eventDistributor.getTargets) {
@@ -72,12 +64,6 @@ class Person @Inject()(val sessionProvider: Provider[SessionTask],
     }
 
     command
-  }
-
-  def provision() {
-    val provisionTask = provisionTaskProvider.get()
-    eventDistributor.subscribe(provisionTask)
-    pulseDistributor.subscribe(provisionTask)
   }
 }
 

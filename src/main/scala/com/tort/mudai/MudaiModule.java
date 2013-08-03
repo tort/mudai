@@ -20,11 +20,8 @@ import java.util.concurrent.*;
 public class MudaiModule extends AbstractModule {
     @Override
     protected void configure() {
-        install(new FactoryModuleBuilder().implement(Task.class, TravelTask.class).build(TravelTaskFactory.class));
         install(new FactoryModuleBuilder().implement(Task.class, GoAndDoTask.class).build(GoAndDoTaskFactory.class));
         install(new FactoryModuleBuilder().implement(Task.class, BuyLiquidContainerTask.class).build(BuyLiquidContainerTaskFactory.class));
-        install(new FactoryModuleBuilder().implement(Task.class, FillLiquidContainerTask.class).build(FillLiquidContainerTaskFactory.class));
-        install(new FactoryModuleBuilder().implement(Task.class, DrinkTask.class).build(DrinkTaskFactory.class));
         install(new FactoryModuleBuilder().implement(Task.class, EatTask.class).build(EatTaskFactory.class));
         install(new FactoryModuleBuilder().implement(KeyListener.class, InputKeyListener.class).build(InputKeyListenerFactory.class));
 
