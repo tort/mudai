@@ -42,34 +42,49 @@ class MudConsole {
         userInputLoop(person, Map())
       case "quit" :: Nil =>
         println("exited")
-      case menuIndex :: Nil if (!menuMap.isEmpty && menuIndex.forall(_.isDigit)) =>
-        val index = menuIndex.toInt
-        val loc = menuMap(index)
-        val future: Future[List[String]] = for {
-          f <- (person ? PathTo(loc)).mapTo[List[String]]
-        } yield f
-
-        future onSuccess {
-          case path => path.mkString
-        }
+      case "путь" :: menuIndex :: Nil if (!menuMap.isEmpty && menuIndex.forall(_.isDigit)) =>
+        menuIndex.toInt |> menuMap |> showPath(person)
         userInputLoop(person, Map())
       case "путь" :: target :: Nil =>
-        persister.locationByTitle(target) match {
-          case Nil =>
-            writer("### Location not found")
-            none
-            userInputLoop(person, Map())
-          case loc :: Nil =>
-            loc.some
-            userInputLoop(person, Map())
-          case locs =>
-            val map = locs.zipWithIndex.map(x => x.swap)
-            map.foreach(x => writer("%s. %s".format(x._1, x._2.title)))
-            userInputLoop(person, map.toMap)
-        }
+        val targetAndMenu = menu(target)
+        targetAndMenu._1.foreach(showPath(person))
+        userInputLoop(person, targetAndMenu._2)
+      case "го" :: menuIndex :: Nil if (!menuMap.isEmpty && menuIndex.forall(_.isDigit)) =>
+        menuIndex.toInt |> menuMap |> goTo(person)
+        userInputLoop(person, Map())
+      case "го" :: target :: Nil =>
+        val targetAndMenu = menu(target)
+        targetAndMenu._1.foreach(person ! GoTo(_))
+        userInputLoop(person, targetAndMenu._2)
       case _ =>
         person ! RawWrite(line + '\n')
         userInputLoop(person, Map())
+    }
+  }
+
+  private def goTo(person: ActorRef)(loc: Location) = person ! GoTo(loc)
+
+  private def showPath(person: ActorRef)(loc: Location) {
+    val future: Future[List[String]] = for {
+      f <- (person ? PathTo(loc)).mapTo[List[String]]
+    } yield f
+
+    future onSuccess {
+      case path => path.mkString
+    }
+  }
+
+  private def menu(target: String): (Option[Location], Map[Int, Location]) = {
+    persister.locationByTitle(target) match {
+      case Nil =>
+        writer("### Location not found")
+        (none, Map())
+      case loc :: Nil =>
+        (loc.some, Map())
+      case locs =>
+        val menuItems = locs.zipWithIndex.map(x => x.swap)
+        menuItems.foreach(x => writer("%s. %s".format(x._1, x._2.title)))
+        (none, menuItems.toMap)
     }
   }
 }

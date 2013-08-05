@@ -9,14 +9,15 @@ import scalaz._
 import Scalaz._
 import scalax.collection.mutable.Graph
 import scalax.collection.edge.Implicits._
-import scalax.collection.edge.{LDiEdge, LUnDiEdge}
+import scalax.collection.edge.LDiEdge
 import com.tort.mudai.Metadata.Direction._
 
-class MudMapper @Inject()(locationPersister: LocationPersister, transitionPersister: TransitionPersister) extends Actor {
+class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPersister, transitionPersister: TransitionPersister) extends Actor {
 
   import context._
   import locationPersister._
   import transitionPersister._
+  import pathHelper._
 
   def receive: Receive = rec(None)
 
@@ -46,15 +47,19 @@ class MudMapper @Inject()(locationPersister: LocationPersister, transitionPersis
       curr <- newOption
     } yield loadTransition(prev, direction, curr).getOrElse(saveTransition(prev, direction, curr))
   }
+}
 
-  private def pathTo(current: Option[Location], target: Location): List[Direction] = {
+case class PathTo(target: Location)
+
+class PathHelper(transitionPersister: TransitionPersister) {
+  def pathTo(current: Option[Location], target: Location): List[Direction] = {
     current.flatMap(curr => pathTo(curr, target)).getOrElse(List())
   }
 
   private def pathTo(currentLocation: Location, target: Location): Option[List[Direction]] = {
     val graph = Graph.empty[String, LDiEdge]
 
-   allTransitions.foreach {
+   transitionPersister.allTransitions.foreach {
       case transition =>
         val edge = (transition.from.id ~+> transition.to.id)(transition.direction.id)
         graph += edge
@@ -66,5 +71,3 @@ class MudMapper @Inject()(locationPersister: LocationPersister, transitionPersis
     shortest.map(_.edges.map(_.label.toString).map(nameToDirection(_)))
   }
 }
-
-case class PathTo(target: Location)
