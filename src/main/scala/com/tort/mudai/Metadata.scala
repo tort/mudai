@@ -19,8 +19,10 @@ object Metadata {
         "e" -> East,
         "W" -> West,
         "w" -> West,
-        "^" -> Up,
-        "v" -> Down
+        "u" -> Up,
+        "U" -> Up,
+        "d" -> Down,
+        "D" -> Down
       )
 
     val nameToDirection = Map(
