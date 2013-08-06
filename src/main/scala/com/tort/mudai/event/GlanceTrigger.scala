@@ -32,8 +32,13 @@ class GlanceTrigger extends EventTrigger[GlanceEvent] {
     val direction = extractDirection(text)
     val GlancePattern(locationTitle, locationDesc, availableExits, objectsGroup, mobsGroup) = text
 
-    val split = availableExits.split(' ')
-    val exits = split.map(alias => Exit(aliasToDirection(alias.toString), alias.head.isUpper)).toSet
+    val exits = availableExits.split(' ').map {
+      case alias if alias.startsWith("(") =>
+        val a = alias.drop(1).dropRight(1)
+        Exit(aliasToDirection(a.toString), a.head.isUpper, closed = true)
+      case alias =>
+        Exit(aliasToDirection(alias.toString), alias.head.isUpper)
+    }.toSet
     val objects = Option(objectsGroup).map(_.split("\n")).getOrElse(Array[String]())
     val mobs = Option(mobsGroup).map(_.split("\n")).getOrElse(Array[String]())
 

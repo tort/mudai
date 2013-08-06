@@ -1,6 +1,6 @@
 package com.tort.mudai.person
 
-import akka.actor.{ActorRef, Props, Actor}
+import akka.actor.{Terminated, ActorRef, Props, Actor}
 import com.tort.mudai.event.{PasswordPromptEvent, LoginPromptEvent}
 import com.tort.mudai.command.{RenderableCommand, SimpleCommand}
 import com.tort.mudai.mapper.{PathHelper, Location, SQLLocationPersister, MudMapper}
@@ -33,7 +33,10 @@ class Person(login: String, password: String) extends Actor {
     case e@GoTo(loc) =>
       val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper))
       system.scheduler.schedule(0 millis, 1000 millis, travelTask, Pulse)
+      become(rec(tasks :+ travelTask))
+      watch(travelTask)
       travelTask ! e
+    case Terminated(ref) => become(rec(tasks.filterNot(_ == ref)))
     case e => tasks.filter(_ != sender).foreach(_ ! e)
   }
 }

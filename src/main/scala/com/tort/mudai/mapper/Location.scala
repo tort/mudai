@@ -22,7 +22,7 @@ class Location(
   }
 }
 
-case class Exit(direction: Direction, border: Boolean = false)
+case class Exit(direction: Direction, border: Boolean = false, closed: Boolean = false)
 
 object Location {
   def apply(room: RoomSnapshot) = new Location("0", room.title, room.desc)

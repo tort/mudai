@@ -63,7 +63,7 @@ public class AdapterImpl implements LegacyAdapter {
         _eventTriggers.add(new CantFindItemInContainerTrigger(eventDistributor));
         _eventTriggers.add(new EatTrigger(eventDistributor));
         _eventTriggers.add(new DrinkTrigger(eventDistributor));
-        _eventTriggers.add(new DiscoverObstacleTrigger(eventDistributor));
+        _eventTriggers.add(new DiscoverObstacleTrigger());
         _eventTriggers.add(new KillTrigger(eventDistributor));
         _eventTriggers.add(new TakeItemTrigger(eventDistributor));
         _eventTriggers.add(new StatTrigger(eventDistributor));

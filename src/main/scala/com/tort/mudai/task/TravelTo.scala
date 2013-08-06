@@ -7,6 +7,7 @@ import com.tort.mudai.command.SimpleCommand
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
+import com.tort.mudai.event.{DiscoverObstacleEvent, GlanceEvent}
 
 class TravelTo(pathHelper: PathHelper, mapper: ActorRef) extends Actor {
   implicit val timeout = Timeout(5 seconds)
@@ -29,17 +30,22 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef) extends Actor {
       }
   }
 
+  def waitMove(person: ActorRef, path: Seq[Direction]): Receive = {
+    case GlanceEvent(room, Some(direction)) =>
+      become(pulse(person, path.tail))
+    case DiscoverObstacleEvent(obstacle) =>
+      person ! new SimpleCommand("открыть дверь " + path.head.id)
+      person ! new SimpleCommand(path.head.id)
+  }
+
   def pulse(person: ActorRef, path: Seq[Direction]): Receive = {
     case Pulse =>
       path match {
         case Nil =>
-          person ! TravelFinished
           context.stop(self)
         case p =>
           person ! new SimpleCommand(p.head.id)
-          become(pulse(person, p.tail))
+          become(waitMove(person, p))
       }
   }
 }
-
-case object TravelFinished
