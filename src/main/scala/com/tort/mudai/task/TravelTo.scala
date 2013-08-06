@@ -34,7 +34,7 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef) extends Actor {
     case GlanceEvent(room, Some(direction)) =>
       become(pulse(person, path.tail))
     case DiscoverObstacleEvent(obstacle) =>
-      person ! new SimpleCommand("открыть дверь " + path.head.id)
+      person ! new SimpleCommand("открыть %s %s".format(obstacle, path.head.id))
       person ! new SimpleCommand(path.head.id)
   }
 
