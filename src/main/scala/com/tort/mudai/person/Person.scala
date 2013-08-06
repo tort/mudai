@@ -18,6 +18,7 @@ class Person(login: String, password: String) extends Actor {
   val mapper = actorOf(Props(classOf[MudMapper], pathHelper, persister, persister))
   val coreTasks = Seq(mapper)
 
+  system.scheduler.schedule(0 millis, 1000 millis, self, Pulse)
 
   def receive: Receive = rec(coreTasks)
 
@@ -32,7 +33,6 @@ class Person(login: String, password: String) extends Actor {
     case c: RenderableCommand => adapter ! c
     case e@GoTo(loc) =>
       val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper))
-      system.scheduler.schedule(0 millis, 1000 millis, travelTask, Pulse)
       become(rec(tasks :+ travelTask))
       watch(travelTask)
       travelTask ! e
