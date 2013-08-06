@@ -8,6 +8,7 @@ import Database.threadLocalSession
 import scala.slick.jdbc.{StaticQuery => Q, GetResult}
 import Q.interpolation
 import java.util
+import com.tort.mudai.Metadata.Direction._
 
 trait LocationPersister {
   def loadLocation(room: RoomKey): Seq[Location]
@@ -74,11 +75,13 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def saveTransition(prev: Location, direction: Direction, newLocation: Location) = DB.db withSession {
-    val id = util.UUID.randomUUID().toString
+    def id = util.UUID.randomUUID().toString
     val from = prev.id
     val dir = direction.id
     val to = newLocation.id
+    val oppositeDir = oppositeDirection(nameToDirection(dir)).id
     sqlu"insert into transition(id, locFrom, direction, locTo) values($id, $from, $dir, $to)".first
+    sqlu"insert into transition(id, locFrom, direction, locTo) values($id, $to, $oppositeDir, $from)".first
     new Transition(id, prev, direction, newLocation)
   }
 }
