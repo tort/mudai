@@ -34,7 +34,8 @@ class Transition(
                   val id: String,
                   val from: Location,
                   val direction: Direction,
-                  val to: Location) {
+                  val to: Location,
+                  val isWeak: Boolean = false) {
   override def hashCode() = 41 + id.hashCode
 
   override def equals(obj: Any) = obj match {

@@ -7,12 +7,10 @@ import com.google.inject.Inject
 import com.tort.mudai.RoomSnapshot
 import scalaz._
 import Scalaz._
-import scalax.collection.mutable.Graph
-import scalax.collection.edge.Implicits._
-import scalax.collection.edge.LDiEdge
-import com.tort.mudai.Metadata.Direction._
 
-class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPersister, transitionPersister: TransitionPersister) extends Actor {
+
+class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPersister, transitionPersister: TransitionPersister)
+  extends Actor {
 
   import context._
   import locationPersister._
@@ -21,16 +19,54 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
 
   def receive: Receive = rec(None)
 
+  def replaceUnstableChain(current: Option[Location]): Option[Location] = {
+    weakChainIntersection match {
+      case xs if (xs.length >= 2) =>
+        val intersectionWeakIds = xs.map(_._1.id).toSet
+        val weakToStrongLoc = xs.flatMap {
+          case (tw, t) => tw.from -> t.from :: tw.to -> t.to :: Nil
+        }.toSet.toMap
+        val weakToStrongLocIds = weakToStrongLoc.map(x => x._1.id -> x._2.id)
+        val forUpdateTo: Seq[Transition] = allWeakTransitions
+          .filterNot(tw => intersectionWeakIds.contains(tw.id))
+          .filter(tw => weakToStrongLocIds.contains(tw.to.id))
+        forUpdateTo.foreach(tw => updateToTransition(tw.id, weakToStrongLocIds(tw.to.id)))
+        val forUpdateFrom: Seq[Transition] = allWeakTransitions
+          .filterNot(tw => intersectionWeakIds.contains(tw.id))
+          .filter(tw => weakToStrongLocIds.contains(tw.from.id))
+        forUpdateFrom.foreach(tw => updateFromTransition(tw.id, weakToStrongLocIds(tw.from.id)))
+
+        deleteWeakIntersection(weakToStrongLoc.keys, xs.map(_._1))
+        replaceWeakWithStrong
+        current.map(loc => loadLocation(weakToStrongLocIds(loc.id)))
+      case _ => None
+    }
+  }
+
   def rec(current: Option[Location]): Receive = {
     case CurrentLocation => sender ! current
     case GlanceEvent(room, None) =>
       become(rec(location(room)))
     case GlanceEvent(room, Some(direction)) =>
-      val newLocation = location(room)
-      transition(current, direction, newLocation)
-      become(rec(newLocation))
+      val newCurrent: Option[Location] = replaceUnstableChain(current).orElse(current)
+      locationFromMap(newCurrent, direction) match {
+        case None =>
+          val loc = loadLocation(room) match {
+            case Nil =>
+              val l = saveLocation(room).some
+              transition(newCurrent, direction, l)
+              l
+            case xs =>
+              val l = saveLocation(room).some
+              transition(newCurrent, direction, l, isWeak = true)
+              l
+          }
+
+          become(rec(loc))
+        case Some(loc) =>
+          become(rec(loc.some))
+      }
     case PathTo(target) =>
-      current.foreach(l => println(l.title))
       val path = pathTo(current, target)
       sender ! RawRead(path.map(_.id).mkString)
   }
@@ -41,33 +77,16 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
     case _ => none
   }
 
-  private def transition(prevOption: Option[Location], direction: Direction, newOption: Option[Location]) {
+  private def locationFromMap(currentOption: Option[Location], direction: Direction): Option[Location] = {
+    currentOption.flatMap(current => loadTransition(current, direction))
+  }
+
+  private def transition(prevOption: Option[Location], direction: Direction, newOption: Option[Location], isWeak: Boolean = false) {
     for {
       prev <- prevOption
       curr <- newOption
-    } yield loadTransition(prev, direction, curr).getOrElse(saveTransition(prev, direction, curr))
+    } yield loadTransition(prev, direction, curr).getOrElse(saveTransition(prev, direction, curr, isWeak))
   }
 }
 
 case class PathTo(target: Location)
-
-class PathHelper(transitionPersister: TransitionPersister) {
-  def pathTo(current: Option[Location], target: Location): List[Direction] = {
-    current.flatMap(curr => pathTo(curr, target)).getOrElse(List())
-  }
-
-  private def pathTo(currentLocation: Location, target: Location): Option[List[Direction]] = {
-    val graph = Graph.empty[String, LDiEdge]
-
-   transitionPersister.allTransitions.foreach {
-      case transition =>
-        val edge = (transition.from.id ~+> transition.to.id)(transition.direction.id)
-        graph += edge
-    }
-
-    def node(location: String) = graph.get(location)
-
-    val shortest = node(currentLocation.id) shortestPathTo node(target.id)
-    shortest.map(_.edges.map(_.label.toString).map(nameToDirection(_)))
-  }
-}
