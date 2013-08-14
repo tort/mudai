@@ -21,6 +21,8 @@ class Adapter extends Actor {
   val triggers: Seq[EventTrigger[Event]] = Seq(
     new LoginPromptTrigger,
     new PasswordPromptTrigger,
+    new FightRoundTrigger,
+    new KillTrigger,
     new GlanceTrigger,
     new DiscoverObstacleTrigger
   )

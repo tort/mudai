@@ -1,7 +1,7 @@
 package com.tort.mudai.event
 
 import com.tort.mudai.task.EventDistributor
-import org.scalatest.{Ignore, FunSuite}
+import org.scalatest.FunSuite
 import org.scalatest.matchers.ShouldMatchers
 import org.mockito.Mockito
 
@@ -59,7 +59,7 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
     "\u001B[0;32m40H\u001B[0;37m \u001B[0;32m93M\u001B[0;37m 134о Зауч:0 \u001B[0;32m[Веретень:Невредим]\u001B[0;37m \u001B[1;32m[комар:Легко ранен]\u001B[0;37m > ЪЫ"
 
   ignore("direction, objects, mobs extraction") {
-    val trigger = new GlanceTrigger(mockDistributor)
+    val trigger = new GlanceTrigger
     val event = trigger.fireEvent(text)
 
     event.direction should not be null
@@ -68,7 +68,7 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
   }
 
   ignore("fight") {
-    val trigger = new GlanceTrigger(mockDistributor);
+    val trigger = new GlanceTrigger()
     val event = trigger.fireEvent(fight);
 
     event.roomSnapshot.objectsPresent should have length 0
@@ -81,25 +81,25 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
   }
 
   test("matchLocationWithoutAnyone") {
-    val matches = new GlanceTrigger(null).matches(locationWithoutAnyone)
+    val matches = new GlanceTrigger().matches(locationWithoutAnyone)
 
     matches should be(true)
   }
 
   test("match") {
-    val matches = new GlanceTrigger(null).matches(text)
+    val matches = new GlanceTrigger().matches(text)
 
     matches should be(true)
   }
 
   test("match fight") {
-    val matches = new GlanceTrigger(null).matches(fight)
+    val matches = new GlanceTrigger().matches(fight)
 
     matches should be(true)
   }
 
   test("move with agro") {
-    val trigger = new GlanceTrigger(null)
+    val trigger = new GlanceTrigger()
     assert(trigger.matches(input))
   }
 }
