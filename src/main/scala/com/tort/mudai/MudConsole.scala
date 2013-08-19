@@ -25,7 +25,6 @@ class MudConsole {
   @tailrec
   final def userInputLoop(person: ActorRef, menuMap: Map[Int, Location]) {
     val line = readLine()
-    println("#>" + line)
     val splitted: Seq[String] = line.split(' ').toList
     splitted match {
       case "snoop" :: Nil =>
