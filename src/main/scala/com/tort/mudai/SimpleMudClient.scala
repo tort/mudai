@@ -3,7 +3,6 @@ package com.tort.mudai
 import command.{MultiCommand, RenderableCommand, StartSessionCommand, RawWriteCommand}
 import gui.{OutputPrinter, JScrollableOutput}
 import mapper.{Persister, Mapper}
-import persistance.MudaiDb
 import task.{StatedTask, Person}
 import com.google.inject.{Guice, Inject}
 import util.parsing.combinator.RegexParsers
@@ -224,9 +223,6 @@ class InputKeyListener @Inject()(@Assisted input: TextField,
         commandExecutor.submit(new CloseSessionCommand())
       case List("#reload") =>
         Scope.reset
-      case "/стат" :: rest if(rest.nonEmpty) =>
-        val stats = MudaiDb.statsLike(like(rest.mkString(" ").trim))
-        stats.foreach(s => output.print("\n" + s.desc))
       case _ =>
         callSingleArgumentJsFunction(ctx, "onInputEvent", input.getText) match {
           case None => commandExecutor.submit(new RawWriteCommand(command))
