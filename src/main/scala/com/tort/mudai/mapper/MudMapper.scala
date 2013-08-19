@@ -1,6 +1,6 @@
 package com.tort.mudai.mapper
 
-import com.tort.mudai.event.GlanceEvent
+import com.tort.mudai.event.{KillEvent, GlanceEvent}
 import com.tort.mudai.person.{RawRead, CurrentLocation}
 import akka.actor.Actor
 import com.google.inject.Inject
@@ -46,7 +46,9 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
   def rec(current: Option[Location]): Receive = {
     case CurrentLocation => sender ! current
     case GlanceEvent(room, None) =>
-      become(rec(location(room)))
+      val newCurrent: Option[Location] = location(room)
+      updateMobAndArea(room, newCurrent)
+      become(rec(newCurrent))
     case GlanceEvent(room, Some(direction)) =>
       val newCurrent: Option[Location] = replaceUnstableChain(current).orElse(current)
       locationFromMap(newCurrent, direction) match {
@@ -62,13 +64,26 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
               l
           }
 
+          updateMobAndArea(room, loc)
           become(rec(loc))
         case Some(loc) =>
+          updateMobAndArea(room, loc.some)
           become(rec(loc.some))
       }
     case PathTo(target) =>
       val path = pathTo(current, target)
       sender ! RawRead(path.map(_.id).mkString)
+    case KillEvent(shortName, exp) =>
+      makeKillable(shortName)
+  }
+
+
+  private def updateMobAndArea(room: RoomSnapshot, current: Option[Location]) {
+    for {
+      mob <- room.mobs
+      loc <- current
+      if !mob.contains("сражается")
+    } yield persistMobAndArea(mob, loc)
   }
 
   private def location(room: RoomSnapshot) = loadLocation(room) match {

@@ -18,6 +18,14 @@ trait LocationPersister {
   def saveLocation(room: RoomKey): Location
 
   def allLocations: Seq[Location]
+
+  def persistMobAndArea(mob: String, location: Location)
+
+  def makeKillable(shortName: String)
+
+  def killablesHabitation: Seq[Location]
+
+  def mobByFullName(name: String): Option[Mob]
 }
 
 trait TransitionPersister {
@@ -44,6 +52,7 @@ trait TransitionPersister {
 
 class SQLLocationPersister extends LocationPersister with TransitionPersister {
   implicit val getLocationResult = GetResult(l => Location(l.<<, l.<<, l.<<))
+  implicit val getMobResult = GetResult(l => Mob(l.<<, l.<<, Option(l.<<), Option(l.<<), l.<<))
 
   def locationByTitle(title: String): Seq[Location] = DB.db withSession {
     sql"select * from location where title like '%#$title%'".as[Location].list
@@ -72,12 +81,14 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     }
   }
 
+  def generateId() = util.UUID.randomUUID().toString
+
   def saveLocation(room: RoomKey) = DB.db withSession {
-    val id = util.UUID.randomUUID().toString
     val title = room.title
     val desc = room.desc
-    sqlu"insert into location(id, title, desc) values($id, $title, $desc)".first
-    Location(id, title, desc)
+    val newId = generateId
+    sqlu"insert into location(id, title, desc) values($newId, $title, $desc)".first
+    Location(newId, title, desc)
   }
 
   def loadTransition(prev: Location, direction: Direction, newLocation: Location) = DB.db withSession {
@@ -143,7 +154,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     sql"select * from transition where isweak = 1"
       .as[(String, String, String, String, Boolean)]
       .list
-    .map(x => new Transition(x._1, loadLocation(x._2), Direction(x._3), loadLocation(x._4), x._5))
+      .map(x => new Transition(x._1, loadLocation(x._2), Direction(x._3), loadLocation(x._4), x._5))
   }
 
   def deleteWeakIntersection(locations: Iterable[Location], transitions: Seq[Transition]): Unit = DB.db withSession {
@@ -155,6 +166,52 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
 
   def replaceWeakWithStrong: Unit = DB.db withSession {
     sqlu"update transition set isweak = 0 where isweak = 1".first
+  }
+
+  def mobByShortName(name: String) = DB.db withSession {
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable from mob m where m.shortName = $name".as[Mob].firstOption
+  }
+
+  def mobByFullName(name: String): Option[Mob] = DB.db withSession {
+    val mob = sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable from mob m where m.fullName = $name".as[Mob].firstOption
+    mob match {
+      case None =>
+        val id = generateId()
+        val alias: String = null
+        val shortName: String = null
+        val fullName = name
+        sqlu"insert into mob(id, alias, shortName, fullName) values($id, $alias, $shortName, $fullName)".first
+        Some(Mob(id, fullName, Option(alias), Option(shortName), killable = false))
+      case mob => mob
+    }
+  }
+
+  def makeKillable(shortName: String) = DB.db withSession {
+    mobByShortName(shortName) match {
+      case Some(mob) =>
+        val mobId = mob.id
+        sqlu"update mob set iskillable = 1 where id = $mobId".first
+      case _ =>
+    }
+  }
+
+  def persistMobAndArea(mobName: String, location: Location) = DB.db withSession {
+    mobByFullName(mobName) match {
+      case Some(mob) =>
+        val locId = location.id
+        val mobId = mob.id
+        val count = sql"select count(*) from habitation h join mob m on m.id = h.mob where m.id = $mobId and h.location = $locId".as[Int].first
+        count match {
+          case 0 =>
+            sqlu"insert into habitation(id, mob, location) values($generateId, $mobId, $locId)".first
+          case x if x > 0 =>
+        }
+      case None =>
+    }
+  }
+
+  def killablesHabitation = DB.db withSession {
+    sql"select l.* from habitation h join mob m on h.mob = m.id join location l on h.location = l.id where m.iskillable = 1".as[Location].list
   }
 }
 

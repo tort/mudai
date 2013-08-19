@@ -7,7 +7,7 @@ import org.mockito.Mockito
 class DiscoverObstacleTriggerTest extends FunSuite {
   val input = "Закрыто.\n\n\u001B[0;32m40H\u001B[0;37m \u001B[0;32m92M\u001B[0;37m 441о Зауч:0 Вых:(С)В(Ю)> "
 
-  test("pattern match ethalon input") {
+  test("pattern match etalon input") {
     val trigger = new DiscoverObstacleTrigger()
     assert(trigger.matches(input))
   }

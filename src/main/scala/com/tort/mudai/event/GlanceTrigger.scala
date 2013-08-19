@@ -39,8 +39,8 @@ class GlanceTrigger extends EventTrigger[GlanceEvent] {
       case alias =>
         Exit(aliasToDirection(alias.toString), alias.head.isUpper)
     }.toSet
-    val objects = Option(objectsGroup).map(_.split("\n")).getOrElse(Array[String]())
-    val mobs = Option(mobsGroup).map(_.split("\n")).getOrElse(Array[String]())
+    val objects = Option(objectsGroup).map(_.split('\n')).getOrElse(Array[String]())
+    val mobs = Option(mobsGroup.filterNot(c => c == '\r')).map(_.split("\n")).getOrElse(Array[String]()).dropRight(1)
 
     val roomSnapshot = new RoomSnapshot(
       locationTitle,

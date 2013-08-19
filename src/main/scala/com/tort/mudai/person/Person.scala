@@ -1,28 +1,30 @@
 package com.tort.mudai.person
 
 import akka.actor._
-import com.tort.mudai.event.{KillEvent, FightRoundEvent, PasswordPromptEvent, LoginPromptEvent}
-import com.tort.mudai.command.{RenderableCommand, SimpleCommand}
-import com.tort.mudai.mapper.{PathHelper, Location, SQLLocationPersister, MudMapper}
+import com.tort.mudai.event._
+import com.tort.mudai.command.{KillCommand, RenderableCommand, SimpleCommand}
+import com.tort.mudai.mapper._
 import com.tort.mudai.task.TravelTo
 import scala.concurrent.duration._
+import akka.pattern.ask
+import akka.util.Timeout
+import com.tort.mudai.event.KillEvent
+import com.tort.mudai.event.FightRoundEvent
 import akka.actor.Terminated
 
-class Person(login: String, password: String) extends Actor {
+class Person(login: String, password: String, mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersister) extends Actor {
 
   import context._
 
   val adapter = actorOf(Props[Adapter])
   val snoopable = actorOf(Props[Snoopable])
-  val persister = new SQLLocationPersister
-  val pathHelper = new PathHelper(persister)
-  val mapper = actorOf(Props(classOf[MudMapper], pathHelper, persister, persister))
   val fighter = actorOf(Props(classOf[Fighter]))
-  val coreTasks = Seq(fighter, mapper)
+  val roamer = actorOf(Props(classOf[Roamer], mapper, pathHelper, persister))
+  val coreTasks = Seq(fighter, mapper, roamer)
 
   system.scheduler.schedule(0 millis, 500 millis, self, Pulse)
 
-  def receive: Receive = rec(coreTasks, Nil)
+  def receive: Receive = rec(coreTasks, roamer :: Nil)
 
   def rec(tasks: Seq[ActorRef], pulseRequests: Seq[ActorRef]): Receive = {
     case snoop: Snoop => snoopable ! snoop
@@ -80,6 +82,57 @@ class Fighter extends Actor {
   }
 }
 
+class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersister) extends Actor {
+  implicit val timeout = Timeout(5 seconds)
+
+  import context._
+  import persister._
+
+  def receive = roam
+
+  def roam: Receive = {
+    case Roam =>
+      val person = sender
+      println("ROAMING STARTED")
+      val future = for {
+        f <- (mapper ? CurrentLocation).mapTo[Option[Location]]
+      } yield f
+
+      future onSuccess {
+        case current =>
+          current.foreach(l => become(visit(person, killablesHabitation :+ l)))
+      }
+  }
+
+  def visit(person: ActorRef, locations: Seq[Location]): Receive = locations match {
+    case Nil =>
+      println("ROAMING FINISHED")
+      roam
+    case x :: xs =>
+      println("VISIT " + x.title)
+      val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper))
+      watch(travelTask)
+      travelTask ! GoTo(x)
+
+    {
+      case Terminated(ref) if ref == travelTask =>
+        become(visit(person, xs))
+      case e@GlanceEvent(room, direction) =>
+        room.mobs.flatMap(mobByFullName(_)).filter(_.killable).headOption.foreach {
+          case mob =>
+            mob.alias.foreach {
+              case x =>
+                println(new KillCommand(x).render)
+                person ! new KillCommand(x)
+            }
+        }
+        travelTask ! e
+      case c: RenderableCommand => person ! c
+      case e => travelTask ! e
+    }
+  }
+}
+
 case class Snoop(onRawRead: (String) => Unit)
 
 case object StopSnoop
@@ -95,3 +148,5 @@ case object Pulse
 case object RequestPulses
 
 case object YieldPulses
+
+case object Roam

@@ -5,16 +5,6 @@ import com.tort.mudai.RoomKey
 trait Persister {
   def persistLocation(current: Location)
 
-  /**
-   * find mob by long name, or create new
-   * @param name
-   * @return mob, found or created
-   */
-  def tryFindMob(name: String): Option[Mob]
-
-  @deprecated("use tryFindMob instead")
-  def findMob(mobLongName: String): Mob
-
   def persistMob(mob: Mob)
 
   def loadLocations(prototype: RoomKey): Seq[Location]
@@ -33,10 +23,6 @@ class MemPersister extends Persister {
   val mobs = new scala.collection.mutable.HashSet[Mob]
 
   def persistLocation(location: Location) { locations += location }
-
-  def tryFindMob(name: String) = mobs.find(_.name == name)
-
-  def findMob(name: String) = tryFindMob(name).get
 
   def persistMob(mob: Mob) { mobs.add(mob) }
 

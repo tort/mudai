@@ -8,15 +8,13 @@ import com.tort.mudai.PulseDistributor
 
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
-import com.tort.mudai.mapper.{Mapper, Location}
 
 class Person @Inject()(val sessionProvider: Provider[SessionTask],
                        @Named("mapperTask") val mapperTaskProvider: Provider[AbstractTask],
                        val commandExecutor: CommandExecutor,
                        val pulseExecutor: ScheduledExecutorService,
                        val eventDistributor: EventDistributor,
-                       val pulseDistributor: PulseDistributor,
-                       val mapper: Mapper
+                       val pulseDistributor: PulseDistributor
                        ) extends StatedTask {
 
   run()
@@ -47,12 +45,6 @@ class Person @Inject()(val sessionProvider: Provider[SessionTask],
         }
       }
     }, 1, 1, TimeUnit.SECONDS)
-  }
-
-  def travel(to: Location) {
-    val travelTask = TravelTask(to)
-    eventDistributor.subscribe(travelTask)
-    pulseDistributor.subscribe(travelTask)
   }
 
   override def pulse() = {
