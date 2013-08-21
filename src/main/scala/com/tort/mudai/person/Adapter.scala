@@ -19,6 +19,7 @@ class Adapter extends Actor {
     new SimpleTrigger(".*^Select one : $", Array[String](Encoding))
   )
   val triggers: Seq[EventTrigger[Event]] = Seq(
+    new PeaceTrigger,
     new LoginPromptTrigger,
     new PasswordPromptTrigger,
     new FightRoundTrigger,

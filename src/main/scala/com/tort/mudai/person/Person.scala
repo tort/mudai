@@ -74,7 +74,7 @@ class Fighter extends Actor {
       val person = sender
       person ! RequestPulses
       become {
-        case KillEvent(target, exp) =>
+        case e: PeaceStatusEvent =>
           println("FIGHT FINISHED")
           person ! YieldPulses
           unbecome()
