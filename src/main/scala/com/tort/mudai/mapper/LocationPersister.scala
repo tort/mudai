@@ -211,7 +211,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def killablesHabitation = DB.db withSession {
-    sql"select l.* from habitation h join mob m on h.mob = m.id join location l on h.location = l.id where m.iskillable = 1".as[Location].list
+    sql"select distinct l.* from habitation h join mob m on h.mob = m.id join location l on h.location = l.id where m.iskillable = 1".as[Location].list
   }
 }
 
