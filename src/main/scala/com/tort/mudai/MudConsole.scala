@@ -9,7 +9,7 @@ import akka.actor.ActorDSL._
 import scala.annotation.tailrec
 import com.tort.mudai.person.Snoop
 import com.tort.mudai.person.RawWrite
-import com.tort.mudai.mapper.{Location, SQLLocationPersister, PathTo}
+import com.tort.mudai.mapper.{NameZone, Location, SQLLocationPersister, PathTo}
 import scala.concurrent.{ExecutionContext, Future}
 import ExecutionContext.Implicits.global
 import akka.util.Timeout
@@ -58,6 +58,11 @@ class MudConsole {
       case "зонинг" :: Nil =>
         person ! Roam
         userInputLoop(person, Map())
+      case "зона" :: location :: name :: Nil =>
+        val targetAndMenu = menu(location)
+        targetAndMenu._1.foreach(l => person ! NameZone(l, name))
+        userInputLoop(person, targetAndMenu._2)
+
       case _ =>
         person ! RawWrite(line + '\n')
         userInputLoop(person, Map())

@@ -1,6 +1,6 @@
 package com.tort.mudai.mapper
 
-import com.tort.mudai.RoomKey
+import com.tort.mudai.{RoomSnapshot, RoomKey}
 import scalaz._
 import Scalaz._
 import scala.slick.session.Database
@@ -26,6 +26,12 @@ trait LocationPersister {
   def killablesHabitation: Seq[Location]
 
   def mobByFullName(name: String): Option[Mob]
+
+  def updateLocation(zone: String)(location: String)
+
+  def nonBorderNeighbors(location: String): Set[Location]
+
+  def zoneByName(zoneName: String): Zone
 }
 
 trait TransitionPersister {
@@ -33,7 +39,7 @@ trait TransitionPersister {
 
   def loadTransition(current: Location, direction: Direction): Option[Location]
 
-  def saveTransition(prev: Location, direction: Direction, newLocation: Location, isWeak: Boolean): Transition
+  def saveTransition(prev: Location, direction: Direction, newLocation: Location, roomSnapshot: RoomSnapshot, isWeak: Boolean): Transition
 
   def allTransitions: Seq[Transition]
 
@@ -53,6 +59,7 @@ trait TransitionPersister {
 class SQLLocationPersister extends LocationPersister with TransitionPersister {
   implicit val getLocationResult = GetResult(l => Location(l.<<, l.<<, l.<<))
   implicit val getMobResult = GetResult(l => Mob(l.<<, l.<<, Option(l.<<), Option(l.<<), l.<<))
+  implicit val getZoneResult = GetResult(z => new Zone(z.<<, z.<<))
 
   def locationByTitle(title: String): Seq[Location] = DB.db withSession {
     sql"select * from location where title like '%#$title%'".as[Location].list
@@ -112,14 +119,15 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     sqlu"update transition set locTo = $toLocId where id = $id".first
   }
 
-  def saveTransition(prev: Location, direction: Direction, newLocation: Location, isWeak: Boolean) = DB.db withSession {
+  def saveTransition(prev: Location, direction: Direction, newLocation: Location, roomSnapshot: RoomSnapshot, isWeak: Boolean) = DB.db withSession {
     def id = util.UUID.randomUUID().toString
     val from = prev.id
     val dir = direction.id
     val to = newLocation.id
-    val oppositeDir = oppositeDirection(nameToDirection(dir)).id
-    sqlu"insert into transition(id, locFrom, direction, locTo, isWeak) values($id, $from, $dir, $to, $isWeak)".first
-    sqlu"insert into transition(id, locFrom, direction, locTo, isWeak) values($id, $to, $oppositeDir, $from, $isWeak)".first
+    val oppositeDirId = oppositeDirection(nameToDirection(dir)).id
+    val isBorder = roomSnapshot.exits.find(e => e.direction.id === oppositeDirId).exists(_.isBorder)
+    sqlu"insert into transition(id, locFrom, direction, locTo, isWeak, isborder) values($id, $from, $dir, $to, $isWeak, $isBorder)".first
+    sqlu"insert into transition(id, locFrom, direction, locTo, isWeak, isborder) values($id, $to, $oppositeDirId, $from, $isWeak, $isBorder)".first
     new Transition(id, prev, direction, newLocation)
   }
 
@@ -135,7 +143,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def weakChainIntersection: Seq[(Transition, Transition)] = DB.db withSession {
-    Q.queryNA[(String, String, String, String, Boolean, String, String, String, String, Boolean)]("select tw.*, t.* " +
+    Q.queryNA[(String, String, String, String, Boolean, Boolean, String, String, String, String, Boolean, Boolean)]("select tw.*, t.* " +
       "from transition t join location lf on t.locFrom = lf.id join location lt on t.locTo = lt.id " +
       "join transition tw join location lfw on tw.locFrom = lfw.id join location ltw on tw.locTo = ltw.id " +
       "where t.isweak = 0 " +
@@ -146,8 +154,8 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
       "and lt.desc = ltw.desc " +
       "and t.direction = tw.direction ").list
       .map(x =>
-      (new Transition(x._1, loadLocation(x._2), Direction(x._3), loadLocation(x._4), x._5),
-        new Transition(x._6, loadLocation(x._7), Direction(x._8), loadLocation(x._9), x._10)))
+      (new Transition(x._1, loadLocation(x._2), Direction(x._3), loadLocation(x._4), x._5, x._6),
+        new Transition(x._7, loadLocation(x._8), Direction(x._9), loadLocation(x._10), x._11, x._12)))
   }
 
   def allWeakTransitions: Seq[Transition] = DB.db withSession {
@@ -212,6 +220,27 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
 
   def killablesHabitation = DB.db withSession {
     sql"select distinct l.* from habitation h join mob m on h.mob = m.id join location l on h.location = l.id where m.iskillable = 1".as[Location].list
+  }
+
+  def nonBorderNeighbors(location: String) = DB.db withSession {
+    val locFrom = location
+    sql"select lt.* from location lf join transition t on t.locfrom = lf.id join location lt on t.locto = lt.id where lf.id = $locFrom and t.isborder = 0".as[Location].list().toSet
+  }
+
+  def updateLocation(zoneId: String)(location: String) = DB.db withSession {
+    val locId = location
+    sqlu"update location set zone = $zoneId where id = $locId".first
+  }
+
+  def zoneByName(zoneName: String) = DB.db withSession {
+    sql"select * from zone where name = $zoneName".as[Zone].firstOption match {
+      case None =>
+        val newId = generateId()
+        sqlu"insert into zone(id, name) values($newId, $zoneName)".first
+        new Zone(newId, zoneName)
+      case Some(zone) =>
+        zone
+    }
   }
 }
 

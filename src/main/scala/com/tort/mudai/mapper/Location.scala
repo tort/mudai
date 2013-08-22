@@ -22,7 +22,7 @@ class Location(
   }
 }
 
-case class Exit(direction: Direction, border: Boolean = false, closed: Boolean = false)
+case class Exit(direction: Direction, isBorder: Boolean = false, closed: Boolean = false)
 
 object Location {
   def apply(room: RoomSnapshot) = new Location("0", room.title, room.desc)
@@ -35,12 +35,5 @@ class Transition(
                   val from: Location,
                   val direction: Direction,
                   val to: Location,
-                  val isWeak: Boolean = false) {
-  override def hashCode() = 41 + id.hashCode
-
-  override def equals(obj: Any) = obj match {
-    case null => false
-    case t: Transition => id === t.id
-    case _ => false
-  }
-}
+                  val isWeak: Boolean = false,
+                  val isBorder: Boolean = false)

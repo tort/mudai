@@ -3,6 +3,8 @@ package com.tort.mudai.event
 import com.tort.mudai.RoomSnapshot
 import com.tort.mudai.Metadata.Direction._
 import com.tort.mudai.mapper.{Exit, Direction}
+import scalaz._
+import Scalaz._
 
 class GlanceTrigger extends EventTrigger[GlanceEvent] {
   val lister = new DirectionLister()
@@ -35,9 +37,9 @@ class GlanceTrigger extends EventTrigger[GlanceEvent] {
     val exits = availableExits.split(' ').map {
       case alias if alias.startsWith("(") =>
         val a = alias.drop(1).dropRight(1)
-        Exit(aliasToDirection(a.toString), a.head.isUpper, closed = true)
+        Exit(aliasToDirection(a.toString), isBorder = a.head.isUpper, closed = true)
       case alias =>
-        Exit(aliasToDirection(alias.toString), alias.head.isUpper)
+        Exit(aliasToDirection(alias.toString), isBorder = alias.head.isUpper)
     }.toSet
     val objects = Option(objectsGroup).map(_.split('\n')).getOrElse(Array[String]())
     val mobs = Option(mobsGroup.filterNot(c => c == '\r')).map(_.split("\n")).getOrElse(Array[String]()).dropRight(1)

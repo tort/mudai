@@ -56,11 +56,11 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
           val loc = loadLocation(room) match {
             case Nil =>
               val l = saveLocation(room).some
-              transition(newCurrent, direction, l)
+              transition(newCurrent, direction, l, room)
               l
             case xs =>
               val l = saveLocation(room).some
-              transition(newCurrent, direction, l, isWeak = true)
+              transition(newCurrent, direction, l, room, isWeak = true)
               l
           }
 
@@ -75,8 +75,19 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
       sender ! RawRead(path.map(_.id).mkString)
     case KillEvent(shortName, exp) =>
       makeKillable(shortName)
+    case NameZone(initLocation, zoneName) =>
+      val zone = zoneByName(zoneName)
+      zoneLocations(initLocation).foreach(updateLocation(zone.id))
   }
 
+  def zoneLocations(l: Location): Set[String] = {
+    def internal(visited: Set[String])(loc: String): Set[String] = {
+      val neighbors: Set[Location] = nonBorderNeighbors(loc)
+      ((neighbors.map(_.id) -- visited).flatMap(internal(visited ++ neighbors.map(_.id) + loc))) + loc
+    }
+
+    internal(Set())(l.id)
+  }
 
   private def updateMobAndArea(room: RoomSnapshot, current: Option[Location]) {
     for {
@@ -96,12 +107,13 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
     currentOption.flatMap(current => loadTransition(current, direction))
   }
 
-  private def transition(prevOption: Option[Location], direction: Direction, newOption: Option[Location], isWeak: Boolean = false) {
+  private def transition(prevOption: Option[Location], direction: Direction, newOption: Option[Location], room: RoomSnapshot, isWeak: Boolean = false) {
     for {
       prev <- prevOption
       curr <- newOption
-    } yield loadTransition(prev, direction, curr).getOrElse(saveTransition(prev, direction, curr, isWeak))
+    } yield loadTransition(prev, direction, curr).getOrElse(saveTransition(prev, direction, curr, room, isWeak))
   }
 }
 
 case class PathTo(target: Location)
+case class NameZone(initLocation: Location, zoneName: String)
