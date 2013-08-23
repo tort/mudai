@@ -57,6 +57,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
             case Nil =>
               val l = saveLocation(room).some
               transition(newCurrent, direction, l, room)
+              replaceWeakWithStrong
               l
             case xs =>
               val l = saveLocation(room).some

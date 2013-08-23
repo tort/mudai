@@ -3,7 +3,6 @@ package com.tort.mudai.event
 import com.tort.mudai.task.EventDistributor
 import org.scalatest.FunSuite
 import org.scalatest.matchers.ShouldMatchers
-import org.mockito.Mockito
 
 class GlanceTriggerTest extends FunSuite with ShouldMatchers {
   val input = "Вы поплелись на запад.\n" +
@@ -83,6 +82,18 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
     "\u001B[0;37m\n" +
     "\u001B[0;32m40H\u001B[0;37m \u001B[0;32m93M\u001B[0;37m 134о Зауч:0 \u001B[0;32m[Веретень:Невредим]\u001B[0;37m \u001B[1;32m[комар:Легко ранен]\u001B[0;37m > ЪЫ"
 
+  val ontheshoreSample = "\u001B[1;36mНа берегу\u001B[0;37m" +
+    "\n   Невысокий поросший жидким кустарником берег изрезан следами от пристающих" +
+    "\n\nлодок. Мелкая галька шуршит под ногами, не позволяя бесшумно пересечь открытое" +
+    "\n\nместо.\n\n" +
+    "\n\u001B[0;36m[ Exits: S ]\u001B[0;37m" +
+    "\n\u001B[1;37mСнежный ковер лежит у вас под ногами.\u001B[0;37m" +
+    "\n\u001B[1;33mЛужица простокваши разлита у ваших ног." +
+    "\n\u001B[1;31mМолодой лодочник весело смотрит вокруг." +
+    "\nПожилой широкоплечий крестьянин в добротной одежде прохаживается тут." +
+    "\n\u001B[0;0m" +
+    "\n\u001B[0;32m90H\u001B[0;37m \u001B[0;32m108M\u001B[0;37m 8861о Зауч:0 5L 0G Вых:Ю> "
+
   ignore("direction, objects, mobs extraction") {
     val trigger = new GlanceTrigger
     val event = trigger.fireEvent(text)
@@ -99,10 +110,6 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
     event.roomSnapshot.objectsPresent should have length 0
     event.roomSnapshot.mobs should have length 7
     event.roomSnapshot.title should equal("В избе")
-  }
-
-  def mockDistributor = {
-    Mockito.mock(classOf[EventDistributor])
   }
 
   test("matchLocationWithoutAnyone") {
@@ -136,6 +143,10 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
    test("no mobs case") {
     val mobs = new GlanceTrigger().fireEvent(noMobsCase).roomSnapshot.mobs
     mobs should have size (0)
+  }
+
+  test("on the shore sample") {
+    new GlanceTrigger().matches(ontheshoreSample) should be(true)
   }
 }
 
