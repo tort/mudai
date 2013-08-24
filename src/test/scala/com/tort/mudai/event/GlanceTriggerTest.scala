@@ -1,6 +1,5 @@
 package com.tort.mudai.event
 
-import com.tort.mudai.task.EventDistributor
 import org.scalatest.FunSuite
 import org.scalatest.matchers.ShouldMatchers
 
@@ -18,7 +17,7 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
     "\u001B[0;37m\n" +
     "\u001B[0;32m40H\u001B[0;37m \u001B[0;32m90M\u001B[0;37m 193о Зауч:0 \u001B[0;32m[Веретень:Невредим]\u001B[0;37m \u001B[0;32m[комар:Невредим]\u001B[0;37m > ЪЫ"
 
-  val text = "Вы поплелись на восток.\n" +
+  val onWalk = "Вы поплелись на восток.\n" +
     "\u001B[1;36mЗаводь\u001B[0;37m\n" +
     "   Низинка у реки, которая при половодье разливается на многие версты.\n" +
     "\n" +
@@ -29,6 +28,11 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
     "\u001B[1;31mУж проползает мимо Вас.\n" +
     "\u001B[0;37m\n" +
     "\u001B[0;32m28H\u001B[0;37m \u001B[0;32m85M\u001B[0;37m 1499о Зауч:0 Вых:ВЗ> ЪЫ"
+
+  val darkRoomSample = "Вы поплелись вниз." +
+    "\nСлишком темно..." +
+    "\n" +
+    "\n\u001B[0;32m90H\u001B[0;37m \u001B[0;32m107M\u001B[0;37m 4838о Зауч:0 5L 83G Вых:ЮЗ^> "
 
   val noMobsCase = "\u001B[1;36mУ колодца\u001B[0;37m" +
     "\n   Хороша водица, сколько не выпьешь все равно мало. Старый колодец говорят" +
@@ -96,7 +100,7 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
 
   ignore("direction, objects, mobs extraction") {
     val trigger = new GlanceTrigger
-    val event = trigger.fireEvent(text)
+    val event = trigger.fireEvent(onWalk)
 
     event.direction should not be null
     event.roomSnapshot.objectsPresent.length should equal(3)
@@ -119,7 +123,7 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
   }
 
   test("match") {
-    val matches = new GlanceTrigger().matches(text)
+    val matches = new GlanceTrigger().matches(onWalk)
 
     matches should be(true)
   }
@@ -147,6 +151,10 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
 
   test("on the shore sample") {
     new GlanceTrigger().matches(ontheshoreSample) should be(true)
+  }
+
+  test("match dark rooms") {
+    new GlanceTrigger().matches(darkRoomSample) should be(true)
   }
 }
 
