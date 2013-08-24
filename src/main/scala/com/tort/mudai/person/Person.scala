@@ -36,7 +36,7 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
     case e: PasswordPromptEvent => adapter ! new SimpleCommand(password)
     case c: RenderableCommand => adapter ! c
     case e@GoTo(loc) =>
-      val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper))
+      val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper, persister))
       become(rec(travelTask +: tasks, travelTask +: pulseRequests))
       watch(travelTask)
       travelTask ! e
@@ -110,7 +110,7 @@ class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersis
       roam
     case x :: xs =>
       println("VISIT " + x.title)
-      val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper))
+      val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper, persister))
       watch(travelTask)
       travelTask ! GoTo(x)
 

@@ -32,12 +32,12 @@ trait LocationPersister {
   def nonBorderNeighbors(location: String): Set[Location]
 
   def zoneByName(zoneName: String): Zone
+
+  def loadLocation(current: Location, direction: Direction): Option[Location]
 }
 
 trait TransitionPersister {
   def loadTransition(prev: Location, direction: Direction, newLocation: Location): Option[Transition]
-
-  def loadTransition(current: Location, direction: Direction): Option[Location]
 
   def saveTransition(prev: Location, direction: Direction, newLocation: Location, roomSnapshot: RoomSnapshot, isWeak: Boolean): Transition
 
@@ -131,7 +131,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     new Transition(id, prev, direction, newLocation)
   }
 
-  def loadTransition(current: Location, direction: Direction): Option[Location] = DB.db withSession {
+  def loadLocation(current: Location, direction: Direction): Option[Location] = DB.db withSession {
     val loc = current.id
     val dir = direction.id
     sql"select l.* from transition t join location l on t.locTo = l.id where t.locFrom = $loc and t.direction = $dir"

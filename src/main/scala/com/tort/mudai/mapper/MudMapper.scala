@@ -46,6 +46,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
   def rec(current: Option[Location]): Receive = {
     case CurrentLocation => sender ! current
     case GlanceEvent(room, None) =>
+      //TODO fix case when recall to non-unique room.
       val newCurrent: Option[Location] = location(room)
       updateMobAndArea(room, newCurrent)
       become(rec(newCurrent))
@@ -105,7 +106,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
   }
 
   private def locationFromMap(currentOption: Option[Location], direction: Direction): Option[Location] = {
-    currentOption.flatMap(current => loadTransition(current, direction))
+    currentOption.flatMap(current => loadLocation(current, direction))
   }
 
   private def transition(prevOption: Option[Location], direction: Direction, newOption: Option[Location], room: RoomSnapshot, isWeak: Boolean = false) {
