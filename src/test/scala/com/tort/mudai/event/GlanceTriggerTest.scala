@@ -98,6 +98,14 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
     "\n\u001B[0;0m" +
     "\n\u001B[0;32m90H\u001B[0;37m \u001B[0;32m108M\u001B[0;37m 8861о Зауч:0 5L 0G Вых:Ю> "
 
+  val icyRoomSample = "\u001B[1;36mМелководье\u001B[0;37m" +
+    "\n  Ты входишь в воду по колено, мелкие водоросли щекочут твои ноги." +
+    "\n" +
+    "\n\u001B[0;36m[ Exits: n s ]\u001B[0;37m" +
+    "\n\u001B[1;34mУ вас под ногами толстый лед.\u001B[0;37m" +
+    "\n\u001B[1;33m\u001B[1;31m\u001B[0;0m" +
+    "\n\u001B[0;32m90H\u001B[0;37m \u001B[0;32m108M\u001B[0;37m 4315о Зауч:0 5L 83G Вых:СЮ> "
+
   ignore("direction, objects, mobs extraction") {
     val trigger = new GlanceTrigger
     val event = trigger.fireEvent(onWalk)
@@ -155,6 +163,10 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
 
   test("match dark rooms") {
     new GlanceTrigger().matches(darkRoomSample) should be(true)
+  }
+
+  test("room with ice") {
+    new GlanceTrigger().matches(icyRoomSample) should be(true)
   }
 }
 
