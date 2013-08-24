@@ -17,7 +17,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
   import transitionPersister._
   import pathHelper._
 
-  def receive: Receive = rec(None)
+  def receive: Receive = rec(None, None)
 
   def replaceUnstableChain(current: Option[Location]): Option[Location] = {
     weakChainIntersection match {
@@ -43,43 +43,61 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
     }
   }
 
-  def rec(current: Option[Location]): Receive = {
-    case CurrentLocation => sender ! current
+  def rec(previous: Option[Location], previousZone: Option[Zone]): Receive = {
+    case CurrentLocation => sender ! previous
     case GlanceEvent(room, None) =>
       //TODO fix case when recall to non-unique room.
-      val newCurrent: Option[Location] = location(room)
-      updateMobAndArea(room, newCurrent)
-      become(rec(newCurrent))
+      val newCurrentLocation: Option[Location] = location(room)
+      updateMobAndArea(room, newCurrentLocation)
+      checkZoneChange(previousZone, newCurrentLocation)
+      become(rec(newCurrentLocation, newCurrentLocation.flatMap(_.zone).orElse(previousZone)))
     case GlanceEvent(room, Some(direction)) =>
-      val newCurrent: Option[Location] = replaceUnstableChain(current).orElse(current)
-      locationFromMap(newCurrent, direction) match {
+      val prevLoc: Option[Location] = replaceUnstableChain(previous).orElse(previous)
+      locationFromMap(prevLoc, direction) match {
         case None =>
           val loc = loadLocation(room) match {
             case Nil =>
-              val l = saveLocation(room).some
-              transition(newCurrent, direction, l, room)
+              val newLoc = saveLocation(room).some
+              transition(prevLoc, direction, newLoc, room)
               replaceWeakWithStrong
-              l
+              newLoc
             case xs =>
-              val l = saveLocation(room).some
-              transition(newCurrent, direction, l, room, isWeak = room.exits.size > 1)
-              l
+              val newLoc = saveLocation(room).some
+              transition(prevLoc, direction, newLoc, room, isWeak = room.exits.size > 1)
+              newLoc
           }
 
           updateMobAndArea(room, loc)
-          become(rec(loc))
+          become(rec(loc, previousZone))
         case Some(loc) =>
           updateMobAndArea(room, loc.some)
-          become(rec(loc.some))
+          checkZoneChange(previousZone, loc.some)
+          become(rec(loc.some, loc.zone.orElse(previousZone)))
       }
     case PathTo(target) =>
-      val path = pathTo(current, target)
+      val path = pathTo(previous, target)
       sender ! RawRead(path.map(_.id).mkString)
     case KillEvent(shortName, exp) =>
       makeKillable(shortName)
-    case NameZone(initLocation, zoneName) =>
+    case NameZone(zoneName, initLocation) =>
       val zone = zoneByName(zoneName)
-      zoneLocations(initLocation).foreach(updateLocation(zone.id))
+      initLocation.orElse(previous).foreach {
+        case location =>
+          updateZone(location, zone)
+      }
+  }
+
+
+  def checkZoneChange(zone: Option[Zone], newCurrent: Option[Location]) {
+    for {
+      prevZone <- zone
+      newZone <- newCurrent.flatMap(_.zone)
+      zoneLocation <- loadLocations(prevZone).headOption
+    } yield updateZone(zoneLocation, prevZone)
+  }
+
+  private def updateZone(location: Location, zone: Zone) {
+    zoneLocations(location).foreach(updateLocation(zone.id))
   }
 
   def zoneLocations(l: Location): Set[String] = {
@@ -118,4 +136,5 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
 }
 
 case class PathTo(target: Location)
-case class NameZone(initLocation: Location, zoneName: String)
+
+case class NameZone(zoneName: String, initLocation: Option[Location] = None)

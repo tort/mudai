@@ -34,6 +34,8 @@ trait LocationPersister {
   def zoneByName(zoneName: String): Zone
 
   def loadLocation(current: Location, direction: Direction): Option[Location]
+
+  def loadLocations(zone: Zone): Seq[Location]
 }
 
 trait TransitionPersister {
@@ -57,7 +59,7 @@ trait TransitionPersister {
 }
 
 class SQLLocationPersister extends LocationPersister with TransitionPersister {
-  implicit val getLocationResult = GetResult(l => Location(l.<<, l.<<, l.<<))
+  implicit val getLocationResult = GetResult(l => new Location(l.<<, l.<<, l.<<, zone = loadZone(l.<<)))
   implicit val getMobResult = GetResult(l => Mob(l.<<, l.<<, Option(l.<<), Option(l.<<), l.<<))
   implicit val getZoneResult = GetResult(z => new Zone(z.<<, z.<<))
 
@@ -86,6 +88,10 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
       case None => throw new RuntimeException("NO LOC FOUND FOR " + id)
       case Some(x) => x
     }
+  }
+
+  def loadZone(id: String): Option[Zone] = DB.db withSession {
+    sql"select * from zone where id = $id".as[Zone].firstOption
   }
 
   def generateId() = util.UUID.randomUUID().toString
@@ -241,6 +247,11 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
       case Some(zone) =>
         zone
     }
+  }
+
+  def loadLocations(zone: Zone) = DB.db withSession {
+    val zoneId = zone.id
+    sql"select l.* from location l join zone z on l.zone = z.id where z.id = $zoneId".as[Location].list
   }
 }
 
