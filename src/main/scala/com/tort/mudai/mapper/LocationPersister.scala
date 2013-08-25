@@ -23,7 +23,7 @@ trait LocationPersister {
 
   def makeKillable(shortName: String)
 
-  def killablesHabitation: Seq[Location]
+  def killablesHabitation(zone: Zone): Seq[Location]
 
   def mobByFullName(name: String): Option[Mob]
 
@@ -36,6 +36,8 @@ trait LocationPersister {
   def loadLocation(current: Location, direction: Direction): Option[Location]
 
   def loadLocations(zone: Zone): Seq[Location]
+
+  def loadZoneByName(name: String): Option[Zone]
 }
 
 trait TransitionPersister {
@@ -224,8 +226,9 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     }
   }
 
-  def killablesHabitation = DB.db withSession {
-    sql"select distinct l.* from habitation h join mob m on h.mob = m.id join location l on h.location = l.id where m.iskillable = 1".as[Location].list
+  def killablesHabitation(zone: Zone) = DB.db withSession {
+    val zoneId = zone.id
+    sql"select distinct l.* from habitation h join mob m on h.mob = m.id join location l on h.location = l.id where m.iskillable = 1 and l.zone = $zoneId".as[Location].list
   }
 
   def nonBorderNeighbors(location: String) = DB.db withSession {
@@ -236,6 +239,10 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   def updateLocation(zoneId: String)(location: String) = DB.db withSession {
     val locId = location
     sqlu"update location set zone = $zoneId where id = $locId".first
+  }
+
+  def loadZoneByName(name: String) = DB.db withSession {
+    sql"select * from zone where name = $name".as[Zone].firstOption
   }
 
   def zoneByName(zoneName: String) = DB.db withSession {

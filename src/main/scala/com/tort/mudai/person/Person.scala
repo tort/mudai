@@ -8,7 +8,6 @@ import com.tort.mudai.task.TravelTo
 import scala.concurrent.duration._
 import akka.pattern.ask
 import akka.util.Timeout
-import com.tort.mudai.event.KillEvent
 import com.tort.mudai.event.FightRoundEvent
 import akka.actor.Terminated
 
@@ -91,16 +90,19 @@ class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersis
   def receive = roam
 
   def roam: Receive = {
-    case Roam =>
-      val person = sender
-      println("ROAMING STARTED")
-      val future = for {
-        f <- (mapper ? CurrentLocation).mapTo[Option[Location]]
-      } yield f
+    case Roam(zoneName) =>
+      loadZoneByName(zoneName).foreach {
+        case zone =>
+          val person = sender
+          println("ROAMING STARTED")
+          val future = for {
+            f <- (mapper ? CurrentLocation).mapTo[Option[Location]]
+          } yield f
 
-      future onSuccess {
-        case current =>
-          current.foreach(l => become(visit(person, killablesHabitation :+ l)))
+          future onSuccess {
+            case current =>
+              current.foreach(l => become(visit(person, killablesHabitation(zone) :+ l)))
+          }
       }
   }
 
@@ -149,4 +151,4 @@ case object RequestPulses
 
 case object YieldPulses
 
-case object Roam
+case class Roam(zoneName: String)

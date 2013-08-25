@@ -55,13 +55,12 @@ class MudConsole {
         val targetAndMenu = menu(target)
         targetAndMenu._1.foreach(person ! GoTo(_))
         userInputLoop(person, targetAndMenu._2)
-      case "зонинг" :: Nil =>
-        person ! Roam
+      case "зонинг" :: zone =>
+        person ! Roam(zone.mkString(" "))
         userInputLoop(person, Map())
-      case "зона" :: nameParts =>
-        person ! NameZone(nameParts.mkString)
+      case "зона" :: zone =>
+        person ! NameZone(zone.mkString(" "))
         userInputLoop(person, Map())
-
       case _ =>
         person ! RawWrite(line + '\n')
         userInputLoop(person, Map())
