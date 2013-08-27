@@ -75,11 +75,22 @@ class Fighter extends Actor {
       become {
         case e: PeaceStatusEvent =>
           println("FIGHT FINISHED")
+          person ! NeedMem
           person ! YieldPulses
           unbecome()
       }
+    case MemFinishedEvent() =>
+      val person = sender
+      person ! ReadyForFight
+    case Attack(target) =>
+      val person = sender
+      person ! new SimpleCommand("кол !прок! %s".format(target))
   }
 }
+
+case object NeedMem
+
+case object ReadyForFight
 
 class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersister) extends Actor {
   implicit val timeout = Timeout(5 seconds)
@@ -116,22 +127,34 @@ class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersis
       watch(travelTask)
       travelTask ! GoTo(x)
 
-    {
-      case Terminated(ref) if ref == travelTask =>
-        become(visit(person, xs))
-      case e@GlanceEvent(room, direction) =>
-        room.mobs.flatMap(mobByFullName(_)).filter(_.killable).headOption.foreach {
-          case mob =>
-            mob.alias.foreach {
-              case x =>
-                println(new KillCommand(x).render)
-                person ! new KillCommand(x)
-            }
-        }
-        travelTask ! e
-      case c: RenderableCommand => person ! c
-      case e => travelTask ! e
-    }
+      base(person, travelTask, xs)
+  }
+
+  private def waitReadyForFight(person: ActorRef, travelTask: ActorRef, xs: Seq[Location]): Receive = {
+        case ReadyForFight =>
+          become(base(person, travelTask, xs))
+          person ! new SimpleCommand("вст")
+          person ! new SimpleCommand("см")
+  }
+
+  private def base(person: ActorRef, travelTask: ActorRef, xs: Seq[Location]): Receive = {
+    case Terminated(ref) if ref == travelTask =>
+      become(visit(person, xs))
+    case NeedMem =>
+      person ! new SimpleCommand("отд")
+      become(waitReadyForFight(person, travelTask, xs))
+    case e@GlanceEvent(room, direction) =>
+      room.mobs.flatMap(mobByFullName(_)).filter(_.killable).headOption.foreach {
+        case mob =>
+          mob.alias.foreach {
+            case x =>
+              person ! Attack(x)
+          }
+      }
+      travelTask ! e
+    case c: RenderableCommand => person ! c
+    case e => travelTask ! e
+
   }
 }
 
@@ -152,3 +175,5 @@ case object RequestPulses
 case object YieldPulses
 
 case class Roam(zoneName: String)
+
+case class Attack(target: String)

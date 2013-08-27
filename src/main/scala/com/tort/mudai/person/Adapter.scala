@@ -25,7 +25,8 @@ class Adapter extends Actor {
     new FightRoundTrigger,
     new KillTrigger,
     new GlanceTrigger,
-    new DiscoverObstacleTrigger
+    new DiscoverObstacleTrigger,
+    new MemFinishedTrigger
   )
 
   private def parse(text: String) =
@@ -44,6 +45,7 @@ class Adapter extends Actor {
       val channelFuture = connector.connect(self)
       become {
         case c: RenderableCommand =>
+          println(c.render)
           channelFuture.sync.getChannel.write(c.render + "\n")
         case RawWrite(line) =>
           channelFuture.sync.getChannel.write(line)
