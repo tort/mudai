@@ -21,7 +21,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
 
   def replaceUnstableChain(current: Option[Location]): Option[Location] = {
     weakChainIntersection match {
-      case xs if (xs.length >= 2) =>
+      case xs if (xs.length >= 3) =>
         val intersectionWeakIds = xs.map(_._1.id).toSet
         val weakToStrongLoc = xs.flatMap {
           case (tw, t) => tw.from -> t.from :: tw.to -> t.to :: Nil
