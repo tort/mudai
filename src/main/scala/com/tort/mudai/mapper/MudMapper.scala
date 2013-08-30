@@ -5,6 +5,7 @@ import com.tort.mudai.person.{RawRead, CurrentLocation}
 import akka.actor.Actor
 import com.google.inject.Inject
 import com.tort.mudai.RoomSnapshot
+import com.tort.mudai.Metadata.Direction._
 import scalaz._
 import Scalaz._
 
@@ -43,6 +44,22 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
     }
   }
 
+  def findAmongKnownRooms(locs: Seq[Location], previous: Option[Location], direction: Direction): Option[Location] = {
+    locs.filter {
+      case loc =>
+      val path = oppositeDirection(direction) :: pathTo(previous, loc)
+      val souths = path.filter(_ == South).size
+      val norths = path.filter(_ == North).size
+      val wests = path.filter(_ == West).size
+      val easts = path.filter(_ == East).size
+
+      souths == norths && wests == easts
+    } match {
+      case loc :: Nil => loc.some
+      case _ => None
+    }
+  }
+
   def rec(previous: Option[Location], previousZone: Option[Zone]): Receive = {
     case CurrentLocation => sender ! previous
     case GlanceEvent(room, None) =>
@@ -52,19 +69,20 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
       checkZoneChange(previousZone, newCurrentLocation)
       become(rec(newCurrentLocation, newCurrentLocation.flatMap(_.zone).orElse(previousZone)))
     case GlanceEvent(room, Some(direction)) =>
-      val prevLoc: Option[Location] = replaceUnstableChain(previous).orElse(previous)
-      locationFromMap(prevLoc, direction) match {
+      locationFromMap(previous, direction) match {
         case None =>
           val loc = loadLocation(room) match {
             case Nil =>
               val newLoc = saveLocation(room).some
-              transition(prevLoc, direction, newLoc, room)
+              transition(previous, direction, newLoc, room)
               replaceWeakWithStrong
               newLoc
-            case xs =>
-              val newLoc = saveLocation(room).some
-              transition(prevLoc, direction, newLoc, room, isWeak = room.exits.size > 1)
-              newLoc
+            case locs =>
+              findAmongKnownRooms(locs, previous, direction).orElse {
+                val newLoc = saveLocation(room).some
+                transition(previous, direction, newLoc, room)
+                newLoc
+              }
           }
 
           updateMobAndArea(room, loc)
