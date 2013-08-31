@@ -2,7 +2,6 @@ package com.tort.mudai.person
 
 import akka.actor.{Terminated, Props, Actor, ActorRef}
 import com.tort.mudai.mapper.{Location, LocationPersister, PathHelper}
-import akka.util.Timeout
 import com.tort.mudai.command.{RenderableCommand, SimpleCommand}
 import com.tort.mudai.task.TravelTo
 import akka.pattern.ask
@@ -72,6 +71,8 @@ class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersis
           }
       }
       travelTask ! e
+    case InterruptRoaming =>
+      become(visit(person, xs.last :: Nil))
     case c: RenderableCommand => person ! c
     case e => travelTask ! e
 
@@ -79,3 +80,4 @@ class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersis
 }
 
 case object RoamingFinished
+case object InterruptRoaming

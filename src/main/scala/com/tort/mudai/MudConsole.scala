@@ -58,6 +58,9 @@ class MudConsole {
       case "зонинг" :: zone =>
         person ! Roam(zone.mkString(" "))
         userInputLoop(person, Map())
+      case "стопзонинг" :: Nil =>
+        person ! InterruptRoaming
+        userInputLoop(person, Map())
       case "зона" :: zone =>
         person ! NameZone(zone.mkString(" "))
         userInputLoop(person, Map())
