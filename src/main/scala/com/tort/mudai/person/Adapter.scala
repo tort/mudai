@@ -6,7 +6,7 @@ import com.tort.mudai.event._
 import scalaz._
 import Scalaz._
 import org.jboss.netty.channel.Channel
-import com.tort.mudai.command.RenderableCommand
+import com.tort.mudai.command.{MultiCommand, RenderableCommand}
 
 class Adapter extends Actor {
 
@@ -45,8 +45,11 @@ class Adapter extends Actor {
       val channelFuture = connector.connect(self)
       become {
         case c: RenderableCommand =>
-          println(c.render)
-          channelFuture.sync.getChannel.write(c.render + "\n")
+          val channel = channelFuture.sync.getChannel
+          (c match {
+            case MultiCommand(commands) => commands
+            case c => c :: Nil
+          }).foreach(c => channel.write(c.render + "\n"))
         case RawWrite(line) =>
           channelFuture.sync.getChannel.write(line)
         case rawRead@RawRead(text) =>
