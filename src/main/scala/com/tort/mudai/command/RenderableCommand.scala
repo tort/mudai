@@ -5,4 +5,3 @@ trait Command
 trait RenderableCommand extends Command {
     def render : String
 }
-

@@ -2,7 +2,7 @@ package com.tort.mudai.person
 
 import akka.actor._
 import com.tort.mudai.event._
-import com.tort.mudai.command.{MultiCommand, KillCommand, RenderableCommand, SimpleCommand}
+import com.tort.mudai.command.{KillCommand, RenderableCommand, SimpleCommand}
 import com.tort.mudai.mapper._
 import com.tort.mudai.task.TravelTo
 import scala.concurrent.duration._
@@ -106,23 +106,13 @@ class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersis
         case zone =>
           val person = sender
           println("ROAMING STARTED")
-          person ! MultiCommand(Seq(
-            new SimpleCommand("снять свеч"),
-            new SimpleCommand("брос свеч"),
-            new SimpleCommand("держ свеч")
-          ))
           val future = for {
             f <- (mapper ? CurrentLocation).mapTo[Option[Location]]
-
           } yield f
 
           future onSuccess {
             case current =>
               current.foreach(l => become(visit(person, killablesHabitation(zone) :+ l)))
-          }
-
-          future onFailure {
-            case x => person ! RawRead("Предусловия не выполнены %s".format(x.getStackTrace))
           }
       }
   }
@@ -141,10 +131,10 @@ class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersis
   }
 
   private def waitReadyForFight(person: ActorRef, travelTask: ActorRef, xs: Seq[Location]): Receive = {
-    case ReadyForFight =>
-      become(base(person, travelTask, xs))
-      person ! new SimpleCommand("вст")
-      person ! new SimpleCommand("см")
+        case ReadyForFight =>
+          become(base(person, travelTask, xs))
+          person ! new SimpleCommand("вст")
+          person ! new SimpleCommand("см")
   }
 
   private def base(person: ActorRef, travelTask: ActorRef, xs: Seq[Location]): Receive = {
