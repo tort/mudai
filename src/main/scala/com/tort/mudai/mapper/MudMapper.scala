@@ -47,13 +47,13 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
   def findAmongKnownRooms(locs: Seq[Location], previous: Option[Location], direction: Direction): Option[Location] = {
     locs.filter {
       case loc =>
-      val path = oppositeDirection(direction) :: pathTo(previous, loc)
-      val souths = path.filter(_ == South).size
-      val norths = path.filter(_ == North).size
-      val wests = path.filter(_ == West).size
-      val easts = path.filter(_ == East).size
+        val path = oppositeDirection(direction) :: pathTo(previous, loc)
+        val souths = path.filter(_ == South).size
+        val norths = path.filter(_ == North).size
+        val wests = path.filter(_ == West).size
+        val easts = path.filter(_ == East).size
 
-      souths == norths && wests == easts
+        souths == norths && wests == easts
     } match {
       case loc :: Nil => loc.some
       case _ => None
@@ -64,10 +64,12 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
     case CurrentLocation => sender ! previous
     case GlanceEvent(room, None) =>
       //TODO fix case when recall to non-unique room.
-      val newCurrentLocation: Option[Location] = location(room)
-      updateMobAndArea(room, newCurrentLocation)
-      checkZoneChange(previousZone, newCurrentLocation)
-      become(rec(newCurrentLocation, newCurrentLocation.flatMap(_.zone).orElse(previousZone)))
+      location(room).foreach {
+        case newCurrentLocation =>
+          updateMobAndArea(room, newCurrentLocation.some)
+          checkZoneChange(previousZone, newCurrentLocation.some)
+          become(rec(newCurrentLocation.some, newCurrentLocation.zone.orElse(previousZone)))
+      }
     case GlanceEvent(room, Some(direction)) =>
       locationFromMap(previous, direction) match {
         case None =>

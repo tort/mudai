@@ -53,12 +53,12 @@ class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersis
     case ReadyForFight =>
       become(base(person, travelTask, xs))
       person ! new SimpleCommand("вст")
-      person ! new SimpleCommand("см")
   }
 
   private def base(person: ActorRef, travelTask: ActorRef, xs: Seq[Location]): Receive = {
     case Terminated(ref) if ref == travelTask =>
       become(visit(person, xs))
+      println("### TRAVEL SUBTASK TERMINATED")
     case NeedMem =>
       person ! new SimpleCommand("отд")
       become(waitReadyForFight(person, travelTask, xs))
