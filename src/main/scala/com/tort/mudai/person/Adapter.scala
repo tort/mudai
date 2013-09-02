@@ -27,7 +27,8 @@ class Adapter extends Actor {
     new GlanceTrigger,
     new DiscoverObstacleTrigger,
     new MemFinishedTrigger,
-    new LightDimmedTrigger
+    new LightDimmedTrigger,
+    new StatusLineTrigger
   )
 
   private def parse(text: String) =

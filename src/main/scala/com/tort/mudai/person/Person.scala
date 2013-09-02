@@ -2,7 +2,7 @@ package com.tort.mudai.person
 
 import akka.actor._
 import com.tort.mudai.event._
-import com.tort.mudai.command.{KillCommand, RenderableCommand, SimpleCommand}
+import com.tort.mudai.command.{RenderableCommand, SimpleCommand}
 import com.tort.mudai.mapper._
 import com.tort.mudai.task.TravelTo
 import scala.concurrent.duration._
@@ -17,7 +17,8 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
   val fighter = actorOf(Props(classOf[Fighter]))
   val roamer = actorOf(Props(classOf[Roamer], mapper, pathHelper, persister))
   val provisioner = actorOf(Props(classOf[Provisioner]))
-  val coreTasks = Seq(fighter, mapper, provisioner, roamer)
+  val statusTranslator = actorOf(Props(classOf[StatusTranslator]))
+  val coreTasks = Seq(fighter, statusTranslator, mapper, provisioner, roamer)
 
   system.scheduler.schedule(0 millis, 500 millis, self, Pulse)
 
@@ -40,63 +41,28 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
     case RequestPulses =>
       val newSubscribers: Seq[ActorRef] = tasks.filter(t => (sender +: pulseSubscribers).contains(t))
       become(rec(tasks, newSubscribers))
-      newSubscribers.foreach(x => println(x.getClass.getName))
     case YieldPulses =>
       become(rec(tasks, pulseSubscribers.filterNot(_ == sender)))
     case Terminated(ref) =>
       become(rec(tasks.filterNot(_ == ref), pulseSubscribers.filterNot(_ == ref)))
       snoopable ! RawRead("### terminated " + ref.getClass.getName)
-    case Pulse => pulseSubscribers.headOption.map(_ ! Pulse)
+    case Pulse =>
+      pulseSubscribers.headOption.map(_ ! Pulse)
     case e => tasks.filter(_ != sender).foreach(_ ! e)
   }
 }
 
-class Provisioner() extends Actor {
-
-  import context._
-
+class StatusTranslator extends Actor {
   def receive = rec
 
+  val maxStamina = 135.0
   def rec: Receive = {
-    case Roam(zone) =>
-      val person = sender
-      sender ! new SimpleCommand("держ свеч")
-      val feeder = system.scheduler.schedule(0 millis, 10 minutes, self, Feed)
-      become(onRoaming(feeder, person))
-
-  }
-
-  def onRoaming(feeder: Cancellable, person: ActorRef): Receive = {
-    case LightDimmedEvent() =>
-      sender ! new SimpleCommand("снять свеч")
-      sender ! new SimpleCommand("брос свеч")
-      sender ! new SimpleCommand("держ свеч")
-    case Feed =>
-      become(onRoaming(feeder, person) orElse onPulse(feeder, person))
-      println("FEED")
-      person ! RequestPulses
-    case RoamingFinished =>
-      become(rec)
-      feeder.cancel()
-      sender ! new SimpleCommand("снять свеч")
-  }
-
-  def onPulse(feeder: Cancellable, person: ActorRef): Receive = {
-    case Pulse =>
-      become(onRoaming(feeder, person))
-      sender ! new SimpleCommand("взять 4 хлеб меш")
-      sender ! new SimpleCommand("есть хлеб")
-      sender ! new SimpleCommand("есть хлеб")
-      sender ! new SimpleCommand("есть хлеб")
-      sender ! new SimpleCommand("есть хлеб")
-      sender ! new SimpleCommand("есть хлеб")
-      sender ! new SimpleCommand("есть хлеб")
-      sender ! new SimpleCommand("полож все.хлеб меш")
-      sender ! new SimpleCommand("пить мех")
-      sender ! new SimpleCommand("пить мех")
-      person ! YieldPulses
+    case StatusLineEvent(health, stamina, exp, level, gold) =>
+      sender ! StaminaChange(stamina * 100 / maxStamina)
   }
 }
+
+case class StaminaChange(stamina: Double)
 
 case object Feed
 
