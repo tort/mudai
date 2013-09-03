@@ -85,7 +85,7 @@ class Feeder extends Actor {
       sender ! RequestPulses
       become {
         case Pulse =>
-          sender ! new SimpleCommand("взять 4 хлеб меш")
+          sender ! new SimpleCommand("взять 6 хлеб меш")
           sender ! new SimpleCommand("есть хлеб")
           sender ! new SimpleCommand("есть хлеб")
           sender ! new SimpleCommand("есть хлеб")
