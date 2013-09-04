@@ -28,7 +28,8 @@ class Adapter extends Actor {
     new DiscoverObstacleTrigger,
     new MemFinishedTrigger,
     new LightDimmedTrigger,
-    new StatusLineTrigger
+    new StatusLineTrigger,
+    new TargetFleeTrigger
   )
 
   private def parse(text: String) =

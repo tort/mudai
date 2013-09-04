@@ -1,8 +1,12 @@
 package com.tort.mudai.person
 
 import akka.actor.Actor
-import com.tort.mudai.event.{MemFinishedEvent, PeaceStatusEvent, FightRoundEvent}
+import com.tort.mudai.event._
 import com.tort.mudai.command.SimpleCommand
+import com.tort.mudai.event.TargetFleeEvent
+import com.tort.mudai.event.FightRoundEvent
+import com.tort.mudai.event.PeaceStatusEvent
+import com.tort.mudai.event.MemFinishedEvent
 
 class Fighter extends Actor {
   import context._
@@ -15,7 +19,6 @@ class Fighter extends Actor {
       become {
         case e: PeaceStatusEvent =>
           println("FIGHT FINISHED")
-          person ! NeedMem
           person ! YieldPulses
           unbecome()
       }
@@ -23,7 +26,14 @@ class Fighter extends Actor {
       val person = sender
       person ! ReadyForFight
     case Attack(target) =>
+      sender ! RequestPulses
       val person = sender
       person ! new SimpleCommand("кол !прок! %s".format(target))
+    case KillEvent(target, exp) =>
+      sender ! NeedMem
+      sender ! YieldPulses
+    case TargetFleeEvent(target, direction) =>
+      sender ! new SimpleCommand(direction)
+      sender ! new SimpleCommand("уб %s".format(target))
   }
 }
