@@ -29,6 +29,7 @@ class Adapter extends Actor {
     new MemFinishedTrigger,
     new LightDimmedTrigger,
     new StatusLineTrigger,
+    new TargetAssistedTrigger,
     new TargetFleeTrigger
   )
 

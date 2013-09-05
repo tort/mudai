@@ -18,7 +18,7 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
   val roamer = actorOf(Props(classOf[Roamer], mapper, pathHelper, persister))
   val provisioner = actorOf(Props(classOf[Provisioner]))
   val statusTranslator = actorOf(Props(classOf[StatusTranslator]))
-  val coreTasks = Seq(fighter, statusTranslator, mapper, provisioner, roamer)
+  val coreTasks = Seq(mapper, fighter, statusTranslator, provisioner, roamer)
 
   system.scheduler.schedule(0 millis, 500 millis, self, Pulse)
 

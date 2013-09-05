@@ -29,6 +29,9 @@ class Fighter extends Actor {
       sender ! RequestPulses
       val person = sender
       person ! new SimpleCommand("кол !прок! %s".format(target))
+    case TargetAssistedEvent(target) =>
+      println("ASSISTED EVENT !%s!".format(target))
+      sender ! new SimpleCommand("кол !прок! %s".format(target))
     case KillEvent(target, exp) =>
       sender ! NeedMem
       sender ! YieldPulses

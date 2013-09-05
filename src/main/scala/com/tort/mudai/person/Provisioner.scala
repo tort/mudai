@@ -81,7 +81,6 @@ class Feeder extends Actor {
 
   def receive = {
     case Feed =>
-      println("FEED")
       sender ! RequestPulses
       become {
         case Pulse =>
