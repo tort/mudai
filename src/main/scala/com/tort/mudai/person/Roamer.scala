@@ -35,7 +35,7 @@ class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersis
       }
   }
 
-  def visit(person: ActorRef, locations: Seq[Location]): Receive = locations match {
+  def visit(person: ActorRef, locations: Set[Location]): Receive = locations match {
     case Nil =>
       println("ROAMING FINISHED")
       person ! RoamingFinished

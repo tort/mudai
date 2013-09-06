@@ -63,6 +63,23 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: Loca
   }
 
   def pulse(person: ActorRef, path: Seq[Direction], current: Location, target: Location): Receive = {
+    case GlanceEvent(room, direction) =>
+      val future = for {
+        f <- (mapper ? CurrentLocation).mapTo[Option[Location]]
+      } yield f
+
+      future onSuccess {
+        case current =>
+          val path = pathHelper.pathTo(current, target)
+          current match {
+            case None =>
+              person ! RawRead("### CURRENT LOCATION UNDEFINED")
+              context.stop(self)
+            case Some(cur) =>
+              become(pulse(person, path, cur, target))
+
+          }
+      }
     case Pulse =>
       path match {
         case Nil =>
