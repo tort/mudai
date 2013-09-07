@@ -35,7 +35,7 @@ class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersis
       }
   }
 
-  def visit(person: ActorRef, locations: Set[Location]): Receive = locations match {
+  def visit(person: ActorRef, locations: Seq[Location]): Receive = locations match {
     case Nil =>
       println("ROAMING FINISHED")
       person ! RoamingFinished
@@ -71,6 +71,18 @@ class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersis
           }
       }
       travelTask ! e
+
+      val future = for {
+        f <- (mapper ? CurrentLocation).mapTo[Option[Location]]
+      } yield f
+
+      future onSuccess {
+        case current =>
+          current.foreach {
+            case c =>
+              base(person, travelTask: ActorRef, xs.filterNot(_.id == c.id))
+          }
+      }
     case InterruptRoaming =>
       become(visit(person, xs.last :: Nil))
     case c: RenderableCommand => person ! c
