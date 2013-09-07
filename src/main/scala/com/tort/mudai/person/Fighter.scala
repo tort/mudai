@@ -36,6 +36,7 @@ class Fighter extends Actor {
       sender ! NeedMem
       sender ! YieldPulses
     case TargetFleeEvent(target, direction) =>
+      sender ! RequestPulses
       sender ! new SimpleCommand(direction)
       sender ! new SimpleCommand("уб %s".format(target))
   }
