@@ -22,13 +22,15 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
 
   system.scheduler.schedule(0 millis, 500 millis, self, Pulse)
 
-  def receive: Receive = rec(coreTasks, roamer :: Nil)
+  def receive: Receive = rec(coreTasks, Nil)
 
   def rec(tasks: Seq[ActorRef], pulseSubscribers: Seq[ActorRef]): Receive = {
     case snoop: Snoop => snoopable ! snoop
     case rawRead: RawRead => snoopable ! rawRead
     case rawWrite: RawWrite => adapter ! rawWrite
-    case Login => adapter ! Login
+    case Login =>
+      become(rec(tasks :+ sender, pulseSubscribers))
+      adapter ! Login
     case Zap => adapter ! Zap
     case e: LoginPromptEvent => adapter ! new SimpleCommand(login)
     case e: PasswordPromptEvent => adapter ! new SimpleCommand(password)
@@ -38,6 +40,10 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
       become(rec(travelTask +: tasks, travelTask +: pulseSubscribers))
       watch(travelTask)
       travelTask ! e
+    case StartQuest =>
+      val quest = actorOf(Props(classOf[Quest], mapper, pathHelper, persister))
+      become(rec(tasks :+ quest, pulseSubscribers))
+      quest ! StartQuest
     case RequestPulses =>
       val newSubscribers: Seq[ActorRef] = tasks.filter(t => (sender +: pulseSubscribers).contains(t))
       become(rec(tasks, newSubscribers))

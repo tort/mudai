@@ -31,7 +31,9 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: Loca
             case None =>
               person ! RawRead("### CURRENT LOCATION UNDEFINED")
               context.stop(self)
-            case Some(cur) => become(pulse(person, path, cur, target))
+            case Some(cur) =>
+              become(pulse(person, path, cur, target))
+              println("WAIT FOR PULSES")
           }
       }
   }

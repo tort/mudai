@@ -20,30 +20,6 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
 
   def receive: Receive = rec(None, None)
 
-  def replaceUnstableChain(current: Option[Location]): Option[Location] = {
-    weakChainIntersection match {
-      case xs if (xs.length >= 3) =>
-        val intersectionWeakIds = xs.map(_._1.id).toSet
-        val weakToStrongLoc = xs.flatMap {
-          case (tw, t) => tw.from -> t.from :: tw.to -> t.to :: Nil
-        }.toSet.toMap
-        val weakToStrongLocIds = weakToStrongLoc.map(x => x._1.id -> x._2.id)
-        val forUpdateTo: Seq[Transition] = allWeakTransitions
-          .filterNot(tw => intersectionWeakIds.contains(tw.id))
-          .filter(tw => weakToStrongLocIds.contains(tw.to.id))
-        forUpdateTo.foreach(tw => updateToTransition(tw.id, weakToStrongLocIds(tw.to.id)))
-        val forUpdateFrom: Seq[Transition] = allWeakTransitions
-          .filterNot(tw => intersectionWeakIds.contains(tw.id))
-          .filter(tw => weakToStrongLocIds.contains(tw.from.id))
-        forUpdateFrom.foreach(tw => updateFromTransition(tw.id, weakToStrongLocIds(tw.from.id)))
-
-        deleteWeakIntersection(weakToStrongLoc.keys, xs.map(_._1))
-        replaceWeakWithStrong
-        current.map(loc => loadLocation(weakToStrongLocIds(loc.id)))
-      case _ => None
-    }
-  }
-
   def findAmongKnownRooms(locs: Seq[Location], previous: Option[Location], direction: Direction): Option[Location] = {
     locs.filter {
       case loc =>

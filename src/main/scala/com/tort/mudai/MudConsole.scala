@@ -64,6 +64,9 @@ class MudConsole {
       case "зона" :: zone =>
         person ! NameZone(zone.mkString(" "))
         userInputLoop(person, Map())
+      case "квест" :: Nil =>
+        person ! StartQuest
+        userInputLoop(person, Map())
       case _ =>
         person ! RawWrite(line + '\n')
         userInputLoop(person, Map())

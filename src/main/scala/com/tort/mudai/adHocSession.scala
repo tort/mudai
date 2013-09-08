@@ -1,7 +1,7 @@
 package com.tort.mudai
 
 import akka.actor.ActorRef
-import com.tort.mudai.person.{Snoop, Login}
+import com.tort.mudai.person.{StartQuest, Snoop, Login}
 
 object adHocSession {
   def apply(person: ActorRef, console: MudConsole) = {
@@ -10,3 +10,4 @@ object adHocSession {
     console.userInputLoop(person, Map())
   }
 }
+

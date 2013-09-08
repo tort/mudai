@@ -10,7 +10,9 @@ import scala.concurrent.duration._
 import com.tort.mudai.event.GlanceEvent
 
 class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersister) extends Actor {
+
   import context._
+
   implicit val timeout = Timeout(5 seconds)
 
   import persister._
@@ -22,6 +24,7 @@ class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersis
       loadZoneByName(zoneName).foreach {
         case zone =>
           val person = sender
+          person ! RequestPulses
           println("ROAMING STARTED")
 
           val future = for {
@@ -38,6 +41,7 @@ class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersis
   def visit(person: ActorRef, locations: Seq[Location]): Receive = locations match {
     case Nil =>
       println("ROAMING FINISHED")
+      person ! YieldPulses
       person ! RoamingFinished
       roam
     case x :: xs =>
@@ -92,4 +96,5 @@ class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersis
 }
 
 case object RoamingFinished
+
 case object InterruptRoaming
