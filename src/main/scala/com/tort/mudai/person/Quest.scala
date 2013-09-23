@@ -21,7 +21,6 @@ class Quest(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersist
       println("### QUEST STARTED")
       val person = sender
       person ! RequestPulses
-      person ! new SimpleCommand("см")
 
       val future = for {
         f <- (mapper ? CurrentLocation).mapTo[Option[Location]]
@@ -29,22 +28,33 @@ class Quest(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersist
 
       future onSuccess {
         case Some(current) =>
-          val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper, persister))
-          watch(travelTask)
-          travelTask ! GoTo(targetLocation)
-
-          become(onArrived(person, travelTask, current))
+          goAndDo(targetLocation, person, () => {
+            person ! new SimpleCommand("см")
+            become(onGlance(person, current))
+          })
         case None =>
           println("### CURRENT LOCATION UNDEFINED")
           person ! YieldPulses
-          stop(self)
+          finishQuest
       }
   }
 
-  def onArrived(person: ActorRef, travelTask: ActorRef, startLocation: Location): Receive = {
+  def goAndDo(targetLocation: Location, person: ActorRef, toDo: () => Unit) {
+    val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper, persister))
+    watch(travelTask)
+    travelTask ! GoTo(targetLocation)
+
+    become(onArrived(person, travelTask, toDo))
+  }
+
+  def finishQuest {
+    println("QUEST FINISHED")
+    stop(self)
+  }
+
+  def onArrived(person: ActorRef, travelTask: ActorRef, toDo: () => Unit): Receive = {
     case Terminated(task) if (task == travelTask) =>
-      person ! new SimpleCommand("см")
-      become(onGlance(person, startLocation))
+      toDo()
     case command: SimpleCommand => person ! command
     case e => travelTask ! e
   }
@@ -53,32 +63,21 @@ class Quest(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersist
     case PeaceStatusEvent() =>
       person ! new SimpleCommand("взять все все.труп")
       person ! new SimpleCommand("взять все.труп")
-      val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper, persister))
-      watch(travelTask)
-      travelTask ! GoTo(hunterLocation)
-      become(onArriveToHunter(person, travelTask, startLocation))
+      goAndDo(hunterLocation, person, () => {
+        person ! new SimpleCommand("дать труп охот")
+        person ! new SimpleCommand("дать труп охот")
+        goRentAndFinishQuest(startLocation, person)
+      })
   }
 
-  def onArriveToHunter(person: ActorRef, travelTask: ActorRef, startLocation: Location): Receive = {
-    case Terminated(task) if (task == travelTask) =>
-      person ! new SimpleCommand("дать труп охот")
-      person ! new SimpleCommand("дать труп охот")
-      val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper, persister))
-      watch(travelTask)
-      travelTask ! GoTo(startLocation)
-      become(onArrivedToStartLocation(person, travelTask))
-    case command: SimpleCommand => person ! command
-    case e => travelTask ! e
-  }
 
-  def onArrivedToStartLocation(person: ActorRef, travelTask: ActorRef): Receive = {
-    case Terminated(task) if (task == travelTask) =>
+  def goRentAndFinishQuest(startLocation: Location, person: ActorRef) {
+    goAndDo(startLocation, person, () => {
       person ! new SimpleCommand("постой")
       person ! new SimpleCommand("0")
       person ! YieldPulses
-      stop(self)
-    case command: SimpleCommand => person ! command
-    case e => travelTask ! e
+      finishQuest
+    })
   }
 
   def onGlance(person: ActorRef, startLocation: Location): Receive = {
@@ -90,10 +89,7 @@ class Quest(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersist
           become(onFinishFight(person, startLocation))
         case false =>
           println("### NO TARGET FOUND")
-          val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper, persister))
-          watch(travelTask)
-          travelTask ! GoTo(startLocation)
-          become(onArrivedToStartLocation(person, travelTask))
+          goRentAndFinishQuest(startLocation, person)
       }
   }
 

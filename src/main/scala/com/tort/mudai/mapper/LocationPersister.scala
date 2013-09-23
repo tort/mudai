@@ -263,7 +263,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
 }
 
 object DB {
-  val DbUrl: String = "jdbc:h2:tcp://localhost:9092/~/workspace/mudai/mudai"
+  val DbUrl: String = "jdbc:h2:tcp://192.168.1.155:9092/~/workspace/mudai/mudai"
   val user = "sa"
   val password = ""
   val db: Database = Database.forURL(DbUrl, user, password, driver = "org.h2.Driver")
