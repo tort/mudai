@@ -8,7 +8,7 @@ import Database.threadLocalSession
 import scala.slick.jdbc.{StaticQuery => Q, GetResult}
 import Q.interpolation
 import java.util
-import com.tort.mudai.Metadata.Direction._
+import com.tort.mudai.mapper.Direction._
 
 trait LocationPersister {
   def loadLocation(id: String): Location
@@ -33,7 +33,7 @@ trait LocationPersister {
 
   def zoneByName(zoneName: String): Zone
 
-  def loadLocation(current: Location, direction: Direction): Option[Location]
+  def loadLocation(current: Location, direction: String @@ Direction): Option[Location]
 
   def loadLocations(zone: Zone): Seq[Location]
 
@@ -41,9 +41,9 @@ trait LocationPersister {
 }
 
 trait TransitionPersister {
-  def loadTransition(prev: Location, direction: Direction, newLocation: Location): Option[Transition]
+  def loadTransition(prev: Location, direction: String @@ Direction, newLocation: Location): Option[Transition]
 
-  def saveTransition(prev: Location, direction: Direction, newLocation: Location, roomSnapshot: RoomSnapshot, isWeak: Boolean): Transition
+  def saveTransition(prev: Location, direction: String @@ Direction, newLocation: Location, roomSnapshot: RoomSnapshot, isWeak: Boolean): Transition
 
   def allTransitions: Seq[Transition]
 
@@ -106,11 +106,10 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     Location(newId, title, desc)
   }
 
-  def loadTransition(prev: Location, direction: Direction, newLocation: Location) = DB.db withSession {
+  def loadTransition(prev: Location, direction: String @@ Direction, newLocation: Location) = DB.db withSession {
     val prevId = prev.id
-    val dir = direction.id
     val newId = newLocation.id
-    sql"select l.id, l.locFrom, l.direction, l.locTo from transition l where l.locFrom = $prevId and l.direction = $dir and l.locTo = $newId"
+    sql"select l.id, l.locFrom, l.direction, l.locTo from transition l where l.locFrom = $prevId and l.direction = $direction and l.locTo = $newId"
       .as[(String, String, String, String)]
       .list
       .map(x => new Transition(x._1, loadLocation(x._2), Direction(x._3), loadLocation(x._4))) match {
@@ -127,22 +126,20 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     sqlu"update transition set locTo = $toLocId where id = $id".first
   }
 
-  def saveTransition(prev: Location, direction: Direction, newLocation: Location, roomSnapshot: RoomSnapshot, isWeak: Boolean) = DB.db withSession {
+  def saveTransition(prev: Location, direction: String @@ Direction, newLocation: Location, roomSnapshot: RoomSnapshot, isWeak: Boolean) = DB.db withSession {
     def id = util.UUID.randomUUID().toString
     val from = prev.id
-    val dir = direction.id
     val to = newLocation.id
-    val oppositeDirId = oppositeDirection(nameToDirection(dir)).id
-    val isBorder = roomSnapshot.exits.find(e => e.direction.id === oppositeDirId).exists(_.isBorder)
-    sqlu"insert into transition(id, locFrom, direction, locTo, isWeak, isborder) values($id, $from, $dir, $to, $isWeak, $isBorder)".first
-    sqlu"insert into transition(id, locFrom, direction, locTo, isWeak, isborder) values($id, $to, $oppositeDirId, $from, $isWeak, $isBorder)".first
+    val oppositeDir = oppositeDirection(direction)
+    val isBorder = roomSnapshot.exits.find(e => e.direction === oppositeDir).exists(_.isBorder)
+    sqlu"insert into transition(id, locFrom, direction, locTo, isWeak, isborder) values($id, $from, $direction, $to, $isWeak, $isBorder)".first
+    sqlu"insert into transition(id, locFrom, direction, locTo, isWeak, isborder) values($id, $to, $oppositeDir, $from, $isWeak, $isBorder)".first
     new Transition(id, prev, direction, newLocation)
   }
 
-  def loadLocation(current: Location, direction: Direction): Option[Location] = DB.db withSession {
+  def loadLocation(current: Location, direction: String @@ Direction): Option[Location] = DB.db withSession {
     val loc = current.id
-    val dir = direction.id
-    sql"select l.* from transition t join location l on t.locTo = l.id where t.locFrom = $loc and t.direction = $dir"
+    sql"select l.* from transition t join location l on t.locTo = l.id where t.locFrom = $loc and t.direction = $direction"
       .as[Location]
       .list match {
       case Nil => None

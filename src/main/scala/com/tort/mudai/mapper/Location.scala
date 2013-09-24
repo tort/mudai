@@ -22,7 +22,7 @@ class Location(
   }
 }
 
-case class Exit(direction: Direction, isBorder: Boolean = false, closed: Boolean = false)
+case class Exit(direction: String @@ Direction, isBorder: Boolean = false, closed: Boolean = false)
 
 object Location {
   def apply(room: RoomSnapshot) = new Location("0", room.title, room.desc)
@@ -33,7 +33,8 @@ object Location {
 class Transition(
                   val id: String,
                   val from: Location,
-                  val direction: Direction,
+                  val direction: String @@ Direction,
                   val to: Location,
                   val isWeak: Boolean = false,
                   val isBorder: Boolean = false)
+

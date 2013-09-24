@@ -5,7 +5,7 @@ import com.tort.mudai.person.{RawRead, CurrentLocation}
 import akka.actor.Actor
 import com.google.inject.Inject
 import com.tort.mudai.RoomSnapshot
-import com.tort.mudai.Metadata.Direction._
+import com.tort.mudai.mapper.Direction._
 import scalaz._
 import Scalaz._
 
@@ -20,16 +20,16 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
 
   def receive: Receive = rec(None, None)
 
-  def findAmongKnownRooms(locs: Seq[Location], previous: Option[Location], direction: Direction): Option[Location] = {
+  def findAmongKnownRooms(locs: Seq[Location], previous: Option[Location], direction: String @@ Direction): Option[Location] = {
     locs.filter {
       case loc =>
         val path = oppositeDirection(direction) :: pathTo(previous, loc)
-        val souths = path.filter(_ == South).size
-        val norths = path.filter(_ == North).size
-        val wests = path.filter(_ == West).size
-        val easts = path.filter(_ == East).size
+        val souths = path.filter(_ === South).size
+        val norths = path.filter(_ === North).size
+        val wests = path.filter(_ === West).size
+        val easts = path.filter(_ === East).size
 
-        souths == norths && wests == easts
+        souths === norths && wests === easts
     } match {
       case loc :: Nil => loc.some
       case _ => None
@@ -72,7 +72,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
       }
     case PathTo(target) =>
       val path = pathTo(previous, target)
-      sender ! RawRead(path.map(_.id).mkString)
+      sender ! RawRead(path.mkString)
     case KillEvent(shortName, exp) =>
       makeKillable(shortName)
     case NameZone(zoneName, initLocation) =>
@@ -119,11 +119,11 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
     case _ => none
   }
 
-  private def locationFromMap(currentOption: Option[Location], direction: Direction): Option[Location] = {
+  private def locationFromMap(currentOption: Option[Location], direction: String @@ Direction): Option[Location] = {
     currentOption.flatMap(current => loadLocation(current, direction))
   }
 
-  private def transition(prevOption: Option[Location], direction: Direction, newOption: Option[Location], room: RoomSnapshot, isWeak: Boolean = false) {
+  private def transition(prevOption: Option[Location], direction: String @@ Direction, newOption: Option[Location], room: RoomSnapshot, isWeak: Boolean = false) {
     for {
       prev <- prevOption
       curr <- newOption

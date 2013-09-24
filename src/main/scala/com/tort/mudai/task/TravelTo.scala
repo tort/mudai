@@ -3,11 +3,12 @@ package com.tort.mudai.task
 import akka.actor.{ActorRef, Actor}
 import com.tort.mudai.person.{RawRead, CurrentLocation, Pulse, GoTo}
 import com.tort.mudai.mapper.{LocationPersister, Location, Direction, PathHelper}
-import com.tort.mudai.command.SimpleCommand
+import com.tort.mudai.command.{WalkCommand, SimpleCommand}
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
 import com.tort.mudai.event.{DiscoverObstacleEvent, GlanceEvent}
+import scalaz.@@
 
 class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: LocationPersister) extends Actor {
   implicit val timeout = Timeout(5 seconds)
@@ -38,7 +39,7 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: Loca
       }
   }
 
-  def waitMove(person: ActorRef, path: Seq[Direction], previous: Location, target: Location): Receive = {
+  def waitMove(person: ActorRef, path: Seq[String @@ Direction], previous: Location, target: Location): Receive = {
     case GlanceEvent(room, Some(direction)) =>
       val shouldBeNewCurrent: Location = locationPersister.loadLocation(previous, direction).get //locations from path => must exist
       if (shouldBeNewCurrent.title == room.title && shouldBeNewCurrent.desc == room.desc)
@@ -60,11 +61,11 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: Loca
         }
       }
     case DiscoverObstacleEvent(obstacle) =>
-      person ! new SimpleCommand("открыть %s %s".format(obstacle, path.head.id))
-      person ! new SimpleCommand(path.head.id)
+      person ! new SimpleCommand("открыть %s %s".format(obstacle, path.head))
+      person ! WalkCommand(path.head)
   }
 
-  def pulse(person: ActorRef, path: Seq[Direction], current: Location, target: Location): Receive = {
+  def pulse(person: ActorRef, path: Seq[String @@ Direction], current: Location, target: Location): Receive = {
     case GlanceEvent(room, direction) =>
       val future = for {
         f <- (mapper ? CurrentLocation).mapTo[Option[Location]]
@@ -87,7 +88,7 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: Loca
         case Nil =>
           context.stop(self)
         case p =>
-          person ! new SimpleCommand(p.head.id)
+          person ! new SimpleCommand(p.head)
           become(waitMove(person, p, current, target))
       }
   }

@@ -1,10 +1,9 @@
 package com.tort.mudai.event
 
 import com.tort.mudai.RoomSnapshot
-import com.tort.mudai.Metadata.Direction._
+import com.tort.mudai.mapper.Direction._
 import com.tort.mudai.mapper.{Exit, Direction}
 import scalaz._
-import Scalaz._
 
 class GlanceTrigger extends EventTrigger[GlanceEvent] {
   val lister = new DirectionLister()
@@ -23,9 +22,9 @@ class GlanceTrigger extends EventTrigger[GlanceEvent] {
     text.matches(GlancePattern.toString())
   }
 
-  private def extractDirection(text: String): Option[Direction] = {
+  private def extractDirection(text: String): Option[String @@ Direction] = {
     text match {
-      case MovePattern(directionName) => Some(nameToDirection(directionName))
+      case MovePattern(directionName) => Some(Direction(directionName))
       case _ => None
     }
   }
