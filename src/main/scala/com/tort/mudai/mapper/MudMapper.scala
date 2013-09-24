@@ -56,10 +56,14 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
               replaceWeakWithStrong
               newLoc
             case locs =>
-              findAmongKnownRooms(locs, previous, direction).orElse {
-                val newLoc = saveLocation(room).some
-                transition(previous, direction, newLoc, room)
-                newLoc
+              findAmongKnownRooms(locs, previous, direction) match {
+                case l@Some(x) =>
+                  transition(previous, direction, l, room)
+                  l
+                case None =>
+                  val newLoc = saveLocation(room).some
+                  transition(previous, direction, newLoc, room)
+                  newLoc
               }
           }
 
