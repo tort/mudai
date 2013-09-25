@@ -9,7 +9,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
 
-class Quest(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersister) extends Actor {
+class SimpleQuest(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersister) extends Actor {
   implicit val timeout = Timeout(5 seconds)
 
   import context._

@@ -19,7 +19,7 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
   val roamer = actorOf(Props(classOf[Roamer], mapper, pathHelper, persister))
   val provisioner = actorOf(Props(classOf[Provisioner]))
   val statusTranslator = actorOf(Props(classOf[StatusTranslator]))
-  val simpleQuest = actorOf(Props(classOf[SimpleQuest]))
+  val simpleQuest = actorOf(Props(classOf[WhiteSpiderQuest]))
   val coreTasks = Seq(mapper, fighter, statusTranslator, provisioner, roamer, simpleQuest)
 
   system.scheduler.schedule(0 millis, 500 millis, self, Pulse)
@@ -43,7 +43,7 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
       watch(travelTask)
       travelTask ! e
     case StartQuest =>
-      val quest = actorOf(Props(classOf[Quest], mapper, pathHelper, persister))
+      val quest = actorOf(Props(classOf[SimpleQuest], mapper, pathHelper, persister))
       become(rec(tasks :+ quest, pulseSubscribers))
       quest ! StartQuest
     case RequestPulses =>
@@ -69,16 +69,6 @@ class StatusTranslator extends Actor {
       sender ! StaminaChange(stamina * 100 / maxStamina)
   }
 }
-
-class SimpleQuest extends Actor {
-  def receive = {
-    case ActivateTrigger("На сеновале", direction, "На чердаке") =>
-      sender ! new SimpleCommand("приставить лестница")
-      sender ! new WalkCommand(direction)
-  }
-}
-
-case class ActivateTrigger(from: String, direction: String @@ Direction, to: String)
 
 case class StaminaChange(stamina: Double)
 

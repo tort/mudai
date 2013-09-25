@@ -1,7 +1,7 @@
 package com.tort.mudai.mapper
 
 import com.tort.mudai.event.{KillEvent, GlanceEvent}
-import com.tort.mudai.person.{ActivateTrigger, RawRead, CurrentLocation}
+import com.tort.mudai.person.{TriggeredMoveRequest, RawRead, CurrentLocation}
 import akka.actor.Actor
 import com.google.inject.Inject
 import com.tort.mudai.RoomSnapshot
@@ -45,7 +45,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
             case Some(t) if !t.isTriggered =>
               sender ! WalkCommand(direction)
             case Some(transition) if transition.isTriggered =>
-              sender ! ActivateTrigger(current.title, direction, transition.to.title)
+              sender ! TriggeredMoveRequest(current.title, direction, transition.to.title)
             case _ =>
               println("### NO WAY THERE")
           }
