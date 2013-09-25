@@ -1,7 +1,7 @@
 package com.tort.mudai.person
 
 import akka.actor.{Terminated, Props, Actor, ActorRef}
-import com.tort.mudai.mapper.{MudMapper, Location, LocationPersister, PathHelper}
+import com.tort.mudai.mapper.{Location, LocationPersister, PathHelper}
 import com.tort.mudai.task.TravelTo
 import com.tort.mudai.command.SimpleCommand
 import com.tort.mudai.event.{PeaceStatusEvent, GlanceEvent}
@@ -73,9 +73,9 @@ class SimpleQuest(val mapper: ActorRef, val pathHelper: PathHelper, val persiste
       }
   }
 
-  def targetLocation: Location = persister.loadLocation("59f7035b-f219-47a1-b207-3f57478d9173")
+  def targetLocation: Location = persister.loadLocation("4296145c-f360-4d6f-9cab-0a30ebccb223")
 
-  def hunterLocation: Location = persister.loadLocation("71f043b1-c4c8-45aa-8cf9-99e0d104f7bc")
+  def hunterLocation: Location = persister.loadLocation("f531a8c6-cc57-4546-80a9-c26c04d8398d")
 }
 
 case object StartQuest
@@ -104,6 +104,5 @@ trait QuestHelper extends Actor {
 
   def finishQuest {
     println("QUEST FINISHED")
-    context.stop(self)
   }
 }

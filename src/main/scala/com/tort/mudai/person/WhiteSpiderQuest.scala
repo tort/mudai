@@ -2,19 +2,21 @@ package com.tort.mudai.person
 
 import com.tort.mudai.command.{WalkCommand, SimpleCommand}
 import scalaz.@@
-import com.tort.mudai.mapper.{Location, Direction}
+import com.tort.mudai.mapper.{PathHelper, LocationPersister, Location, Direction}
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
 import com.tort.mudai.event.PeaceStatusEvent
 import akka.actor.ActorRef
 
-class WhiteSpiderQuest extends QuestHelper {
+class WhiteSpiderQuest(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister) extends QuestHelper {
   implicit val timeout = Timeout(5 seconds)
 
   import context._
 
-  def receive = {
+  def receive = quest
+
+  def quest: Receive = {
     case StartQuest =>
       println("### QUEST STARTED")
       val person = sender
@@ -61,6 +63,9 @@ class WhiteSpiderQuest extends QuestHelper {
       finishQuest
     })
   }
+
+  def targetLocation = persister.loadLocation("a3929190-8baf-4f4d-a13c-4452b61df853")
+  def chestLocation = persister.loadLocation("12544efe-858d-49c2-b084-21b5025a9cbb")
 }
 
 case class TriggeredMoveRequest(from: String, direction: String @@ Direction, to: String)

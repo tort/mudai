@@ -19,8 +19,9 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
   val roamer = actorOf(Props(classOf[Roamer], mapper, pathHelper, persister))
   val provisioner = actorOf(Props(classOf[Provisioner]))
   val statusTranslator = actorOf(Props(classOf[StatusTranslator]))
-  val simpleQuest = actorOf(Props(classOf[WhiteSpiderQuest]))
-  val coreTasks = Seq(mapper, fighter, statusTranslator, provisioner, roamer, simpleQuest)
+  val simpleQuest = actorOf(Props(classOf[SimpleQuest], mapper, pathHelper, persister))
+  val whiteSpiderQuest = actorOf(Props(classOf[WhiteSpiderQuest], mapper, pathHelper, persister))
+  val coreTasks = Seq(mapper, fighter, statusTranslator, provisioner, roamer, simpleQuest, whiteSpiderQuest)
 
   system.scheduler.schedule(0 millis, 500 millis, self, Pulse)
 
@@ -43,9 +44,7 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
       watch(travelTask)
       travelTask ! e
     case StartQuest =>
-      val quest = actorOf(Props(classOf[SimpleQuest], mapper, pathHelper, persister))
-      become(rec(tasks :+ quest, pulseSubscribers))
-      quest ! StartQuest
+      simpleQuest ! StartQuest
     case RequestPulses =>
       val newSubscribers: Seq[ActorRef] = tasks.filter(t => (sender +: pulseSubscribers).contains(t))
       become(rec(tasks, newSubscribers))
@@ -64,6 +63,7 @@ class StatusTranslator extends Actor {
   def receive = rec
 
   val maxStamina = 135.0
+
   def rec: Receive = {
     case StatusLineEvent(health, stamina, exp, level, gold) =>
       sender ! StaminaChange(stamina * 100 / maxStamina)
