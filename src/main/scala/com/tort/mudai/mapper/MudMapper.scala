@@ -38,7 +38,16 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
   }
 
   def rec(previous: Option[Location], previousZone: Option[Zone]): Receive = {
-    case RequestWalkCommand(direction) => sender ! WalkCommand(direction)
+    case RequestWalkCommand(direction) =>
+      previous.foreach {
+        case current =>
+          loadTransition(current, direction) match {
+            case Some(t) if !t.isTriggered =>
+              sender ! WalkCommand(direction)
+            case _ =>
+              println("### NO WAY THERE")
+          }
+      }
     case CurrentLocation => sender ! previous
     case GlanceEvent(room, None) =>
       //TODO fix case when recall to non-unique room.
@@ -55,7 +64,6 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
             case Nil =>
               val newLoc = saveLocation(room).some
               transition(previous, direction, newLoc, room)
-              replaceWeakWithStrong
               newLoc
             case locs =>
               findAmongKnownRooms(locs, previous, direction) match {
