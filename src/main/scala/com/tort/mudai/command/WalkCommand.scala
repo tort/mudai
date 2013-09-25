@@ -6,3 +6,5 @@ import scalaz.@@
 case class WalkCommand(direction: String @@ Direction) extends RenderableCommand {
   def render: String = direction
 }
+
+case class RequestWalkCommand(direction: String @@ Direction)

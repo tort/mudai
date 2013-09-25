@@ -8,6 +8,7 @@ import com.tort.mudai.RoomSnapshot
 import com.tort.mudai.mapper.Direction._
 import scalaz._
 import Scalaz._
+import com.tort.mudai.command.{WalkCommand, RequestWalkCommand}
 
 
 class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPersister, transitionPersister: TransitionPersister)
@@ -37,6 +38,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
   }
 
   def rec(previous: Option[Location], previousZone: Option[Zone]): Receive = {
+    case RequestWalkCommand(direction) => sender ! WalkCommand(direction)
     case CurrentLocation => sender ! previous
     case GlanceEvent(room, None) =>
       //TODO fix case when recall to non-unique room.

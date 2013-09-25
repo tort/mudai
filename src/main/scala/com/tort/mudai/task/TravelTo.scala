@@ -3,7 +3,7 @@ package com.tort.mudai.task
 import akka.actor.{ActorRef, Actor}
 import com.tort.mudai.person.{RawRead, CurrentLocation, Pulse, GoTo}
 import com.tort.mudai.mapper.{LocationPersister, Location, Direction, PathHelper}
-import com.tort.mudai.command.{WalkCommand, SimpleCommand}
+import com.tort.mudai.command.{RequestWalkCommand, WalkCommand, SimpleCommand}
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
@@ -62,7 +62,7 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: Loca
       }
     case DiscoverObstacleEvent(obstacle) =>
       person ! new SimpleCommand("открыть %s %s".format(obstacle, path.head))
-      person ! WalkCommand(path.head)
+      person ! RequestWalkCommand(path.head)
   }
 
   def pulse(person: ActorRef, path: Seq[String @@ Direction], current: Location, target: Location): Receive = {
@@ -88,7 +88,7 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: Loca
         case Nil =>
           context.stop(self)
         case p =>
-          person ! new WalkCommand(p.head)
+          person ! RequestWalkCommand(p.head)
           become(waitMove(person, p, current, target))
       }
   }

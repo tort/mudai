@@ -2,7 +2,7 @@ package com.tort.mudai.person
 
 import akka.actor.Actor
 import com.tort.mudai.event._
-import com.tort.mudai.command.{WalkCommand, SimpleCommand}
+import com.tort.mudai.command.{RequestWalkCommand, WalkCommand, SimpleCommand}
 import com.tort.mudai.event.TargetFleeEvent
 import com.tort.mudai.event.FightRoundEvent
 import com.tort.mudai.event.PeaceStatusEvent
@@ -37,7 +37,7 @@ class Fighter extends Actor {
       sender ! YieldPulses
     case TargetFleeEvent(target, direction) =>
       sender ! RequestPulses
-      sender ! WalkCommand(direction)
+      sender ! RequestWalkCommand(direction)
       sender ! new SimpleCommand("уб %s".format(target))
   }
 }
