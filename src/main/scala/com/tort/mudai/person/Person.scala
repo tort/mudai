@@ -2,11 +2,12 @@ package com.tort.mudai.person
 
 import akka.actor._
 import com.tort.mudai.event._
-import com.tort.mudai.command.{RenderableCommand, SimpleCommand}
+import com.tort.mudai.command.{WalkCommand, RenderableCommand, SimpleCommand}
 import com.tort.mudai.mapper._
 import com.tort.mudai.task.TravelTo
 import scala.concurrent.duration._
 import akka.actor.Terminated
+import scalaz.@@
 
 class Person(login: String, password: String, mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersister) extends Actor {
 
@@ -18,7 +19,8 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
   val roamer = actorOf(Props(classOf[Roamer], mapper, pathHelper, persister))
   val provisioner = actorOf(Props(classOf[Provisioner]))
   val statusTranslator = actorOf(Props(classOf[StatusTranslator]))
-  val coreTasks = Seq(mapper, fighter, statusTranslator, provisioner, roamer)
+  val simpleQuest = actorOf(Props(classOf[SimpleQuest]))
+  val coreTasks = Seq(mapper, fighter, statusTranslator, provisioner, roamer, simpleQuest)
 
   system.scheduler.schedule(0 millis, 500 millis, self, Pulse)
 
@@ -67,6 +69,16 @@ class StatusTranslator extends Actor {
       sender ! StaminaChange(stamina * 100 / maxStamina)
   }
 }
+
+class SimpleQuest extends Actor {
+  def receive = {
+    case ActivateTrigger("На сеновале", direction, "На чердаке") =>
+      sender ! new SimpleCommand("приставить лестница")
+      sender ! new WalkCommand(direction)
+  }
+}
+
+case class ActivateTrigger(from: String, direction: String @@ Direction, to: String)
 
 case class StaminaChange(stamina: Double)
 
