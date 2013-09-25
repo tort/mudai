@@ -88,7 +88,7 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: Loca
         case Nil =>
           context.stop(self)
         case p =>
-          person ! new SimpleCommand(p.head)
+          person ! new WalkCommand(p.head)
           become(waitMove(person, p, current, target))
       }
   }

@@ -1,5 +1,8 @@
 package com.tort.mudai.event
 
+import com.tort.mudai.mapper.Direction
+import scalaz.@@
+
 class TargetFleeTrigger extends EventTrigger[TargetFleeEvent] {
   val Pattern = ("""(?ms).*\n(.*) сбежал[ао]? (?:на )?(.*)\..*""").r
 
@@ -8,8 +11,8 @@ class TargetFleeTrigger extends EventTrigger[TargetFleeEvent] {
   def fireEvent(text: String) = {
     val Pattern(mobShortName, direction) = text
 
-    TargetFleeEvent(mobShortName, direction)
+    TargetFleeEvent(mobShortName, Direction(direction))
   }
 }
 
-case class TargetFleeEvent(mobShortName: String, direction: String) extends Event
+case class TargetFleeEvent(mobShortName: String, direction: String @@ Direction) extends Event
