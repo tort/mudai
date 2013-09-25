@@ -46,7 +46,7 @@ class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersis
       roam
     case x :: xs =>
       println("VISIT " + x.title)
-      val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper, persister))
+      val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper, persister, person))
       watch(travelTask)
       travelTask ! GoTo(x)
 

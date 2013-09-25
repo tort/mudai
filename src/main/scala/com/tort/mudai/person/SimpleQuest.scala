@@ -9,7 +9,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
 
-class Quest(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersister) extends Actor {
+class SimpleQuest(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister) extends QuestHelper {
   implicit val timeout = Timeout(5 seconds)
 
   import context._
@@ -37,26 +37,6 @@ class Quest(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersist
           person ! YieldPulses
           finishQuest
       }
-  }
-
-  def goAndDo(targetLocation: Location, person: ActorRef, toDo: () => Unit) {
-    val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper, persister))
-    watch(travelTask)
-    travelTask ! GoTo(targetLocation)
-
-    become(onArrived(person, travelTask, toDo))
-  }
-
-  def finishQuest {
-    println("QUEST FINISHED")
-    stop(self)
-  }
-
-  def onArrived(person: ActorRef, travelTask: ActorRef, toDo: () => Unit): Receive = {
-    case Terminated(task) if (task == travelTask) =>
-      toDo()
-    case command: SimpleCommand => person ! command
-    case e => travelTask ! e
   }
 
   def onFinishFight(person: ActorRef, startLocation: Location): Receive = {
@@ -93,9 +73,35 @@ class Quest(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersist
       }
   }
 
-  def targetLocation: Location = persister.loadLocation("59f7035b-f219-47a1-b207-3f57478d9173")
+  def targetLocation: Location = persister.loadLocation("4296145c-f360-4d6f-9cab-0a30ebccb223")
 
-  def hunterLocation: Location = persister.loadLocation("71f043b1-c4c8-45aa-8cf9-99e0d104f7bc")
+  def hunterLocation: Location = persister.loadLocation("f531a8c6-cc57-4546-80a9-c26c04d8398d")
 }
 
 case object StartQuest
+
+trait QuestHelper extends Actor {
+  def pathHelper: PathHelper
+
+  def mapper: ActorRef
+
+  def persister: LocationPersister
+
+  def goAndDo(targetLocation: Location, person: ActorRef, toDo: () => Unit) {
+    val travelTask = context.actorOf(Props(classOf[TravelTo], pathHelper, mapper, persister, person))
+    context.watch(travelTask)
+    travelTask ! GoTo(targetLocation)
+
+    context.become(onArrived(person, travelTask, toDo))
+  }
+
+  def onArrived(person: ActorRef, travelTask: ActorRef, toDo: () => Unit): Receive = {
+    case Terminated(task) if (task == travelTask) => toDo()
+    case command: SimpleCommand => person ! command
+    case e => travelTask forward e
+  }
+
+  def finishQuest {
+    println("QUEST FINISHED")
+  }
+}

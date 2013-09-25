@@ -1,13 +1,14 @@
 package com.tort.mudai.mapper
 
 import com.tort.mudai.event.{KillEvent, GlanceEvent}
-import com.tort.mudai.person.{RawRead, CurrentLocation}
-import akka.actor.Actor
+import com.tort.mudai.person.{TriggeredMoveRequest, RawRead, CurrentLocation}
+import akka.actor.{ActorRef, Actor}
 import com.google.inject.Inject
 import com.tort.mudai.RoomSnapshot
 import com.tort.mudai.mapper.Direction._
 import scalaz._
 import Scalaz._
+import com.tort.mudai.command.{WalkCommand, RequestWalkCommand}
 
 
 class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPersister, transitionPersister: TransitionPersister)
@@ -37,6 +38,18 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
   }
 
   def rec(previous: Option[Location], previousZone: Option[Zone]): Receive = {
+    case RequestWalkCommand(direction) =>
+      previous.foreach {
+        case current =>
+          loadTransition(current, direction) match {
+            case Some(t) if !t.isTriggered =>
+              sender ! WalkCommand(direction)
+            case Some(transition) if transition.isTriggered =>
+              sender ! TriggeredMoveRequest(current.title, direction, transition.to.title)
+            case _ =>
+              println("### NO WAY THERE")
+          }
+      }
     case CurrentLocation => sender ! previous
     case GlanceEvent(room, None) =>
       //TODO fix case when recall to non-unique room.
@@ -53,7 +66,6 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
             case Nil =>
               val newLoc = saveLocation(room).some
               transition(previous, direction, newLoc, room)
-              replaceWeakWithStrong
               newLoc
             case locs =>
               findAmongKnownRooms(locs, previous, direction) match {
@@ -103,7 +115,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
   def zoneLocations(l: Location): Set[String] = {
     def internal(visited: Set[String])(loc: String): Set[String] = {
       val neighbors: Set[Location] = nonBorderNeighbors(loc)
-      ((neighbors.map(_.id) -- visited).flatMap(internal(visited ++ neighbors.map(_.id) + loc))) + loc
+      (neighbors.map(_.id) -- visited).flatMap(internal(visited ++ neighbors.map(_.id) + loc)) + loc
     }
 
     internal(Set())(l.id)

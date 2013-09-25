@@ -43,21 +43,11 @@ trait LocationPersister {
 trait TransitionPersister {
   def loadTransition(prev: Location, direction: String @@ Direction, newLocation: Location): Option[Transition]
 
+  def loadTransition(prev: Location, direction: String @@ Direction): Option[Transition]
+
   def saveTransition(prev: Location, direction: String @@ Direction, newLocation: Location, roomSnapshot: RoomSnapshot, isWeak: Boolean): Transition
 
   def allTransitions: Seq[Transition]
-
-  def weakChainIntersection: Seq[(Transition, Transition)]
-
-  def allWeakTransitions: Seq[Transition]
-
-  def deleteWeakIntersection(locations: Iterable[Location], transitions: Seq[Transition])
-
-  def replaceWeakWithStrong
-
-  def updateToTransition(id: String, toLocId: String)
-
-  def updateFromTransition(id: String, toLocId: String)
 }
 
 class SQLLocationPersister extends LocationPersister with TransitionPersister {
@@ -74,9 +64,9 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def allTransitions = DB.db withSession {
-    sql"select id, locFrom, direction, locTo from transition".as[(String, String, String, String)]
+    sql"select id, locFrom, direction, locTo, isTriggered from transition".as[(String, String, String, String, Boolean)]
       .list
-      .map(x => new Transition(x._1, loadLocation(x._2), Direction(x._3), loadLocation(x._4)))
+      .map(x => new Transition(x._1, loadLocation(x._2), Direction(x._3), loadLocation(x._4), isTriggered = x._5))
   }
 
   def loadLocation(room: RoomKey) = DB.db withSession {
@@ -109,10 +99,21 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   def loadTransition(prev: Location, direction: String @@ Direction, newLocation: Location) = DB.db withSession {
     val prevId = prev.id
     val newId = newLocation.id
-    sql"select l.id, l.locFrom, l.direction, l.locTo from transition l where l.locFrom = $prevId and l.direction = $direction and l.locTo = $newId"
-      .as[(String, String, String, String)]
+    sql"select l.id, l.locFrom, l.direction, l.locTo, l.isTriggered from transition l where l.locFrom = $prevId and l.direction = $direction and l.locTo = $newId"
+      .as[(String, String, String, String, Boolean)]
       .list
-      .map(x => new Transition(x._1, loadLocation(x._2), Direction(x._3), loadLocation(x._4))) match {
+      .map(x => new Transition(x._1, loadLocation(x._2), Direction(x._3), loadLocation(x._4), isTriggered = x._5)) match {
+      case trans :: Nil => trans.some
+      case _ => None
+    }
+  }
+
+  def loadTransition(prev: Location, direction: String @@ Direction) = DB.db withSession {
+    val prevId = prev.id
+    sql"select l.id, l.locFrom, l.direction, l.locTo, l.isTriggered from transition l where l.locFrom = $prevId and l.direction = $direction"
+      .as[(String, String, String, String, Boolean)]
+      .list
+      .map(x => new Transition(x._1, loadLocation(x._2), Direction(x._3), loadLocation(x._4), isTriggered = x._5)) match {
       case trans :: Nil => trans.some
       case _ => None
     }

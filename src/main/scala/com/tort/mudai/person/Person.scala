@@ -2,11 +2,12 @@ package com.tort.mudai.person
 
 import akka.actor._
 import com.tort.mudai.event._
-import com.tort.mudai.command.{RenderableCommand, SimpleCommand}
+import com.tort.mudai.command.{WalkCommand, RenderableCommand, SimpleCommand}
 import com.tort.mudai.mapper._
 import com.tort.mudai.task.TravelTo
 import scala.concurrent.duration._
 import akka.actor.Terminated
+import scalaz.@@
 
 class Person(login: String, password: String, mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersister) extends Actor {
 
@@ -18,7 +19,9 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
   val roamer = actorOf(Props(classOf[Roamer], mapper, pathHelper, persister))
   val provisioner = actorOf(Props(classOf[Provisioner]))
   val statusTranslator = actorOf(Props(classOf[StatusTranslator]))
-  val coreTasks = Seq(mapper, fighter, statusTranslator, provisioner, roamer)
+  val simpleQuest = actorOf(Props(classOf[SimpleQuest], mapper, pathHelper, persister))
+  val whiteSpiderQuest = actorOf(Props(classOf[WhiteSpiderAgg], mapper, pathHelper, persister, self))
+  val coreTasks = Seq(mapper, fighter, statusTranslator, provisioner, roamer, simpleQuest, whiteSpiderQuest)
 
   system.scheduler.schedule(0 millis, 500 millis, self, Pulse)
 
@@ -36,14 +39,12 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
     case e: PasswordPromptEvent => adapter ! new SimpleCommand(password)
     case c: RenderableCommand => adapter ! c
     case e@GoTo(loc) =>
-      val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper, persister))
+      val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper, persister, self))
       become(rec(travelTask +: tasks, travelTask +: pulseSubscribers))
       watch(travelTask)
       travelTask ! e
     case StartQuest =>
-      val quest = actorOf(Props(classOf[Quest], mapper, pathHelper, persister))
-      become(rec(tasks :+ quest, pulseSubscribers))
-      quest ! StartQuest
+      whiteSpiderQuest ! StartQuest
     case RequestPulses =>
       val newSubscribers: Seq[ActorRef] = tasks.filter(t => (sender +: pulseSubscribers).contains(t))
       become(rec(tasks, newSubscribers))
@@ -62,6 +63,7 @@ class StatusTranslator extends Actor {
   def receive = rec
 
   val maxStamina = 135.0
+
   def rec: Receive = {
     case StatusLineEvent(health, stamina, exp, level, gold) =>
       sender ! StaminaChange(stamina * 100 / maxStamina)

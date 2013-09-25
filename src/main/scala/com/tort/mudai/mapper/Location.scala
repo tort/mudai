@@ -36,5 +36,6 @@ class Transition(
                   val direction: String @@ Direction,
                   val to: Location,
                   val isWeak: Boolean = false,
-                  val isBorder: Boolean = false)
+                  val isBorder: Boolean = false,
+                  val isTriggered: Boolean = false)
 
