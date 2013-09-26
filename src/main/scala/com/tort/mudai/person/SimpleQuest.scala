@@ -88,7 +88,7 @@ trait QuestHelper extends Actor {
   def persister: LocationPersister
 
   def goAndDo(targetLocation: Location, person: ActorRef, toDo: () => Unit) {
-    val travelTask = context.actorOf(Props(classOf[TravelTo], pathHelper, mapper, persister))
+    val travelTask = context.actorOf(Props(classOf[TravelTo], pathHelper, mapper, persister, person))
     context.watch(travelTask)
     travelTask ! GoTo(targetLocation)
 

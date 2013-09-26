@@ -2,7 +2,7 @@ package com.tort.mudai.mapper
 
 import com.tort.mudai.event.{KillEvent, GlanceEvent}
 import com.tort.mudai.person.{TriggeredMoveRequest, RawRead, CurrentLocation}
-import akka.actor.Actor
+import akka.actor.{ActorRef, Actor}
 import com.google.inject.Inject
 import com.tort.mudai.RoomSnapshot
 import com.tort.mudai.mapper.Direction._

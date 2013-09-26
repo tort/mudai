@@ -39,12 +39,12 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
     case e: PasswordPromptEvent => adapter ! new SimpleCommand(password)
     case c: RenderableCommand => adapter ! c
     case e@GoTo(loc) =>
-      val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper, persister))
+      val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper, persister, self))
       become(rec(travelTask +: tasks, travelTask +: pulseSubscribers))
       watch(travelTask)
       travelTask ! e
     case StartQuest =>
-      simpleQuest ! StartQuest
+      whiteSpiderQuest ! StartQuest
     case RequestPulses =>
       val newSubscribers: Seq[ActorRef] = tasks.filter(t => (sender +: pulseSubscribers).contains(t))
       become(rec(tasks, newSubscribers))
