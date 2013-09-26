@@ -1,13 +1,13 @@
 package com.tort.mudai.person
 
-import com.tort.mudai.command.{WalkCommand, SimpleCommand}
+import com.tort.mudai.command.{RequestWalkCommand, RenderableCommand, WalkCommand, SimpleCommand}
 import scalaz.@@
 import com.tort.mudai.mapper.{PathHelper, LocationPersister, Location, Direction}
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
 import com.tort.mudai.event.PeaceStatusEvent
-import akka.actor.ActorRef
+import akka.actor.{Props, Actor, ActorRef}
 
 class WhiteSpiderQuest(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister) extends QuestHelper {
   implicit val timeout = Timeout(5 seconds)
@@ -38,9 +38,7 @@ class WhiteSpiderQuest(val mapper: ActorRef, val pathHelper: PathHelper, val per
           finishQuest
       }
 
-    case TriggeredMoveRequest("На сеновале", direction, "На чердаке") =>
-      sender ! new SimpleCommand("приставить лестница")
-      sender ! new WalkCommand(direction)
+
   }
 
   def onFinishFight(person: ActorRef, startLocation: Location): Receive = {
@@ -65,7 +63,27 @@ class WhiteSpiderQuest(val mapper: ActorRef, val pathHelper: PathHelper, val per
   }
 
   def targetLocation = persister.loadLocation("a3929190-8baf-4f4d-a13c-4452b61df853")
+
   def chestLocation = persister.loadLocation("12544efe-858d-49c2-b084-21b5025a9cbb")
+}
+
+class WhiteSpiderAgg(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister, person: ActorRef) extends Actor {
+  import context._
+
+  val quest = actorOf(Props(classOf[WhiteSpiderQuest], mapper, pathHelper, persister))
+
+  def receive = {
+    case TriggeredMoveRequest("На сеновале", direction, "На чердаке") =>
+      sender ! new SimpleCommand("приставить лестница")
+      sender ! new WalkCommand(direction)
+
+    case RequestPulses => person ! RequestPulses
+    case YieldPulses => person ! YieldPulses
+    case c: RenderableCommand => person ! c
+    case w: RequestWalkCommand => person ! w
+    case a: Attack => person ! a
+    case e => quest ! e
+  }
 }
 
 case class TriggeredMoveRequest(from: String, direction: String @@ Direction, to: String)

@@ -96,10 +96,9 @@ trait QuestHelper extends Actor {
   }
 
   def onArrived(person: ActorRef, travelTask: ActorRef, toDo: () => Unit): Receive = {
-    case Terminated(task) if (task == travelTask) =>
-      toDo()
+    case Terminated(task) if (task == travelTask) => toDo()
     case command: SimpleCommand => person ! command
-    case e => travelTask ! e
+    case e => travelTask forward e
   }
 
   def finishQuest {
