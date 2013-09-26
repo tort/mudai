@@ -62,9 +62,9 @@ class WhiteSpiderQuest(val mapper: ActorRef, val pathHelper: PathHelper, val per
     })
   }
 
-  def targetLocation = persister.loadLocation("a3929190-8baf-4f4d-a13c-4452b61df853")
+  def targetLocation = persister.loadLocation("96944805-db9a-4a1a-a91d-d83c5229510a")
 
-  def chestLocation = persister.loadLocation("12544efe-858d-49c2-b084-21b5025a9cbb")
+  def chestLocation = persister.loadLocation("4e3c6e58-a985-45a6-8352-543a0f24ca42")
 }
 
 class WhiteSpiderAgg(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister, person: ActorRef) extends Actor {
@@ -80,7 +80,7 @@ class WhiteSpiderAgg(val mapper: ActorRef, val pathHelper: PathHelper, val persi
     case RequestPulses => person ! RequestPulses
     case YieldPulses => person ! YieldPulses
     case c: RenderableCommand => person ! c
-    case w: RequestWalkCommand => person ! w
+    case w: RequestWalkCommand if sender != person => person ! w
     case a: Attack => person ! a
     case e => quest ! e
   }

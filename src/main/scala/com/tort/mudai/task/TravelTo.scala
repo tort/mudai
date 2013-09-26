@@ -19,8 +19,6 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: Loca
 
   def goto: Receive = {
     case GoTo(target) =>
-      val person = sender
-
       val future = for {
         f <- (mapper ? CurrentLocation).mapTo[Option[Location]]
       } yield f
@@ -30,7 +28,7 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: Loca
           val path = pathHelper.pathTo(current, target)
           current match {
             case None =>
-              person ! RawRead("### CURRENT LOCATION UNDEFINED")
+              sender ! RawRead("### CURRENT LOCATION UNDEFINED")
               context.stop(self)
             case Some(cur) =>
               become(pulse(path, cur, target))

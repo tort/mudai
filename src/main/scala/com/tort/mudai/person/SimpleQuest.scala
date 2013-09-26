@@ -73,9 +73,9 @@ class SimpleQuest(val mapper: ActorRef, val pathHelper: PathHelper, val persiste
       }
   }
 
-  def targetLocation: Location = persister.loadLocation("4296145c-f360-4d6f-9cab-0a30ebccb223")
+  def targetLocation: Location = persister.loadLocation("318951cf-d7f6-4ff7-8095-2f22b9e539e0")
 
-  def hunterLocation: Location = persister.loadLocation("f531a8c6-cc57-4546-80a9-c26c04d8398d")
+  def hunterLocation: Location = persister.loadLocation("e185e8e7-a510-44d2-8c48-740e3723b2b5")
 }
 
 case object StartQuest
