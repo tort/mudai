@@ -35,7 +35,7 @@ class WhiteSpiderPlan(val mapper: ActorRef, val pathHelper: PathHelper, val pers
         case None =>
           println("### CURRENT LOCATION UNDEFINED")
           person ! YieldPulses
-          finishQuest
+          finishQuest(person)
       }
 
 
@@ -55,10 +55,8 @@ class WhiteSpiderPlan(val mapper: ActorRef, val pathHelper: PathHelper, val pers
 
   def goRentAndFinishQuest(startLocation: Location, person: ActorRef) {
     goAndDo(startLocation, person, () => {
-      person ! new SimpleCommand("постой")
-      person ! new SimpleCommand("0")
       person ! YieldPulses
-      finishQuest
+      finishQuest(person)
     })
   }
 
@@ -78,10 +76,12 @@ class WhiteSpiderQuest(val mapper: ActorRef, val pathHelper: PathHelper, val per
       sender ! new WalkCommand(direction)
 
     case RequestPulses => person ! RequestPulses
-    case YieldPulses => person ! YieldPulses
+    case YieldPulses =>
+      person ! YieldPulses
     case c: RenderableCommand => person ! c
     case w: RequestWalkCommand if sender != person => person ! w
-    case a: Attack => person ! a
+    case a: Attack if sender == quest => person ! a
+    case qf@QuestFinished if sender == quest => person ! qf
     case e => quest ! e
   }
 }

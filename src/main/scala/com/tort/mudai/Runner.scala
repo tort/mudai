@@ -4,9 +4,9 @@ import akka.actor.{Actor, ActorRef, Props, ActorSystem}
 import com.tort.mudai.person._
 import com.tort.mudai.mapper.{MudMapper, PathHelper, SQLLocationPersister}
 import com.tort.mudai.event.GlanceEvent
-import com.tort.mudai.event.GlanceEvent
 import com.tort.mudai.person.StartQuest
 import com.tort.mudai.person.Snoop
+import com.tort.mudai.command.SimpleCommand
 
 object Runner {
   def main(args: Array[String]) {
@@ -33,6 +33,7 @@ object QuestRunner {
 }
 
 class QuestScheduler(person: ActorRef, console: MudConsole) extends Actor {
+
   import context._
   import scala.concurrent.duration._
 
@@ -45,8 +46,19 @@ class QuestScheduler(person: ActorRef, console: MudConsole) extends Actor {
       become {
         case GlanceEvent(room, direction) =>
           println("GLANCE")
-          person ! StartQuest
-          unbecome()
+          person ! StartQuest("бобры")
+          become {
+            case QuestFinished =>
+              person ! StartQuest("белый паук")
+              become {
+                case QuestFinished =>
+                  person ! new SimpleCommand("постой")
+                  person ! new SimpleCommand("0")
+                  unbecome()
+                  unbecome()
+                  unbecome()
+              }
+          }
       }
       person ! Login
   }

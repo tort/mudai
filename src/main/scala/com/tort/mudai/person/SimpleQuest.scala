@@ -35,7 +35,7 @@ class SimpleQuest(val mapper: ActorRef, val pathHelper: PathHelper, val persiste
         case None =>
           println("### CURRENT LOCATION UNDEFINED")
           person ! YieldPulses
-          finishQuest
+          finishQuest(person)
       }
   }
 
@@ -53,10 +53,8 @@ class SimpleQuest(val mapper: ActorRef, val pathHelper: PathHelper, val persiste
 
   def goRentAndFinishQuest(startLocation: Location, person: ActorRef) {
     goAndDo(startLocation, person, () => {
-      person ! new SimpleCommand("постой")
-      person ! new SimpleCommand("0")
       person ! YieldPulses
-      finishQuest
+      finishQuest(person)
     })
   }
 
@@ -101,7 +99,10 @@ trait QuestHelper extends Actor {
     case e => travelTask forward e
   }
 
-  def finishQuest {
+  def finishQuest(person: ActorRef) {
+    person ! QuestFinished
     println("QUEST FINISHED")
   }
 }
+
+case object QuestFinished
