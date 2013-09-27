@@ -37,7 +37,7 @@ class QuestScheduler(person: ActorRef, console: MudConsole) extends Actor {
   import context._
   import scala.concurrent.duration._
 
-  system.scheduler.schedule(1 second, 5 minutes, self, TimeForQuest)
+  system.scheduler.schedule(1 second, 20 minutes, self, TimeForQuest)
 
   person ! Snoop(console.writer)
 

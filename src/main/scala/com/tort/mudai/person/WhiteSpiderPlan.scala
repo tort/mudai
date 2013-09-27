@@ -60,9 +60,9 @@ class WhiteSpiderPlan(val mapper: ActorRef, val pathHelper: PathHelper, val pers
     })
   }
 
-  def targetLocation = persister.loadLocation("96944805-db9a-4a1a-a91d-d83c5229510a")
+  def targetLocation = persister.locationByMob("Большой паук с белым брюхом ждет жертву здесь.").head
 
-  def chestLocation = persister.loadLocation("4e3c6e58-a985-45a6-8352-543a0f24ca42")
+  def chestLocation = persister.loadLocation("c8d67f15-a313-41b8-bece-30d05cd51540")
 }
 
 class WhiteSpiderQuest(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister, person: ActorRef) extends Actor {

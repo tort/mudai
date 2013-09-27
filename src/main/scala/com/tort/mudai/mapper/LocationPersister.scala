@@ -11,6 +11,10 @@ import java.util
 import com.tort.mudai.mapper.Direction._
 
 trait LocationPersister {
+  def locationByTitle(title: String): Seq[Location]
+
+  def locationByMob(shortName: String): Seq[Location]
+
   def loadLocation(id: String): Location
 
   def loadLocation(room: RoomKey): Seq[Location]
@@ -257,6 +261,10 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   def loadLocations(zone: Zone) = DB.db withSession {
     val zoneId = zone.id
     sql"select l.* from location l join zone z on l.zone = z.id where z.id = $zoneId".as[Location].list
+  }
+
+  def locationByMob(shortName: String) = DB.db withSession {
+    sql"select distinct l.* from habitation h join mob m on h.mob = m.id join location l on h.location = l.id where m.fullName = $shortName".as[Location].list
   }
 }
 
