@@ -9,7 +9,7 @@ import scala.concurrent.duration._
 import com.tort.mudai.event.PeaceStatusEvent
 import akka.actor.{Props, Actor, ActorRef}
 
-class WhiteSpiderQuest(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister) extends QuestHelper {
+class WhiteSpiderPlan(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister) extends QuestHelper {
   implicit val timeout = Timeout(5 seconds)
 
   import context._
@@ -67,10 +67,10 @@ class WhiteSpiderQuest(val mapper: ActorRef, val pathHelper: PathHelper, val per
   def chestLocation = persister.loadLocation("4e3c6e58-a985-45a6-8352-543a0f24ca42")
 }
 
-class WhiteSpiderAgg(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister, person: ActorRef) extends Actor {
+class WhiteSpiderQuest(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister, person: ActorRef) extends Actor {
   import context._
 
-  val quest = actorOf(Props(classOf[WhiteSpiderQuest], mapper, pathHelper, persister))
+  val quest = actorOf(Props(classOf[WhiteSpiderPlan], mapper, pathHelper, persister))
 
   def receive = {
     case TriggeredMoveRequest("На сеновале", direction, "На чердаке") =>
