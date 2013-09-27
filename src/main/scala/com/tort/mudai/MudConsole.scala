@@ -22,6 +22,8 @@ class MudConsole {
 
   implicit val timeout = Timeout(5 seconds)
 
+  val quests = Set("бобры", "белый паук")
+
   @tailrec
   final def userInputLoop(person: ActorRef, menuMap: Map[Int, Location]) {
     val line = readLine()
@@ -64,8 +66,12 @@ class MudConsole {
       case "зона" :: zone =>
         person ! NameZone(zone.mkString(" "))
         userInputLoop(person, Map())
-      case "квест" :: Nil =>
-        person ! StartQuest
+      case "квест" :: name =>
+        val questName: String = name.mkString(" ")
+        if (!quests(questName))
+          quests.foreach(println)
+        else
+          person ! StartQuest(questName)
         userInputLoop(person, Map())
       case _ =>
         person ! RawWrite(line + '\n')

@@ -78,7 +78,7 @@ class SimpleQuest(val mapper: ActorRef, val pathHelper: PathHelper, val persiste
   def hunterLocation: Location = persister.loadLocation("e185e8e7-a510-44d2-8c48-740e3723b2b5")
 }
 
-case object StartQuest
+case class StartQuest(quest: String)
 
 trait QuestHelper extends Actor {
   def pathHelper: PathHelper

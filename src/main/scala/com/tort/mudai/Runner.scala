@@ -1,9 +1,12 @@
 package com.tort.mudai
 
 import akka.actor.{Actor, ActorRef, Props, ActorSystem}
-import com.tort.mudai.person.{StartQuest, Snoop, Login, Person}
+import com.tort.mudai.person._
 import com.tort.mudai.mapper.{MudMapper, PathHelper, SQLLocationPersister}
 import com.tort.mudai.event.GlanceEvent
+import com.tort.mudai.event.GlanceEvent
+import com.tort.mudai.person.StartQuest
+import com.tort.mudai.person.Snoop
 
 object Runner {
   def main(args: Array[String]) {

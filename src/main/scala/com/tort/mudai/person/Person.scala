@@ -2,12 +2,11 @@ package com.tort.mudai.person
 
 import akka.actor._
 import com.tort.mudai.event._
-import com.tort.mudai.command.{WalkCommand, RenderableCommand, SimpleCommand}
+import com.tort.mudai.command.{RenderableCommand, SimpleCommand}
 import com.tort.mudai.mapper._
 import com.tort.mudai.task.TravelTo
 import scala.concurrent.duration._
 import akka.actor.Terminated
-import scalaz.@@
 
 class Person(login: String, password: String, mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersister) extends Actor {
 
@@ -21,7 +20,8 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
   val statusTranslator = actorOf(Props(classOf[StatusTranslator]))
   val simpleQuest = actorOf(Props(classOf[SimpleQuest], mapper, pathHelper, persister))
   val whiteSpiderQuest = actorOf(Props(classOf[WhiteSpiderQuest], mapper, pathHelper, persister, self))
-  val coreTasks = Seq(mapper, fighter, statusTranslator, provisioner, roamer, simpleQuest, whiteSpiderQuest)
+  val quests = Map[String, ActorRef]("бобры" -> simpleQuest, "белый паук" -> whiteSpiderQuest)
+  val coreTasks = Seq(mapper, fighter, statusTranslator, provisioner, roamer) ++ quests.values
 
   system.scheduler.schedule(0 millis, 500 millis, self, Pulse)
 
@@ -43,8 +43,8 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
       become(rec(travelTask +: tasks, travelTask +: pulseSubscribers))
       watch(travelTask)
       travelTask ! e
-    case StartQuest =>
-      whiteSpiderQuest ! StartQuest
+    case StartQuest(quest) =>
+      quests(quest) ! StartQuest
     case RequestPulses =>
       val newSubscribers: Seq[ActorRef] = tasks.filter(t => (sender +: pulseSubscribers).contains(t))
       become(rec(tasks, newSubscribers))
