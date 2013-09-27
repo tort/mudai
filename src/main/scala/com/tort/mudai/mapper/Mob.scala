@@ -1,7 +1,13 @@
 package com.tort.mudai.mapper
 
-case class Mob(id: String,
-               fullName: String,
-               shortName: Option[String],
-               alias: Option[String],
-               killable: Boolean)
+class Mob(val id: String,
+               val fullName: String,
+               val shortName: Option[String],
+               val alias: Option[String],
+               val killable: Boolean)
+
+class Item( val id: String,
+            val fullName: String,
+            val shortName: Option[String],
+            val alias: Option[String],
+            val objectType: Option[String])

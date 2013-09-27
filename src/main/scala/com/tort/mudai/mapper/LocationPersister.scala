@@ -15,6 +15,8 @@ trait LocationPersister {
 
   def locationByMob(shortName: String): Seq[Location]
 
+  def locationByItem(fullName: String): Seq[Location]
+
   def loadLocation(id: String): Location
 
   def loadLocation(room: RoomKey): Seq[Location]
@@ -24,6 +26,8 @@ trait LocationPersister {
   def allLocations: Seq[Location]
 
   def persistMobAndArea(mob: String, location: Location)
+
+  def persistItemAndArea(mob: String, location: Location)
 
   def makeKillable(shortName: String)
 
@@ -56,7 +60,8 @@ trait TransitionPersister {
 
 class SQLLocationPersister extends LocationPersister with TransitionPersister {
   implicit val getLocationResult = GetResult(l => new Location(l.<<, l.<<, l.<<, zone = loadZone(l.<<)))
-  implicit val getMobResult = GetResult(l => Mob(l.<<, l.<<, Option(l.<<), Option(l.<<), l.<<))
+  implicit val getMobResult = GetResult(l => new Mob(l.<<, l.<<, Option(l.<<), Option(l.<<), l.<<))
+  implicit val getItemResult = GetResult(l => new Item(l.<<, l.<<, Option(l.<<), Option(l.<<), Option(l.<<)))
   implicit val getZoneResult = GetResult(z => new Zone(z.<<, z.<<))
 
   def locationByTitle(title: String): Seq[Location] = DB.db withSession {
@@ -199,8 +204,22 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
         val shortName: String = null
         val fullName = name
         sqlu"insert into mob(id, alias, shortName, fullName) values($id, $alias, $shortName, $fullName)".first
-        Some(Mob(id, fullName, Option(alias), Option(shortName), killable = false))
+        Some(new Mob(id, fullName, Option(alias), Option(shortName), killable = false))
       case mob => mob
+    }
+  }
+
+  def itemByFullName(name: String): Option[Item] = DB.db withSession {
+    val item = sql"select m.id, m.fullname, m.shortname, m.alias, m.objectType from item m where m.fullName = $name".as[Item].firstOption
+    item match {
+      case None =>
+        val id = generateId()
+        val alias: String = null
+        val shortName: String = null
+        val fullName = name
+        sqlu"insert into item(id, alias, shortName, fullName) values($id, $alias, $shortName, $fullName)".first
+        Some(new Item(id, fullName, Option(shortName), Option(alias), objectType = None))
+      case item => item
     }
   }
 
@@ -210,6 +229,19 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
         val mobId = mob.id
         sqlu"update mob set iskillable = 1 where id = $mobId".first
       case _ =>
+    }
+  }
+
+  def persistItemAndArea(fullName: String, location: Location) = DB.db withSession {
+    itemByFullName(fullName) match {
+      case Some(item) =>
+        val count = sql"select count(*) from disposition d join item m on m.id = d.item where m.id = ${item.id} and d.location = ${location.id}".as[Int].first
+        count match {
+          case 0 =>
+            sqlu"insert into disposition(id, item, location) values($generateId, ${item.id}, ${location.id})".first
+          case x if x > 0 =>
+        }
+      case None =>
     }
   }
 
@@ -265,6 +297,10 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
 
   def locationByMob(shortName: String) = DB.db withSession {
     sql"select distinct l.* from habitation h join mob m on h.mob = m.id join location l on h.location = l.id where m.fullName = $shortName".as[Location].list
+  }
+
+  def locationByItem(fullName: String) = DB.db withSession {
+    sql"select distinct l.* from disposition d join item i on d.item = i.id join location l on d.location = l.id where i.fullName = $fullName".as[Location].list
   }
 }
 

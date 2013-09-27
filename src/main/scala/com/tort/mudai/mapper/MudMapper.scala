@@ -56,6 +56,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
       location(room).foreach {
         case newCurrentLocation =>
           updateMobAndArea(room, newCurrentLocation.some)
+          updateItemAndArea(room, newCurrentLocation.some)
           checkZoneChange(previousZone, newCurrentLocation.some)
           become(rec(newCurrentLocation.some, newCurrentLocation.zone.orElse(previousZone)))
       }
@@ -80,9 +81,11 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
           }
 
           updateMobAndArea(room, loc)
+          updateItemAndArea(room, loc)
           become(rec(loc, previousZone))
         case Some(loc) =>
           updateMobAndArea(room, loc.some)
+          updateItemAndArea(room, loc.some)
           checkZoneChange(previousZone, loc.some)
           become(rec(loc.some, loc.zone.orElse(previousZone)))
       }
@@ -127,6 +130,13 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
       loc <- current
       if !mob.contains("сражается")
     } yield persistMobAndArea(mob, loc)
+  }
+
+  private def updateItemAndArea(room: RoomSnapshot, current: Option[Location]) {
+    for {
+      item <- room.objectsPresent
+      loc <- current
+    } yield persistItemAndArea(item, loc)
   }
 
   private def location(room: RoomSnapshot) = loadLocation(room) match {
