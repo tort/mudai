@@ -1,7 +1,7 @@
 package com.tort.mudai.person
 
 import akka.actor.{Actor, ActorRef}
-import com.tort.mudai.mapper.{Location, LocationPersister, PathHelper}
+import com.tort.mudai.mapper.{MoveEvent, Location, LocationPersister, PathHelper}
 import com.tort.mudai.command.SimpleCommand
 import com.tort.mudai.event.{PeaceStatusEvent, GlanceEvent}
 import akka.pattern.ask
