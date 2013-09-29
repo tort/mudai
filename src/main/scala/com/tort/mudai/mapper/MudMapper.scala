@@ -2,7 +2,7 @@ package com.tort.mudai.mapper
 
 import com.tort.mudai.event.{KillEvent, GlanceEvent}
 import com.tort.mudai.person.{TriggeredMoveRequest, RawRead, CurrentLocation}
-import akka.actor.{ActorRef, Actor}
+import akka.actor.Actor
 import com.google.inject.Inject
 import com.tort.mudai.RoomSnapshot
 import com.tort.mudai.mapper.Direction._
@@ -21,14 +21,14 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
 
   def receive: Receive = rec(None, None)
 
-  def findAmongKnownRooms(locs: Seq[Location], previous: Option[Location], direction: String @@ Direction): Option[Location] = {
-    locs.filter {
+  def findAmongKnownRooms(locations: Seq[Location], previous: Option[Location], direction: String @@ Direction): Option[Location] = {
+    locations.filter {
       case loc =>
         val path = oppositeDirection(direction) :: pathTo(previous, loc)
-        val souths = path.filter(_ === South).size
-        val norths = path.filter(_ === North).size
-        val wests = path.filter(_ === West).size
-        val easts = path.filter(_ === East).size
+        val souths = path.count(_ === South)
+        val norths = path.count(_ === North)
+        val wests = path.count(_ === West)
+        val easts = path.count(_ === East)
 
         souths === norths && wests === easts
     } match {
@@ -59,35 +59,41 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
           updateItemAndArea(room, newCurrentLocation.some)
           checkZoneChange(previousZone, newCurrentLocation.some)
           become(rec(newCurrentLocation.some, newCurrentLocation.zone.orElse(previousZone)))
+
+          if (previous != newCurrentLocation) {
+            sender ! MoveEvent(previous, None, newCurrentLocation)
+          }
       }
     case GlanceEvent(room, Some(direction)) =>
       locationFromMap(previous, direction) match {
         case None =>
           val loc = loadLocation(room) match {
             case Nil =>
-              val newLoc = saveLocation(room).some
-              transition(previous, direction, newLoc, room)
+              val newLoc = saveLocation(room)
+              transition(previous, direction, newLoc.some, room)
               newLoc
-            case locs =>
-              findAmongKnownRooms(locs, previous, direction) match {
+            case locations =>
+              findAmongKnownRooms(locations, previous, direction) match {
                 case l@Some(x) =>
                   transition(previous, direction, l, room)
-                  l
+                  x
                 case None =>
-                  val newLoc = saveLocation(room).some
-                  transition(previous, direction, newLoc, room)
+                  val newLoc = saveLocation(room)
+                  transition(previous, direction, newLoc.some, room)
                   newLoc
               }
           }
 
-          updateMobAndArea(room, loc)
-          updateItemAndArea(room, loc)
-          become(rec(loc, previousZone))
+          updateMobAndArea(room, loc.some)
+          updateItemAndArea(room, loc.some)
+          become(rec(loc.some, previousZone))
+          sender ! MoveEvent(previous, direction.some, loc)
         case Some(loc) =>
           updateMobAndArea(room, loc.some)
           updateItemAndArea(room, loc.some)
           checkZoneChange(previousZone, loc.some)
           become(rec(loc.some, loc.zone.orElse(previousZone)))
+          sender ! MoveEvent(previous, direction.some, loc)
       }
     case PathTo(target) =>
       val path = pathTo(previous, target)
@@ -160,3 +166,5 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
 case class PathTo(target: Location)
 
 case class NameZone(zoneName: String, initLocation: Option[Location] = None)
+
+case class MoveEvent(from: Option[Location], direction: Option[String @@ Direction], to: Location)
