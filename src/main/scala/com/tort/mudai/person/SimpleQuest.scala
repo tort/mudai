@@ -78,6 +78,8 @@ class SimpleQuest(val mapper: ActorRef, val pathHelper: PathHelper, val persiste
 class Passages extends Actor {
   def receive = {
     case TriggeredMoveRequest("У шалаша", direction, "Тихий угол") =>
-      sender ! new SimpleCommand("дать 13 кун следопыт")
+      sender ! new SimpleCommand("дать 14 кун следопыт")
+    case TriggeredMoveRequest("Тихий угол", direction, "У шалаша") =>
+      sender ! new SimpleCommand("дать 14 кун следопыт")
   }
 }

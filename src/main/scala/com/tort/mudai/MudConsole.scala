@@ -100,7 +100,7 @@ class MudConsole {
         (loc.some, Map())
       case locs =>
         val menuItems = locs.zipWithIndex.map(x => x.swap)
-        menuItems.foreach(x => writer("%s. %s".format(x._1, x._2.title)))
+        menuItems.foreach(x => writer("%s. %s - %s".format(x._1, x._2.title, x._2.zone.map(_.name).getOrElse("no zone"))))
         (none, menuItems.toMap)
     }
   }
