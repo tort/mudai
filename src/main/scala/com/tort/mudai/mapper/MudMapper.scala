@@ -29,8 +29,10 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
         val norths = path.count(_ === North)
         val wests = path.count(_ === West)
         val easts = path.count(_ === East)
+        val ups = path.count(_ === Up)
+        val downs = path.count(_ === Down)
 
-        souths === norths && wests === easts
+        souths === norths && wests === easts && ups === downs
     } match {
       case loc :: Nil => loc.some
       case _ => None

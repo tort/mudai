@@ -11,7 +11,7 @@ fork := true
 
 libraryDependencies += "com.google.inject" % "guice" % "3.0"
 
-libraryDependencies += "com.assembla.scala-incubator" % "graph-core_2.10" % "1.6.1"
+libraryDependencies += "com.assembla.scala-incubator" % "graph-core_2.10" % "1.7.0"
 
 libraryDependencies += "org.scalatest" % "scalatest_2.10" % "1.9.1"
 
@@ -19,7 +19,7 @@ libraryDependencies += "com.h2database" % "h2" % "1.3.168"
 
 libraryDependencies += "io.netty" % "netty" % "3.6.0.Final"
 
-libraryDependencies += "org.scalaz" % "scalaz-core_2.10" % "7.0.0-RC2"
+libraryDependencies += "org.scalaz" % "scalaz-core_2.10" % "7.0.0"
 
 libraryDependencies += "com.typesafe.akka" % "akka-actor_2.10" % "2.2-M3"
 

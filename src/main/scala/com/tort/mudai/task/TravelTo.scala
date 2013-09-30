@@ -74,9 +74,13 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: Loca
           person ! RequestWalkCommand(p.head)
           become(waitMove(path, current, target))
         case None =>
-          val newPath = pathHelper.pathTo(current.some, target)
-          person ! RequestWalkCommand(newPath.head)
-          become(waitMove(newPath.some, current, target))
+          pathHelper.pathTo(current.some, target) match {
+            case Nil =>
+              context.stop(self)
+            case newPath =>
+              person ! RequestWalkCommand(newPath.head)
+              become(waitMove(newPath.some, current, target))
+          }
       }
   }
 }
