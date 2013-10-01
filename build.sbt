@@ -11,7 +11,7 @@ fork := true
 
 libraryDependencies += "com.google.inject" % "guice" % "3.0"
 
-libraryDependencies += "com.assembla.scala-incubator" % "graph-core_2.10" % "1.7.0"
+libraryDependencies += "com.assembla.scala-incubator" % "graph-core_2.10" % "1.6.1"
 
 libraryDependencies += "org.scalatest" % "scalatest_2.10" % "1.9.1"
 
