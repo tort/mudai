@@ -74,12 +74,3 @@ class SimpleQuest(val mapper: ActorRef, val pathHelper: PathHelper, val persiste
 
   def hunterLocation: Location = persister.locationByTitle("Жилище охотника").head
 }
-
-class Passages extends Actor {
-  def receive = {
-    case TriggeredMoveRequest("У шалаша", direction, "Тихий угол") =>
-      sender ! new SimpleCommand("дать 14 кун следопыт")
-    case TriggeredMoveRequest("Тихий угол", direction, "У шалаша") =>
-      sender ! new SimpleCommand("дать 14 кун следопыт")
-  }
-}

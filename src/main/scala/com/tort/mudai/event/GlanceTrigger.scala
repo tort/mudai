@@ -9,7 +9,7 @@ class GlanceTrigger extends EventTrigger[GlanceEvent] {
   val lister = new DirectionLister()
   val MovePattern = ("(?ms).*Вы поплелись (?:на )?(" + lister.listDirections() + ")\\.\r?\n.*").r
   val GlancePattern = ("(?ms).*" +
-    "\u001B\\[1\\;36m(.*)\u001B\\[0\\;37m$\\s\\s\\s(.*)\r?\n\r?\n" +
+    "\u001B\\[1\\;36m(.*)\u001B\\[0\\;37m$\\s\\s\\s(.*)" +
     "\u001B\\[0\\;36m\\[ Exits: ([nsewudNSEWUD\\s\\(\\)]*) \\]\u001B\\[0\\;37m\r?\n" +
     "(?:\u001B\\[1\\;37mСнежный ковер лежит у вас под ногами.\u001B\\[0\\;37m\r?\n)?" +
     "(?:\u001B\\[1\\;30mВы просто увязаете в грязи.\u001B\\[0\\;37m\r?\n)?" +

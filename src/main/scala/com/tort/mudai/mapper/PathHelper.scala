@@ -8,6 +8,7 @@ import scalaz.@@
 
 class PathHelper(transitionPersister: TransitionPersister) {
   def pathTo(current: Option[Location], target: Location): List[String @@ Direction] = {
+    println(s"PATH-TO: ${current.map(_.title)} -> ${target.title}")
     current.flatMap(curr => pathTo(curr, target)).getOrElse(List())
   }
 
