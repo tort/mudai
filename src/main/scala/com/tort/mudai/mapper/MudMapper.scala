@@ -59,7 +59,6 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
         case newCurrentLocation =>
           updateMobAndArea(room, newCurrentLocation.some)
           updateItemAndArea(room, newCurrentLocation.some)
-          checkZoneChange(previousZone, newCurrentLocation.some)
           become(rec(newCurrentLocation.some, newCurrentLocation.zone.orElse(previousZone)))
 
           if (previous != newCurrentLocation) {
@@ -93,7 +92,6 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
         case Some(loc) =>
           updateMobAndArea(room, loc.some)
           updateItemAndArea(room, loc.some)
-          checkZoneChange(previousZone, loc.some)
           become(rec(loc.some, loc.zone.orElse(previousZone)))
           sender ! MoveEvent(previous, direction.some, loc)
       }

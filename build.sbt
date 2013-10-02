@@ -4,7 +4,7 @@ name := "mudai"
 
 version := "0.1"
 
-scalaVersion := "2.10.0"
+scalaVersion := "2.10.2"
 
 fork := true
 
@@ -21,12 +21,14 @@ libraryDependencies += "io.netty" % "netty" % "3.6.0.Final"
 
 libraryDependencies += "org.scalaz" % "scalaz-core_2.10" % "7.0.0"
 
-libraryDependencies += "com.typesafe.akka" % "akka-actor_2.10" % "2.2-M3"
+libraryDependencies += "com.typesafe.akka" % "akka-actor_2.10" % "2.2.1"
 
-libraryDependencies += "com.typesafe.akka" % "akka-testkit_2.10" % "2.2-M3"
+libraryDependencies += "com.typesafe.akka" % "akka-testkit_2.10" % "2.2.1"
 
 libraryDependencies += "com.typesafe" % "slick_2.10" % "1.0.0-RC2"
 
 assemblySettings
 
 test in assembly := {}
+
+resolvers += "typesafe" at "http://repo.typesafe.com/typesafe/releases"
