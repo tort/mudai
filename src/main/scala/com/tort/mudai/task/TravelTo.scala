@@ -58,7 +58,7 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: Loca
   def pfMove(path: Option[Seq[String @@ Direction]], current: Location, target: Location): Receive = {
     case MoveEvent(Some(from), direction, to) =>
       direction match {
-        case Some(dir) if dir === path.head.head && from.id === current.id =>
+        case Some(dir) if path.head.size > 0 && dir === path.head.head && from.id === current.id =>
           become(pulse(path.map(_.tail), to, target))
         case _ =>
           become(pulse(None, to, target))

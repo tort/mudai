@@ -7,6 +7,7 @@ import com.tort.mudai.event.TargetFleeEvent
 import com.tort.mudai.event.FightRoundEvent
 import com.tort.mudai.event.PeaceStatusEvent
 import com.tort.mudai.event.MemFinishedEvent
+import com.tort.mudai.mapper.MoveEvent
 
 class Fighter extends Actor {
   import context._
@@ -38,6 +39,10 @@ class Fighter extends Actor {
     case TargetFleeEvent(target, direction) =>
       sender ! RequestPulses
       sender ! RequestWalkCommand(direction)
-      sender ! new SimpleCommand("уб %s".format(target))
+      become {
+        case MoveEvent(from, Some(direction), to) =>
+          sender ! new SimpleCommand("уб %s".format(target))
+          unbecome()
+      }
   }
 }
