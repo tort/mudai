@@ -170,3 +170,16 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
   }
 }
 
+class DisarmTriggerTest extends FunSuite with ShouldMatchers {
+  val sample = "Вы пырнули толстого агафона.\n" +
+    "Вы слегка укололи толстого агафона.\n" +
+    "Толстый агафон ловко выбил копье молодецкое из ваших рук.\n" +
+    "Толстый агафон попытался ударить вас, но не рассчитал и промахнулся.\n" +
+    "Толстый агафон попытался ударить вас, но не рассчитал и промахнулся.\n" +
+    "\n" +
+    "250H 138M 5843о Зауч:0:23 [Веретень:Невредим] [толстый агафон:О.тяжело ранен] > "
+
+  test("match disarm"){
+    new DisarmTrigger().matches(sample) should be(true)
+  }
+}

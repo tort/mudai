@@ -30,7 +30,10 @@ class Adapter extends Actor {
     new LightDimmedTrigger,
     new StatusLineTrigger,
     new TargetAssistedTrigger,
-    new TargetFleeTrigger
+    new TargetFleeTrigger,
+    new DisarmTrigger,
+    new CurseFailedTrigger,
+    new CurseSucceededTrigger
   )
 
   private def parse(text: String) =
