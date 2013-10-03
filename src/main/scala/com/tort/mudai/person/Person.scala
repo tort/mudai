@@ -14,7 +14,7 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
 
   val adapter = actorOf(Props[Adapter])
   val snoopable = actorOf(Props[Snoopable])
-  val fighter = actorOf(Props(classOf[Fighter]))
+  val fighter = actorOf(Props(classOf[Fighter], self))
   val roamer = actorOf(Props(classOf[Roamer], mapper, pathHelper, persister))
   val provisioner = actorOf(Props(classOf[Provisioner]))
   val statusTranslator = actorOf(Props(classOf[StatusTranslator]))

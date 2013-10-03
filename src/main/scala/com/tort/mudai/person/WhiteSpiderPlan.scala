@@ -76,8 +76,7 @@ class WhiteSpiderQuest(val mapper: ActorRef, val pathHelper: PathHelper, val per
       sender ! new WalkCommand(direction)
 
     case RequestPulses => person ! RequestPulses
-    case YieldPulses =>
-      person ! YieldPulses
+    case YieldPulses => person ! YieldPulses
     case c: RenderableCommand => person ! c
     case w: RequestWalkCommand if sender != person => person ! w
     case a: Attack if sender == quest => person ! a

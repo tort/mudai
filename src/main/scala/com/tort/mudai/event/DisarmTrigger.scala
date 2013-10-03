@@ -6,7 +6,6 @@ class DisarmTrigger extends EventTrigger[DisarmEvent] {
   def matches(text: String) = text.matches(Pattern.toString())
 
   def fireEvent(text: String) = {
-    println("DISARM")
     val Pattern(what) = text
 
     DisarmEvent("", what)
