@@ -1,14 +1,14 @@
 package com.tort.mudai.person
 
-import akka.actor.{Actor, ActorRef}
-import com.tort.mudai.mapper.{MoveEvent, Location, LocationPersister, PathHelper}
+import akka.actor.ActorRef
+import com.tort.mudai.mapper.{Location, LocationPersister, PathHelper}
 import com.tort.mudai.command.SimpleCommand
 import com.tort.mudai.event.{PeaceStatusEvent, GlanceEvent}
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
 
-class SimpleQuest(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister) extends QuestHelper {
+class SimpleQuest(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister, val person: ActorRef) extends QuestHelper {
   implicit val timeout = Timeout(5 seconds)
 
   import context._
@@ -27,7 +27,7 @@ class SimpleQuest(val mapper: ActorRef, val pathHelper: PathHelper, val persiste
 
       future onSuccess {
         case Some(current) =>
-          goAndDo(targetLocation, person, () => {
+          goAndDo(targetLocation, person, (visited) => {
             person ! new SimpleCommand("см")
             become(onGlance(person, current))
           })
@@ -42,16 +42,15 @@ class SimpleQuest(val mapper: ActorRef, val pathHelper: PathHelper, val persiste
     case PeaceStatusEvent() =>
       person ! new SimpleCommand("взять все все.труп")
       person ! new SimpleCommand("взять все.труп")
-      goAndDo(hunterLocation, person, () => {
+      goAndDo(hunterLocation, person, (visited) => {
         person ! new SimpleCommand("дать труп охот")
         person ! new SimpleCommand("дать труп охот")
         goRentAndFinishQuest(startLocation, person)
       })
   }
 
-
   def goRentAndFinishQuest(startLocation: Location, person: ActorRef) {
-    goAndDo(startLocation, person, () => {
+    goAndDo(startLocation, person, (visited) => {
       person ! YieldPulses
       finishQuest(person)
     })

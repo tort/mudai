@@ -9,7 +9,7 @@ import scala.concurrent.duration._
 import com.tort.mudai.event.PeaceStatusEvent
 import akka.actor.{Props, Actor, ActorRef}
 
-class WhiteSpiderPlan(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister) extends QuestHelper {
+class WhiteSpiderPlan(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister, val person: ActorRef) extends QuestHelper {
   implicit val timeout = Timeout(5 seconds)
 
   import context._
@@ -28,7 +28,7 @@ class WhiteSpiderPlan(val mapper: ActorRef, val pathHelper: PathHelper, val pers
 
       future onSuccess {
         case Some(current) =>
-          goAndDo(targetLocation, person, () => {
+          goAndDo(targetLocation, person, (visited) => {
             person ! Attack("паук")
             become(onFinishFight(person, current))
           })
@@ -44,7 +44,7 @@ class WhiteSpiderPlan(val mapper: ActorRef, val pathHelper: PathHelper, val pers
   def onFinishFight(person: ActorRef, startLocation: Location): Receive = {
     case PeaceStatusEvent() =>
       person ! new SimpleCommand("взять все все.труп")
-      goAndDo(chestLocation, person, () => {
+      goAndDo(chestLocation, person, (visited) => {
         person ! new SimpleCommand("отпер сунд")
         person ! new SimpleCommand("откр сунд")
         person ! new SimpleCommand("взять все сунд")
@@ -54,7 +54,7 @@ class WhiteSpiderPlan(val mapper: ActorRef, val pathHelper: PathHelper, val pers
   }
 
   def goRentAndFinishQuest(startLocation: Location, person: ActorRef) {
-    goAndDo(startLocation, person, () => {
+    goAndDo(startLocation, person, (visited) => {
       person ! YieldPulses
       finishQuest(person)
     })
@@ -68,7 +68,7 @@ class WhiteSpiderPlan(val mapper: ActorRef, val pathHelper: PathHelper, val pers
 class WhiteSpiderQuest(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister, person: ActorRef) extends Actor {
   import context._
 
-  val quest = actorOf(Props(classOf[WhiteSpiderPlan], mapper, pathHelper, persister))
+  val quest = actorOf(Props(classOf[WhiteSpiderPlan], mapper, pathHelper, persister, person))
 
   def receive = {
     case TriggeredMoveRequest("На сеновале", direction, "На чердаке") =>

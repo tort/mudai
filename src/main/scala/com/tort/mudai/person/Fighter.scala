@@ -76,7 +76,7 @@ class AntiBasher extends Actor {
   def bashed(round: Int): Receive = {
     case FightRoundEvent(state, target, targetState) =>
       (round + 1) match {
-        case 2 =>
+        case 1 =>
           sender ! new SimpleCommand("встать")
           become(rec)
         case r =>

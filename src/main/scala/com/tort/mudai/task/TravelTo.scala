@@ -37,14 +37,14 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: Loca
               sender ! RawRead("### CURRENT LOCATION UNDEFINED")
               context.stop(self)
             case Some(cur) =>
-              become(pulse(path.some, cur, target))
+              become(pulse(path.some, cur, target, Set()))
               println("WAIT FOR PULSES")
           }
       }
   }
 
-  def waitMove(path: Option[Seq[String @@ Direction]], current: Location, target: Location): Receive =
-    pfWaitMove(path, current, target).orElse(pfMove(path, current, target))
+  def waitMove(path: Option[Seq[String @@ Direction]], current: Location, target: Location, visited: Set[Location]): Receive =
+    pfWaitMove(path, current, target).orElse(pfMove(path, current, target, visited))
 
   def pfWaitMove(path: Option[Seq[String @@ Direction]], current: Location, target: Location): Receive = {
     case DiscoverObstacleEvent(obstacle) =>
@@ -52,35 +52,46 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: Loca
       person ! RequestWalkCommand(path.head.head) //TODO fix
   }
 
-  def pulse(path: Option[Seq[String @@ Direction]], current: Location, target: Location): Receive =
-    pfPulse(path, current, target).orElse(pfMove(path, current, target))
+  def pulse(path: Option[Seq[String @@ Direction]], current: Location, target: Location, visited: Set[Location]): Receive =
+    pfPulse(path, current, target, visited).orElse(pfMove(path, current, target, visited))
 
-  def pfMove(path: Option[Seq[String @@ Direction]], current: Location, target: Location): Receive = {
+  def pfMove(p: Option[Seq[String @@ Direction]], current: Location, target: Location, visited: Set[Location]): Receive = {
     case MoveEvent(Some(from), direction, to) =>
-      direction match {
-        case Some(dir) if path.head.size > 0 && dir === path.head.head && from.id === current.id =>
-          become(pulse(path.map(_.tail), to, target))
-        case _ =>
-          become(pulse(None, to, target))
+      p match {
+        case Some(Nil) =>
+          person ! TravelToTerminated(self, visited)
+          context.stop(self)
+        case Some(path) =>
+          direction match {
+            case Some(dir) if path.head.size > 0 && dir === path.head && from.id === current.id =>
+              become(pulse(path.tail.some, to, target, visited + from + to))
+            case _ =>
+              become(pulse(None, to, target, visited + from + to))
+          }
+        case None =>
+          become(pulse(None, to, target, visited + from + to))
       }
   }
 
-  def pfPulse(path: Option[Seq[String @@ Direction]], current: Location, target: Location): Receive = {
+  def pfPulse(path: Option[Seq[String @@ Direction]], current: Location, target: Location, visited: Set[Location]): Receive = {
     case Pulse =>
       path match {
         case Some(Nil) =>
+          person ! TravelToTerminated(self, visited)
           context.stop(self)
         case Some(p) =>
           person ! RequestWalkCommand(p.head)
-          become(waitMove(path, current, target))
+          become(waitMove(path, current, target, visited))
         case None =>
           pathHelper.pathTo(current.some, target) match {
             case Nil =>
               context.stop(self)
             case newPath =>
               person ! RequestWalkCommand(newPath.head)
-              become(waitMove(newPath.some, current, target))
+              become(waitMove(newPath.some, current, target, visited))
           }
       }
   }
 }
+
+case class TravelToTerminated(task: ActorRef, visited: Set[Location])

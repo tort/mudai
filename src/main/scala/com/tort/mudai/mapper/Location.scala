@@ -17,6 +17,12 @@ class Location(
     isShop = true
   }
 
+  override def equals(obj: Any) = obj match {
+    case location: Location => this === location
+    case _ => false
+  }
+  override def hashCode() = id.hashCode
+
   def markTavern() {
     isTavern = true
   }
@@ -28,6 +34,8 @@ object Location {
   def apply(room: RoomSnapshot) = new Location("0", room.title, room.desc)
 
   def apply(id: String, title: String, desc: String) = new Location(id, title, desc)
+
+  implicit val locationsEqual: Equal[Location] = Equal.equal(_.id === _.id)
 }
 
 class Transition(

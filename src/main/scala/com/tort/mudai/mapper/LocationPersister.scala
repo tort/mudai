@@ -15,6 +15,8 @@ trait LocationPersister {
 
   def locationByMob(shortName: String): Seq[Location]
 
+  def locationByMobShortName(shortName: String): Seq[Location]
+
   def locationByItem(fullName: String): Seq[Location]
 
   def loadLocation(id: String): Location
@@ -43,7 +45,7 @@ trait LocationPersister {
 
   def loadLocation(current: Location, direction: String @@ Direction): Option[Location]
 
-  def loadLocations(zone: Zone): Seq[Location]
+  def loadLocations(zone: Zone): Set[Location]
 
   def loadZoneByName(name: String): Option[Zone]
 }
@@ -100,7 +102,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   def saveLocation(room: RoomKey) = DB.db withSession {
     val title = room.title
     val desc = room.desc
-    val newId = generateId
+    val newId = generateId()
     sqlu"insert into location(id, title, desc) values($newId, $title, $desc)".first
     Location(newId, title, desc)
   }
@@ -187,7 +189,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     sqlu"delete from location where id in (#$lids)".first
   }
 
-  def replaceWeakWithStrong: Unit = DB.db withSession {
+  def replaceWeakWithStrong(): Unit = DB.db withSession {
     sqlu"update transition set isweak = 0 where isweak = 1".first
   }
 
@@ -292,11 +294,15 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
 
   def loadLocations(zone: Zone) = DB.db withSession {
     val zoneId = zone.id
-    sql"select l.* from location l join zone z on l.zone = z.id where z.id = $zoneId".as[Location].list
+    sql"select l.* from location l join zone z on l.zone = z.id where z.id = $zoneId".as[Location].list.toSet
   }
 
-  def locationByMob(shortName: String) = DB.db withSession {
-    sql"select distinct l.* from habitation h join mob m on h.mob = m.id join location l on h.location = l.id where m.fullName = $shortName".as[Location].list
+  def locationByMob(fullName: String) = DB.db withSession {
+    sql"select distinct l.* from habitation h join mob m on h.mob = m.id join location l on h.location = l.id where m.fullName = $fullName".as[Location].list
+  }
+
+  def locationByMobShortName(shortName: String) = DB.db withSession {
+    sql"select distinct l.* from habitation h join mob m on h.mob = m.id join location l on h.location = l.id where m.shortName = $shortName".as[Location].list
   }
 
   def locationByItem(fullName: String) = DB.db withSession {

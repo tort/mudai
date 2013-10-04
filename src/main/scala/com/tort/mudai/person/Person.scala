@@ -18,10 +18,11 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
   val roamer = actorOf(Props(classOf[Roamer], mapper, pathHelper, persister))
   val provisioner = actorOf(Props(classOf[Provisioner]))
   val statusTranslator = actorOf(Props(classOf[StatusTranslator]))
-  val simpleQuest = actorOf(Props(classOf[SimpleQuest], mapper, pathHelper, persister))
+  val simpleQuest = actorOf(Props(classOf[SimpleQuest], mapper, pathHelper, persister, self))
   val whiteSpiderQuest = actorOf(Props(classOf[WhiteSpiderQuest], mapper, pathHelper, persister, self))
   val villageWellQuest = actorOf(Props(classOf[VillageWellQuest]))
-  val quests = Map[String, ActorRef]("бобры" -> simpleQuest, "белый паук" -> whiteSpiderQuest, "колодец" -> villageWellQuest)
+  val lynxQuest = actorOf(Props(classOf[LynxQuest], mapper, persister, pathHelper, self))
+  val quests = Map[String, ActorRef]("бобры" -> simpleQuest, "белый паук" -> whiteSpiderQuest, "колодец" -> villageWellQuest, "рысь" -> lynxQuest)
   val passages = actorOf(Props(classOf[Passages]))
   val coreTasks = Seq(mapper, fighter, statusTranslator, provisioner, roamer, passages) ++ quests.values
 
