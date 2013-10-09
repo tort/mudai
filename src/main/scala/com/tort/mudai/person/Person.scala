@@ -18,12 +18,11 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
   val roamer = actorOf(Props(classOf[Roamer], mapper, pathHelper, persister))
   val provisioner = actorOf(Props(classOf[Provisioner]))
   val statusTranslator = actorOf(Props(classOf[StatusTranslator]))
-  val simpleQuest = actorOf(Props(classOf[SimpleQuest], mapper, pathHelper, persister, self))
   val whiteSpiderQuest = actorOf(Props(classOf[WhiteSpiderQuest], mapper, pathHelper, persister, self))
   val villageWellQuest = actorOf(Props(classOf[VillageWellQuest]))
-  val lynxQuest = actorOf(Props(classOf[LynxQuest], mapper, persister, pathHelper, self))
-  val quests = Map[String, ActorRef]("бобры" -> simpleQuest, "белый паук" -> whiteSpiderQuest, "колодец" -> villageWellQuest, "рысь" -> lynxQuest)
-  val passages = actorOf(Props(classOf[Passages]))
+  val simpleQuest = actorOf(Props(classOf[SimpleQuest], mapper, persister, pathHelper, self))
+  val quests = Map[String, ActorRef]("белый паук" -> whiteSpiderQuest, "колодец" -> villageWellQuest, "рысь" -> simpleQuest)
+  val passages = actorOf(Props(classOf[Passages], persister, self))
   val coreTasks = Seq(mapper, fighter, statusTranslator, provisioner, roamer, passages) ++ quests.values
 
   system.scheduler.schedule(0 millis, 500 millis, self, Pulse)

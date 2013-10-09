@@ -31,6 +31,7 @@ class Fighter(person: ActorRef) extends Actor {
           person ! new SimpleCommand("кол !прок! %s".format(target))
         case TargetAssistedEvent(target) =>
           sender ! new SimpleCommand("кол !прок! %s".format(target))
+          person ! new SimpleCommand("пом")
         case MemFinishedEvent() =>
           val person = sender
           person ! ReadyForFight
@@ -43,16 +44,23 @@ class Fighter(person: ActorRef) extends Actor {
     case Attack(target) =>
       sender ! RequestPulses
       val person = sender
-      person ! new SimpleCommand("кол !прок! %s".format(target))
+      person ! new SimpleCommand(s"прик все убить $target")
+      person ! new SimpleCommand(s"кол !прок! $target")
+      person ! new SimpleCommand("пом")
     case KillEvent(target, exp) =>
       sender ! NeedMem
       sender ! YieldPulses
     case TargetFleeEvent(target, direction) =>
       sender ! RequestPulses
-      sender ! RequestWalkCommand(direction)
+      become {
+        case Pulse =>
+          sender ! RequestWalkCommand(direction)
+          unbecome()
+      }
       become {
         case MoveEvent(from, Some(direction), to) =>
-          sender ! new SimpleCommand("уб %s".format(target))
+          person ! new SimpleCommand(s"прик все убить $target")
+          person ! new SimpleCommand("пом")
           unbecome()
       }
     case RequestPulses => person ! RequestPulses
