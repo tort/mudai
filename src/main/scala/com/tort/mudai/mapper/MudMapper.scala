@@ -19,7 +19,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
   import transitionPersister._
   import pathHelper._
 
-  def receive: Receive = rec(None, None)
+  def receive: Receive = rec(None)
 
   def findAmongKnownRooms(locations: Seq[Location], previous: Option[Location], direction: String @@ Direction): Option[Location] = {
     locations.filter {
@@ -39,7 +39,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
     }
   }
 
-  def rec(previous: Option[Location], previousZone: Option[Zone]): Receive = {
+  def rec(previous: Option[Location]): Receive = {
     case RequestWalkCommand(direction) =>
       previous.foreach {
         case current =>
@@ -48,6 +48,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
               sender ! WalkCommand(direction)
             case Some(transition) if transition.isTriggered =>
               sender ! TriggeredMoveRequest(current.title, direction, transition.to.title)
+              become(rec(transition.to.some))
             case _ =>
               println("### NO WAY THERE")
           }
@@ -59,7 +60,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
         case newCurrentLocation =>
           updateMobAndArea(room, newCurrentLocation.some)
           updateItemAndArea(room, newCurrentLocation.some)
-          become(rec(newCurrentLocation.some, newCurrentLocation.zone.orElse(previousZone)))
+          become(rec(newCurrentLocation.some))
 
           previous foreach {
             case p if p /== newCurrentLocation =>
@@ -88,12 +89,12 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
 
           updateMobAndArea(room, loc.some)
           updateItemAndArea(room, loc.some)
-          become(rec(loc.some, previousZone))
+          become(rec(loc.some))
           sender ! MoveEvent(previous, direction.some, loc)
         case Some(loc) =>
           updateMobAndArea(room, loc.some)
           updateItemAndArea(room, loc.some)
-          become(rec(loc.some, loc.zone.orElse(previousZone)))
+          become(rec(loc.some))
           sender ! MoveEvent(previous, direction.some, loc)
       }
     case PathTo(target) =>

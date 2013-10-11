@@ -66,9 +66,11 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: Loca
             case Some(dir) if path.head.size > 0 && dir === path.head && from.id === current.id =>
               become(pulse(path.tail.some, to, target, visited + from + to))
             case _ =>
+              println(s"1 FROM ${from.title} # ${direction}, # TO ${to.title}")
               become(pulse(None, to, target, visited + from + to))
           }
         case None =>
+          println(s"2 FROM ${from.title} # ${direction}, # TO ${to.title}")
           become(pulse(None, to, target, visited + from + to))
       }
   }
@@ -85,8 +87,10 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: Loca
         case None =>
           pathHelper.pathTo(current.some, target) match {
             case Nil =>
+              println(s"### NO PATH FOUND FROM ${current.title} TO ${target.title}")
               context.stop(self)
             case newPath =>
+              println(s"NEW PATH ${newPath.mkString(" ")}")
               person ! RequestWalkCommand(newPath.head)
               become(waitMove(newPath.some, current, target, visited))
           }

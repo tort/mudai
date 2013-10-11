@@ -21,5 +21,8 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
         persister.loadLocation("ebb1d973-693f-4d3c-95f9-8b0f187f7eaa"))
     case TriggeredMoveRequest("На лугу", direction, "На лугу") if direction == "v2_v1_trigger" =>
       sender ! new SimpleCommand(s"дать $level кун цыган")
+      person ! MoveEvent(persister.loadLocation("ebb1d973-693f-4d3c-95f9-8b0f187f7eaa").some,
+        direction.some,
+        persister.loadLocation("a2487caf-444f-4736-978f-0f1fbbd6083d"))
   }
 }
