@@ -1,9 +1,5 @@
 package com.tort.mudai.event;
 
-import com.tort.mudai.Handler;
-import com.tort.mudai.task.AbstractTask;
-import com.tort.mudai.task.EventDistributor;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -12,12 +8,6 @@ public class ExamineLiquidContainerTrigger implements EventTrigger {
             "(.*)\\.\r?\n\r?\n[^\r?\n]*");
     private static final Pattern STATE_GROUP_PATTERN =
             PatternUtil.compile("Наполнена ((?:(?:меньше|больше), чем |примерно )(?:наполовину|на четверть) |почти полностью )?[^\\s]* жидкостью");
-
-    private final EventDistributor _eventDistributor;
-
-    public ExamineLiquidContainerTrigger(final EventDistributor eventDistributor) {
-        _eventDistributor = eventDistributor;
-    }
 
     @Override
     public ExamineLiquidContainerEvent fireEvent(final String text) {
@@ -57,12 +47,6 @@ public class ExamineLiquidContainerTrigger implements EventTrigger {
         }
 
         final ExamineLiquidContainerEvent finalEvent = event;
-        _eventDistributor.invoke(new Handler() {
-            @Override
-            public void handle(final AbstractTask task) {
-                task.examineWaterContainer(finalEvent.getState());
-            }
-        });
 
         return event;
     }

@@ -1,6 +1,7 @@
 package com.tort.mudai.person
 
 import akka.actor.{Terminated, Props, Actor, ActorRef}
+import scalaz.Scalaz._
 import com.tort.mudai.mapper.{Location, LocationPersister, PathHelper}
 import com.tort.mudai.command.{RenderableCommand, SimpleCommand}
 import com.tort.mudai.task.TravelTo
@@ -84,7 +85,7 @@ class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersis
         case current =>
           current.foreach {
             case c =>
-              base(person, travelTask: ActorRef, xs.filterNot(_.id == c.id))
+              base(person, travelTask: ActorRef, xs.filterNot(_.id === c.id))
           }
       }
     case InterruptRoaming =>

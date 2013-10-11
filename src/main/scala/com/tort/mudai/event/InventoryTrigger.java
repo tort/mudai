@@ -1,21 +1,11 @@
 package com.tort.mudai.event;
 
-import com.tort.mudai.Handler;
-import com.tort.mudai.task.AbstractTask;
-import com.tort.mudai.task.EventDistributor;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class InventoryTrigger implements EventTrigger {
     public final static Pattern PATTERN = PatternUtil.compile("^Вы несете:\r\n(.*)\r\n\r\n[^\n\r]*$");
     public static final String DELIMETER = "\n";
-
-    private final EventDistributor _eventDistributor;
-
-    public InventoryTrigger(EventDistributor eventDistributor) {
-        _eventDistributor = eventDistributor;
-    }
 
     @Override
     public Event fireEvent(String text) {
@@ -41,12 +31,6 @@ public class InventoryTrigger implements EventTrigger {
         }
 
         final String[] finalInventory = inventory;
-        _eventDistributor.invoke(new Handler() {
-            @Override
-            public void handle(AbstractTask task) {
-                task.inventory(finalInventory);
-            }
-        });
 
         return null;
     }

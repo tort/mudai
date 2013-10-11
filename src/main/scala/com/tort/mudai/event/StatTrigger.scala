@@ -1,9 +1,7 @@
 package com.tort.mudai.event
 
-import com.google.inject.Inject
-import com.tort.mudai.task.{AbstractTask, EventDistributor}
 
-class StatTrigger @Inject()(eventDistributor: EventDistributor) extends EventTrigger[StatEvent]{
+class StatTrigger extends EventTrigger[StatEvent]{
   private val Pattern = ("(?ms).*^Вы узнали следующее:\r?\n" +
                          "(.*)\r?\n" +
                          "[^\n]*> ЪЫ$").r
