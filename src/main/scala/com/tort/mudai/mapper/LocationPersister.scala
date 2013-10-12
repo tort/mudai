@@ -19,7 +19,7 @@ trait LocationPersister {
 
   def locationByItem(fullName: String): Seq[Location]
 
-  def loadLocation(id: String): Location
+  def loadLocation: (String) => Location
 
   def loadLocation(room: RoomKey): Seq[Location]
 
@@ -86,10 +86,12 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     sql"select * from location l where l.title = $title and l.desc = $desc".as[Location].list
   }
 
-  def loadLocation(id: String): Location = DB.db withSession {
-    sql"select * from location l where l.id = $id".as[Location].firstOption match {
-      case None => throw new RuntimeException("NO LOC FOUND FOR " + id)
-      case Some(x) => x
+  val loadLocation: (String) => Location = Memo.immutableHashMapMemo {
+    case id => DB.db withSession {
+      sql"select * from location l where l.id = $id".as[Location].firstOption match {
+        case None => throw new RuntimeException("NO LOC FOUND FOR " + id)
+        case Some(x) => x
+      }
     }
   }
 
