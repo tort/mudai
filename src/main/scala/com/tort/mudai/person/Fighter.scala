@@ -16,53 +16,30 @@ class Fighter(person: ActorRef) extends Actor {
   val antiBasher = actorOf(Props(classOf[AntiBasher]))
 
   def receive = {
-    case FightRoundEvent(state, target, targetState) =>
-      val person = sender
-      person ! RequestPulses
-      become {
-        case e: PeaceStatusEvent =>
-          person ! YieldPulses
-          unbecome()
-        case DisarmEvent(_, weapon) =>
-          sender ! new SimpleCommand("вз коп")
-          sender ! new SimpleCommand("воор молод")
-          sender ! new SimpleCommand("держ полов")
-        case CurseFailedEvent() =>
-          person ! new SimpleCommand("кол !прок! %s".format(target))
-        case TargetAssistedEvent(target) =>
-          sender ! new SimpleCommand("кол !прок! %s".format(target))
-          person ! new SimpleCommand("пом")
-        case MemFinishedEvent() =>
-          val person = sender
-          person ! ReadyForFight
-        case c: RenderableCommand if sender == antiBasher => person ! c
-        case e => antiBasher ! e
-      }
     case MemFinishedEvent() =>
       val person = sender
+      person ! new SimpleCommand("вст")
       person ! ReadyForFight
     case Attack(target) =>
       sender ! RequestPulses
       val person = sender
       person ! new SimpleCommand(s"прик все убить $target")
       person ! new SimpleCommand(s"кол !прок! $target")
-      person ! new SimpleCommand("пом")
+      person ! new SimpleCommand("отд")
     case KillEvent(target, exp) =>
-      sender ! NeedMem
       sender ! YieldPulses
     case TargetFleeEvent(target, direction) =>
-      sender ! RequestPulses
       become {
         case Pulse =>
           sender ! RequestWalkCommand(direction)
-          unbecome()
+          become {
+            case MoveEvent(from, Some(direction), to) =>
+              person ! new SimpleCommand(s"прик все убить $target")
+              unbecome()
+              unbecome()
+          }
       }
-      become {
-        case MoveEvent(from, Some(direction), to) =>
-          person ! new SimpleCommand(s"прик все убить $target")
-          person ! new SimpleCommand("пом")
-          unbecome()
-      }
+
     case RequestPulses => person ! RequestPulses
     case YieldPulses => person ! YieldPulses
     case c: RenderableCommand if sender == antiBasher => person ! c
