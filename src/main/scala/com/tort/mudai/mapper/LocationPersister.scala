@@ -37,6 +37,8 @@ trait LocationPersister {
 
   def mobByFullName(name: String): Option[Mob]
 
+  def mobByShortName(name: String): Option[Mob]
+
   def updateLocation(zone: String)(location: String)
 
   def nonBorderNeighbors(location: String): Set[Location]
