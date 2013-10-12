@@ -16,6 +16,11 @@ class Provisioner extends Actor {
   def receive = rec
 
   def rec: Receive = {
+    case StartQuest(quest) =>
+      val person = sender
+      val feedPulseEmitter = system.scheduler.schedule(0 millis, 10 minutes, feeder, Feed)
+
+      become(onRoam(person, feedPulseEmitter, Nil))
     case Roam(zone) =>
       val person = sender
       sender ! new SimpleCommand("держ свеч")
@@ -29,6 +34,10 @@ class Provisioner extends Actor {
       sender ! new SimpleCommand("снять свеч")
       sender ! new SimpleCommand("брос свеч")
       sender ! new SimpleCommand("держ свеч")
+    case QuestFinished =>
+      become(rec)
+      feedPulseEmitter.cancel()
+      sender ! new SimpleCommand("снять свеч")
     case RoamingFinished =>
       become(rec)
       feedPulseEmitter.cancel()

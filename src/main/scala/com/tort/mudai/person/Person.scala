@@ -47,6 +47,7 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
       travelTask ! e
     case StartQuest(quest) =>
       quests(quest) ! StartQuest
+      provisioner ! StartQuest(quest)
     case RequestPulses =>
       val newSubscribers: Seq[ActorRef] = tasks.filter(t => (sender +: pulseSubscribers).contains(t))
       become(rec(tasks, newSubscribers))
