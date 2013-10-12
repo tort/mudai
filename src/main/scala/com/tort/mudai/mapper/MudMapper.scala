@@ -63,8 +63,9 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
           become(rec(newCurrentLocation.some))
 
           previous foreach {
-            case p if p /== newCurrentLocation =>
-              sender ! MoveEvent(previous, None, newCurrentLocation)
+            case p =>
+              if (p /== newCurrentLocation)
+                sender ! MoveEvent(previous, None, newCurrentLocation)
           }
       }
     case GlanceEvent(room, Some(direction)) =>
