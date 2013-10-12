@@ -1,9 +1,5 @@
 package com.tort.mudai.event;
 
-import com.tort.mudai.task.AbstractTask;
-import com.tort.mudai.task.EventDistributor;
-import com.tort.mudai.Handler;
-
 import java.util.regex.Pattern;
 
 public class PasswordPromptTrigger implements EventTrigger<PasswordPromptEvent> {

@@ -57,7 +57,7 @@ trait TransitionPersister {
 
   def loadTransition(prev: Location, direction: String @@ Direction): Option[Transition]
 
-  def saveTransition(prev: Location, direction: String @@ Direction, newLocation: Location, roomSnapshot: RoomSnapshot, isWeak: Boolean): Transition
+  def saveTransition(prev: Location, direction: String @@ Direction, newLocation: Location, roomSnapshot: RoomSnapshot): Transition
 
   def allTransitions: Seq[Transition]
 }
@@ -142,14 +142,14 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     sqlu"update transition set locTo = $toLocId where id = $id".first
   }
 
-  def saveTransition(prev: Location, direction: String @@ Direction, newLocation: Location, roomSnapshot: RoomSnapshot, isWeak: Boolean) = DB.db withSession {
+  def saveTransition(prev: Location, direction: String @@ Direction, newLocation: Location, roomSnapshot: RoomSnapshot) = DB.db withSession {
     def id = util.UUID.randomUUID().toString
     val from = prev.id
     val to = newLocation.id
     val oppositeDir = oppositeDirection(direction)
     val isBorder = roomSnapshot.exits.find(e => e.direction === oppositeDir).exists(_.isBorder)
-    sqlu"insert into transition(id, locFrom, direction, locTo, isWeak, isborder) values($id, $from, $direction, $to, $isWeak, $isBorder)".first
-    sqlu"insert into transition(id, locFrom, direction, locTo, isWeak, isborder) values($id, $to, $oppositeDir, $from, $isWeak, $isBorder)".first
+    sqlu"insert into transition(id, locFrom, direction, locTo, isborder) values($id, $from, $direction, $to, $isBorder)".first
+    sqlu"insert into transition(id, locFrom, direction, locTo, isborder) values($id, $to, $oppositeDir, $from, $isBorder)".first
     new Transition(id, prev, direction, newLocation)
   }
 

@@ -16,6 +16,7 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
   val antiBasher = actorOf(Props(classOf[AntiBasher]))
 
   def receive = rec
+
   def rec: Receive = {
     case MemFinishedEvent() =>
       val person = sender
@@ -28,14 +29,24 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
       person ! new SimpleCommand(s"кол !прок! $target")
       person ! new SimpleCommand("отд")
     case KillEvent(target, exp) =>
-      person ! new SimpleCommand("вст")
-      person ! YieldPulses
+      person ! new SimpleCommand("группа")
+      become(waitGroupStatus)
     case TargetFleeEvent(target, direction) =>
       become(waitPulse(target, direction))
     case RequestPulses => person ! RequestPulses
     case YieldPulses => person ! YieldPulses
     case c: RenderableCommand if sender == antiBasher => person ! c
     case e => antiBasher ! e
+  }
+
+  def waitGroupStatus: Receive = {
+    case GroupStatusEvent("Стоит") =>
+      person ! new SimpleCommand("вст")
+      person ! YieldPulses
+      become(rec)
+    case GroupStatusEvent(status) =>
+      println(status)
+      become(rec)
   }
 
   def waitPulse(target: String, direction: String @@ Direction): Receive = {
@@ -46,12 +57,12 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
 
   def waitMove(target: String): Receive = {
     case MoveEvent(from, Some(direction), to) =>
-      persister.mobByShortName(target).map(_.alias) match {
+      persister.mobByShortName(target).flatMap(_.alias) match {
         case None => println(s"### UNKNOWN ALIAS FOR $target")
         case Some(alias) =>
           person ! new SimpleCommand(s"прик все убить ${alias}")
       }
-    become(rec)
+      become(rec)
   }
 }
 

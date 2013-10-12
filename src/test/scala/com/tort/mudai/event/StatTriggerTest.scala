@@ -77,7 +77,7 @@ class StatTriggerTest extends FunSuite with ShouldMatchers {
     "760H 260M 6250001о Зауч:0 30L 435G Вых:СЗ> ЪЫ"
 
   test("match") {
-    val matches = new StatTrigger(null).matches(examineSkillUse)
+    val matches = new StatTrigger().matches(examineSkillUse)
 
     matches should be(true)
   }

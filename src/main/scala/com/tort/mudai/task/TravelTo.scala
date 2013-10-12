@@ -66,11 +66,9 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: Loca
             case Some(dir) if path.head.size > 0 && dir === path.head && from.id === current.id =>
               become(pulse(path.tail.some, to, target, visited + from + to))
             case _ =>
-              println(s"1 FROM ${from.title} # ${direction}, # TO ${to.title}")
               become(pulse(None, to, target, visited + from + to))
           }
         case None =>
-          println(s"2 FROM ${from.title} # ${direction}, # TO ${to.title}")
           become(pulse(None, to, target, visited + from + to))
       }
   }

@@ -34,6 +34,7 @@ class Adapter extends Actor {
     new DisarmTrigger,
     new CurseFailedTrigger,
     new BashTrigger,
+    new GroupStatusTrigger,
     new CurseSucceededTrigger
   )
 

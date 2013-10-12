@@ -162,7 +162,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
     for {
       prev <- prevOption
       curr <- newOption
-    } yield loadTransition(prev, direction, curr).getOrElse(saveTransition(prev, direction, curr, room, isWeak))
+    } yield loadTransition(prev, direction, curr).getOrElse(saveTransition(prev, direction, curr, room))
   }
 }
 
