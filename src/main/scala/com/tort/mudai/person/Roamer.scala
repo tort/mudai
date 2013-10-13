@@ -8,7 +8,7 @@ import com.tort.mudai.task.TravelTo
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
-import com.tort.mudai.event.GlanceEvent
+import com.tort.mudai.event.{KillEvent, GlanceEvent}
 
 class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersister) extends Actor {
 
@@ -61,6 +61,8 @@ class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersis
   }
 
   private def base(person: ActorRef, travelTask: ActorRef, xs: Seq[Location]): Receive = {
+    case KillEvent(_, _) =>
+      person ! new SimpleCommand("взять все труп")
     case Terminated(ref) if ref == travelTask =>
       become(visit(person, xs))
       println("### TRAVEL SUBTASK TERMINATED")
