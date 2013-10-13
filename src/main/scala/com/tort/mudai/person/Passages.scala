@@ -7,7 +7,7 @@ import scalaz._
 import Scalaz._
 
 class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
-  val level = 18
+  val level = 20
 
   def receive = {
     case TriggeredMoveRequest("У шалаша", direction, "Тихий угол") =>
