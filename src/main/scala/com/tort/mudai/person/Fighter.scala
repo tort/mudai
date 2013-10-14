@@ -4,7 +4,6 @@ import akka.actor.{ActorRef, Props, Actor}
 import com.tort.mudai.event._
 import com.tort.mudai.command.{RenderableCommand, RequestWalkCommand, SimpleCommand}
 import com.tort.mudai.event.TargetFleeEvent
-import com.tort.mudai.event.FightRoundEvent
 import com.tort.mudai.event.MemFinishedEvent
 import com.tort.mudai.mapper.{Direction, LocationPersister, MoveEvent}
 import scalaz.@@
@@ -14,6 +13,7 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
   import context._
 
   val antiBasher = actorOf(Props(classOf[AntiBasher]))
+  val curser = actorOf(Props(classOf[Curser]))
 
   def receive = rec
 
@@ -26,7 +26,7 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
       val person = sender
       person ! RequestPulses
       person ! new SimpleCommand(s"прик все убить $target")
-      person ! new SimpleCommand(s"кол !прок! $target")
+      person ! CurseCommand(target)
       person ! new SimpleCommand("отд")
     case KillEvent(target, exp) =>
       person ! new SimpleCommand("группа")
@@ -40,7 +40,10 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
     case RequestPulses => person ! RequestPulses
     case YieldPulses => person ! YieldPulses
     case c: RenderableCommand if sender == antiBasher => person ! c
-    case e => antiBasher ! e
+    case c: RenderableCommand if sender == curser => person ! c
+    case e =>
+      antiBasher ! e
+      curser ! e
   }
 
   def waitGroupStatus: Receive = {
@@ -70,25 +73,21 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
   }
 }
 
-class AntiBasher extends Actor {
+class Curser extends Actor {
 
   import context._
 
-  def receive = rec
-
-  def rec: Receive = {
-    case BashEvent(basher, target) =>
-      become(bashed(0))
-  }
-
-  def bashed(round: Int): Receive = {
-    case FightRoundEvent(state, target, targetState) =>
-      round + 1 match {
-        case 1 =>
-          sender ! new SimpleCommand("встать")
-          become(rec)
-        case r =>
-          become(bashed(r))
+  def receive = {
+    case Attack(target) =>
+      become {
+        case CurseFailedEvent =>
+          sender ! CurseCommand(target)
+        case CurseSucceededEvent(_) =>
+          unbecome()
       }
   }
+}
+
+case class CurseCommand(target: String) extends RenderableCommand {
+  def render = s"кол !прок! $target"
 }
