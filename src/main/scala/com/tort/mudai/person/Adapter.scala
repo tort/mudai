@@ -35,7 +35,8 @@ class Adapter extends Actor {
     new CurseFailedTrigger,
     new BashTrigger,
     new GroupStatusTrigger,
-    new CurseSucceededTrigger
+    new CurseSucceededTrigger,
+    new DisarmAssistantTrigger
   )
 
   private def parse(text: String) =

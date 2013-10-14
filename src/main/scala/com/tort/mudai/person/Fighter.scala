@@ -33,6 +33,10 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
       become(waitGroupStatus)
     case TargetFleeEvent(target, direction) =>
       become(waitPulse(target, direction))
+    case DisarmAssistantEvent(_, _, _) =>
+      person ! new SimpleCommand("взять клевец")
+      person ! new SimpleCommand("дать клевец дружинник")
+      person ! new SimpleCommand("прик все воор клевец")
     case RequestPulses => person ! RequestPulses
     case YieldPulses => person ! YieldPulses
     case c: RenderableCommand if sender == antiBasher => person ! c
