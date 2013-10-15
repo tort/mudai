@@ -24,12 +24,14 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
       val person = sender
       person ! new SimpleCommand("вст")
       person ! ReadyForFight
-    case Attack(target) =>
+    case e@Attack(target) =>
       val person = sender
       person ! RequestPulses
       person ! new SimpleCommand(s"прик все убить $target")
       person ! CurseCommand(target)
-      person ! new SimpleCommand("отд")
+
+      antiBasher ! e
+      curser ! e
     case KillEvent(target, exp) =>
       person ! new SimpleCommand("группа")
       become(waitGroupStatus)
@@ -50,10 +52,13 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
 
   def waitGroupStatus: Receive = {
     case GroupStatusEvent(name, health, _, "Стоит") =>
+      println(s"N: $name")
       person ! new SimpleCommand("вст")
 
-      if (health === "Ранен" || health.trim === "Лег.ранен") {
+      if ((health.trim === "Ранен") || (health.trim === "Лег.ранен") || (health.trim === "Тяж.ранен") || (health.trim === "Оч.тяж.ранен") || (health.trim === "При смерти")) {
+        println("WANNA HEAL")
         val mob: Option[Mob] = persister.mobBy(name)
+        mob.foreach(m => println(s"LOADED ${m.alias}"))
         mob.flatMap(_.alias) foreach {
           case alias => person ! new SimpleCommand(s"кол !к и! ${alias}")
         }
@@ -93,7 +98,7 @@ class Curser extends Actor {
   def receive = {
     case Attack(target) =>
       become {
-        case CurseFailedEvent =>
+        case CurseFailedEvent() =>
           sender ! CurseCommand(target)
         case CurseSucceededEvent(_) =>
           unbecome()

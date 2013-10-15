@@ -199,7 +199,9 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def mobBy(shortName: String @@ ShortName) = DB.db withSession {
-    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable from mob m where m.shortName = $shortName".as[Mob].firstOption
+    println(s"SN: $shortName")
+    val s: String = shortName.trim
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable from mob m where m.shortName = $s".as[Mob].firstOption
   }
 
   def mobByFullName(name: String): Option[Mob] = DB.db withSession {

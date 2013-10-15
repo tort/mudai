@@ -66,6 +66,10 @@ class MudConsole {
       case "зона" :: zone =>
         person ! NameZone(zone.mkString(" "))
         userInputLoop(person, Map())
+      case "аттак" :: name =>
+        val targetName: String = name.mkString(" ")
+        person ! Attack(targetName)
+        userInputLoop(person, Map())
       case "квест" :: name =>
         val questName: String = name.mkString(" ")
         if (!quests(questName))

@@ -1,11 +1,14 @@
 package com.tort.mudai.event
 
 class CurseFailedTrigger extends EventTrigger[CurseFailedEvent]{
-  val Pattern = """(?ms).*Вы произнесли заклинание "проклятье"\..*Ваши потуги оказались напрасными\..*""".r
+  val Pattern = """(?ms).*Вы произнесли заклинание "\u001B\[\d\;\d\dmпроклятье\u001B\[\d\;\d\dm"\..*Ваши потуги оказались напрасными\..*""".r
 
   def matches(text: String) = text.matches(Pattern.toString())
 
-  def fireEvent(text: String) = CurseFailedEvent()
+  def fireEvent(text: String) = {
+    println("CURS FAILE TRIGGER")
+    CurseFailedEvent()
+  }
 }
 
 case class CurseFailedEvent() extends Event
