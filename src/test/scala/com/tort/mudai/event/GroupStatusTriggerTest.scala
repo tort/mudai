@@ -2,6 +2,7 @@ package com.tort.mudai.event
 
 import org.scalatest.FunSuite
 import org.scalatest.matchers.ShouldMatchers
+import com.tort.mudai.mapper.Mob.ShortName
 
 class GroupStatusTriggerTest extends FunSuite with ShouldMatchers {
   val sample = "Ваши последователи:\n" +
@@ -16,5 +17,10 @@ class GroupStatusTriggerTest extends FunSuite with ShouldMatchers {
 
   test("match group status") {
     new GroupStatusTrigger().matches(sample) should be(true)
+  }
+
+  test("group member name extraction") {
+    val name: scalaz.@@[String, ShortName] = new GroupStatusTrigger().fireEvent(sample).shortName
+    name should be("Батрак")
   }
 }
