@@ -70,6 +70,9 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
     case Pulse =>
       person ! RequestWalkCommand(direction)
       become(waitMove(target))
+    case KillEvent(target, exp) =>
+      person ! new SimpleCommand("группа")
+      become(waitGroupStatus)
   }
 
   def waitMove(target: String @@ ShortName): Receive = {
