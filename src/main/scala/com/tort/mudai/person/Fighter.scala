@@ -5,8 +5,10 @@ import com.tort.mudai.event._
 import com.tort.mudai.command.{RenderableCommand, RequestWalkCommand, SimpleCommand}
 import com.tort.mudai.event.TargetFleeEvent
 import com.tort.mudai.event.MemFinishedEvent
-import com.tort.mudai.mapper.{Direction, LocationPersister, MoveEvent}
-import scalaz.@@
+import com.tort.mudai.mapper.{Mob, Direction, LocationPersister, MoveEvent}
+import scalaz._
+import Scalaz._
+import com.tort.mudai.mapper.Mob.ShortName
 
 class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
 
@@ -47,24 +49,32 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
   }
 
   def waitGroupStatus: Receive = {
-    case GroupStatusEvent("Стоит") =>
+    case GroupStatusEvent(name, health, _, "Стоит") =>
       person ! new SimpleCommand("вст")
+
+      if (health === "Ранен" || health.trim === "Лег.ранен") {
+        val mob: Option[Mob] = persister.mobBy(name)
+        mob.flatMap(_.alias) foreach {
+          case alias => person ! new SimpleCommand(s"кол !к и! ${alias}")
+        }
+      }
+
       person ! YieldPulses
       become(rec)
-    case GroupStatusEvent(status) =>
+    case GroupStatusEvent(_, _, _, status) =>
       println(status)
       become(rec)
   }
 
-  def waitPulse(target: String, direction: String @@ Direction): Receive = {
+  def waitPulse(target: String @@ ShortName, direction: String @@ Direction): Receive = {
     case Pulse =>
       person ! RequestWalkCommand(direction)
       become(waitMove(target))
   }
 
-  def waitMove(target: String): Receive = {
+  def waitMove(target: String @@ ShortName): Receive = {
     case MoveEvent(from, Some(direction), to) =>
-      persister.mobByShortName(target).flatMap(_.alias) match {
+      persister.mobBy(target).flatMap(_.alias) match {
         case None => println(s"### UNKNOWN ALIAS FOR $target")
         case Some(alias) =>
           person ! new SimpleCommand(s"прик все убить ${alias}")

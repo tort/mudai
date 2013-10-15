@@ -9,6 +9,7 @@ import scala.slick.jdbc.{StaticQuery => Q, GetResult}
 import Q.interpolation
 import java.util
 import com.tort.mudai.mapper.Direction._
+import com.tort.mudai.mapper.Mob._
 
 trait LocationPersister {
   def locationByTitle(title: String): Seq[Location]
@@ -31,13 +32,13 @@ trait LocationPersister {
 
   def persistItemAndArea(mob: String, location: Location)
 
-  def makeKillable(shortName: String)
+  def makeKillable(shortName: String @@ ShortName)
 
   def killablesHabitation(zone: Zone): Seq[Location]
 
   def mobByFullName(name: String): Option[Mob]
 
-  def mobByShortName(name: String): Option[Mob]
+  def mobBy(shortName: String @@ ShortName): Option[Mob]
 
   def updateLocation(zone: String)(location: String)
 
@@ -197,8 +198,8 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     sqlu"update transition set isweak = 0 where isweak = 1".first
   }
 
-  def mobByShortName(name: String) = DB.db withSession {
-    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable from mob m where m.shortName = $name".as[Mob].firstOption
+  def mobBy(shortName: String @@ ShortName) = DB.db withSession {
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable from mob m where m.shortName = $shortName".as[Mob].firstOption
   }
 
   def mobByFullName(name: String): Option[Mob] = DB.db withSession {
@@ -229,8 +230,8 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     }
   }
 
-  def makeKillable(shortName: String) = DB.db withSession {
-    mobByShortName(shortName) match {
+  def makeKillable(shortName: String @@ ShortName) = DB.db withSession {
+    mobBy(shortName) match {
       case Some(mob) =>
         val mobId = mob.id
         sqlu"update mob set iskillable = 1 where id = $mobId".first

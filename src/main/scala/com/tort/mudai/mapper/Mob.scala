@@ -19,6 +19,10 @@ class Mob(val id: String,
 
 object Mob {
   implicit val mobEquality: Equal[Mob] = Equal.equal(_.id === _.id)
+
+  trait ShortName
+
+  def shortName(shortName: String): String @@ ShortName = Tag(shortName)
 }
 
 class Item( val id: String,
