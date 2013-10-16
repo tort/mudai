@@ -8,21 +8,19 @@ import Scalaz._
 
 class Searcher(val mapper: ActorRef, val persister: LocationPersister, val pathHelper: PathHelper, val person: ActorRef) extends QuestHelper {
   def receive = {
-    case FindMobs(mobNames) =>
-      val mobs = mobNames.map(m => persister.mobByFullName(m).get)
-
+    case FindMobs(mobs) =>
       findMobs(mobs, sender, () => onAllVisited(sender))
   }
 
-  def onAllVisited(caller: ActorRef) {
+  private def onAllVisited(caller: ActorRef) {
     caller ! SearchFinished
   }
 
-  def findMobs(mobs: Set[Mob], caller: ActorRef, onAllVisited: () => Unit) {
+  private def findMobs(mobs: Set[Mob], caller: ActorRef, onAllVisited: () => Unit) {
     whereMobLives(mobs) |> visitAll(mobs, caller, onAllVisited)
   }
 
-  def visitAll(mobs: Set[Mob], caller: ActorRef, onAllVisited: () => Unit)(toVisit: Set[Location]): Unit = {
+  private def visitAll(mobs: Set[Mob], caller: ActorRef, onAllVisited: () => Unit)(toVisit: Set[Location]): Unit = {
     visit(lookForMob(mobs, caller), onAllVisited)(toVisit)
   }
 
@@ -31,7 +29,7 @@ class Searcher(val mapper: ActorRef, val persister: LocationPersister, val pathH
       val needed: Seq[String] = roomSnapshot.mobs.toSet.intersect(mobs.map(_.fullName)).toList
       needed match {
         case x :: xs =>
-          caller ! MobFound(x)
+          caller ! MobFound(mobs.find(m => m.fullName === x).flatMap(_.alias).get)
         case Nil =>
       }
       travel ! e
@@ -51,11 +49,13 @@ class Searcher(val mapper: ActorRef, val persister: LocationPersister, val pathH
   //TODO fix get
   private def whereMobLives(mobs: Set[Mob]): Set[Location] = persister.loadLocations(mobZone(mobs.head).get)
 
-  private def mobZone(mob: Mob): Option[Zone] = persister.locationByMob(mob.fullName).head.zone
+  private def mobZone(mob: Mob): Option[Zone] = {
+    persister.locationByMob(mob.fullName).head.zone
+  }
 }
 
-case class FindMobs(mobs: Set[String])
+case class FindMobs(mobs: Set[Mob])
 
 case object SearchFinished
 
-case class MobFound(fullName: String)
+case class MobFound(alias: String)

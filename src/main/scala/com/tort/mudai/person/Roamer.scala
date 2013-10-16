@@ -1,16 +1,16 @@
 package com.tort.mudai.person
 
-import akka.actor.{Terminated, Props, Actor, ActorRef}
-import scalaz.Scalaz._
+import akka.actor._
 import com.tort.mudai.mapper.{Location, LocationPersister, PathHelper}
-import com.tort.mudai.command.{RenderableCommand, SimpleCommand}
-import com.tort.mudai.task.TravelTo
+import com.tort.mudai.command.SimpleCommand
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
-import com.tort.mudai.event.{StatusLineEvent, KillEvent, GlanceEvent}
+import akka.actor.Terminated
+import com.tort.mudai.event.{StatusLineEvent, KillEvent}
+import scala.Some
 
-class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersister) extends Actor {
+class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister, val person: ActorRef) extends QuestHelper {
 
   import context._
 
@@ -22,8 +22,10 @@ class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersis
 
   def roam: Receive = {
     case Roam(zoneName) =>
-      loadZoneByName(zoneName).foreach {
-        case zone =>
+      loadZoneByName(zoneName) match {
+        case None =>
+          println(s"### ZONE $zoneName NOT FOUND")
+        case Some(zone) =>
           val person = sender
           person ! RequestPulses
           println("ROAMING STARTED")
@@ -33,59 +35,55 @@ class Roamer(mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersis
           } yield f
 
           future onSuccess {
-            case current =>
-              current.foreach(l => become(visit(person, killablesHabitation(zone) :+ l)))
+            case Some(current) =>
+              search(persister.killableMobsBy(zone))(waitTarget(current))
+            case None =>
+              println("### CURRENT LOCATION UNKNOWN")
           }
       }
   }
 
-  def visit(person: ActorRef, locations: Seq[Location]): Receive = locations match {
-    case Nil =>
-      println("ROAMING FINISHED")
+  def waitTarget(current: Location)(searcher: ActorRef): Receive = {
+    case MobFound(alias) =>
+      person ! Attack(alias)
+      become(waitKill(searcher, current, 0, isSitting = false))
+    case SearchFinished =>
+      finishRoaming(current)
+    case e => searcher ! e
+  }
+
+  private def finishRoaming(current: Location) {
+    goAndDo(current, person, (visited) => {
       person ! YieldPulses
       person ! RoamingFinished
-      roam
-    case x :: xs =>
-      println("VISIT " + x.title)
-      val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper, persister, person))
-      watch(travelTask)
-      travelTask ! GoTo(x)
-
-      base(person, travelTask, xs)
+      become(roam)
+      println("### TRAVEL SUBTASK TERMINATED")
+    })
   }
 
-  private def base(person: ActorRef, travelTask: ActorRef, xs: Seq[Location]): Receive = {
+  private def waitKill(searcher: ActorRef, current: Location, mem: Int, isSitting: Boolean): Receive = {
     case KillEvent(_, _) =>
       person ! new SimpleCommand("взять все труп")
-    case Terminated(ref) if ref == travelTask =>
-      become(visit(person, xs))
-      println("### TRAVEL SUBTASK TERMINATED")
-    case e@GlanceEvent(room, direction) =>
-      room.mobs.flatMap(mobByFullName(_)).filter(_.killable).headOption.foreach {
-        case mob =>
-          mob.alias.foreach {
-            case x =>
-              person ! Attack(x)
-          }
-      }
-      travelTask ! e
-
-      val future = for {
-        f <- (mapper ? CurrentLocation).mapTo[Option[Location]]
-      } yield f
-
-      future onSuccess {
-        case current =>
-          current.foreach {
-            case c =>
-              base(person, travelTask: ActorRef, xs.filterNot(_.id === c.id))
-          }
-      }
     case InterruptRoaming =>
-      become(visit(person, xs.last :: Nil))
-    case c: RenderableCommand => person ! c
-    case e => travelTask ! e
-
+      watch(searcher)
+      searcher ! PoisonPill
+      become {
+        case Terminated(ref) if ref == searcher =>
+          finishRoaming(current)
+      }
+    case Pulse =>
+      if (mem > 0) {
+        if (!isSitting) {
+          person ! new SimpleCommand("отд")
+          become(waitKill(searcher, current, mem, isSitting = true))
+        }
+      } else {
+        person ! new SimpleCommand("вст")
+        become(waitTarget(current)(searcher))
+      }
+    case StatusLineEvent(_, _, _, mem, _, _) =>
+      become(waitKill(searcher, current, mem, isSitting))
+    case e => searcher ! e
   }
 }
 

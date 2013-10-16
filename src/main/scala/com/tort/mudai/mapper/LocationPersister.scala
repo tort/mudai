@@ -10,6 +10,7 @@ import Q.interpolation
 import java.util
 import com.tort.mudai.mapper.Direction._
 import com.tort.mudai.mapper.Mob._
+import com.tort.mudai.mapper.Zone.ZoneName
 
 trait LocationPersister {
   def locationByTitle(title: String): Seq[Location]
@@ -40,17 +41,19 @@ trait LocationPersister {
 
   def mobBy(shortName: String @@ ShortName): Option[Mob]
 
+  def killableMobsBy(zone: Zone): Set[Mob]
+
   def updateLocation(zone: String)(location: String)
 
   def nonBorderNeighbors(location: String): Set[Location]
 
-  def zoneByName(zoneName: String): Zone
+  def zoneByName(zoneName: String @@ ZoneName): Zone
 
   def loadLocation(current: Location, direction: String @@ Direction): Option[Location]
 
   def loadLocations(zone: Zone): Set[Location]
 
-  def loadZoneByName(name: String): Option[Zone]
+  def loadZoneByName(name: String @@ ZoneName): Option[Zone]
 }
 
 trait TransitionPersister {
@@ -282,11 +285,11 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     sqlu"update location set zone = $zoneId where id = $locId".first
   }
 
-  def loadZoneByName(name: String) = DB.db withSession {
+  def loadZoneByName(name: String @@ ZoneName) = DB.db withSession {
     sql"select * from zone where name = $name".as[Zone].firstOption
   }
 
-  def zoneByName(zoneName: String) = DB.db withSession {
+  def zoneByName(zoneName: String @@ ZoneName) = DB.db withSession {
     sql"select * from zone where name = $zoneName".as[Zone].firstOption match {
       case None =>
         val newId = generateId()
@@ -312,6 +315,10 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
 
   def locationByItem(fullName: String) = DB.db withSession {
     sql"select distinct l.* from disposition d join item i on d.item = i.id join location l on d.location = l.id where i.fullName = $fullName".as[Location].list
+  }
+
+  def killableMobsBy(zone: Zone): Set[Mob] = DB.db withSession {
+    sql"select distinct m.id, m.fullname, m.shortname, m.alias, m.iskillable from mob m join habitation h on h.mob = m.id join location l on h.location = l.id join zone z on l.zone = z.id where z.id = ${zone.id} and m.iskillable = 1".as[Mob].list.toSet
   }
 }
 

@@ -9,6 +9,7 @@ import com.tort.mudai.mapper.Direction._
 import scalaz._
 import Scalaz._
 import com.tort.mudai.command.{WalkCommand, RequestWalkCommand}
+import com.tort.mudai.mapper.Zone.ZoneName
 
 
 class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPersister, transitionPersister: TransitionPersister)
@@ -168,6 +169,6 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
 
 case class PathTo(target: Location)
 
-case class NameZone(zoneName: String, initLocation: Option[Location] = None)
+case class NameZone(zoneName: String @@ ZoneName, initLocation: Option[Location] = None)
 
 case class MoveEvent(from: Option[Location], direction: Option[String @@ Direction], to: Location)

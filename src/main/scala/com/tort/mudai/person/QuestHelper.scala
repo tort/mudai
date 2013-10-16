@@ -23,8 +23,17 @@ trait QuestHelper extends Actor {
     context.become(pfProcess(travelTask).orElse(onArrived(travelTask, toDo)))
   }
 
+  def search(mobs: Set[Mob])(onEvent: (ActorRef) => Receive) = {
+    val searcher = context.actorOf(Props(classOf[Searcher], mapper, persister, pathHelper, person))
+    searcher ! FindMobs(mobs)
+    context.become(onEvent(searcher).orElse(passEvents(searcher)))
+  }
 
-  def onArrived(travelTask: ActorRef, toDo: (Set[Location]) => Unit): Receive = {
+  private def passEvents(searcher: ActorRef): Receive = {
+    case e => searcher ! e
+  }
+
+  private def onArrived(travelTask: ActorRef, toDo: (Set[Location]) => Unit): Receive = {
     case TravelToTerminated(task, visited) if task == travelTask => toDo(visited)
     case command: SimpleCommand => person ! command
     case Pulse =>

@@ -7,6 +7,8 @@ import com.tort.mudai.mapper._
 import com.tort.mudai.task.TravelTo
 import scala.concurrent.duration._
 import akka.actor.Terminated
+import com.tort.mudai.mapper.Zone.ZoneName
+import scalaz.@@
 
 class Person(login: String, password: String, mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersister) extends Actor {
 
@@ -15,7 +17,7 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
   val adapter = actorOf(Props[Adapter])
   val snoopable = actorOf(Props[Snoopable])
   val fighter = actorOf(Props(classOf[Fighter], self, persister))
-  val roamer = actorOf(Props(classOf[Roamer], mapper, pathHelper, persister))
+  val roamer = actorOf(Props(classOf[Roamer], mapper, pathHelper, persister, self))
   val provisioner = actorOf(Props(classOf[Provisioner]))
   val statusTranslator = actorOf(Props(classOf[StatusTranslator]))
   val whiteSpiderQuest = actorOf(Props(classOf[WhiteSpiderQuest], mapper, pathHelper, persister, self))
@@ -68,7 +70,7 @@ class StatusTranslator extends Actor {
   val maxStamina = 135.0
 
   def rec: Receive = {
-    case StatusLineEvent(health, stamina, exp, level, gold) =>
+    case StatusLineEvent(health, stamina, exp, mem, level, gold) =>
       sender ! StaminaChange(stamina * 100 / maxStamina)
   }
 }
@@ -99,6 +101,6 @@ case object RequestPulses
 
 case object YieldPulses
 
-case class Roam(zoneName: String)
+case class Roam(zoneName: String @@ ZoneName)
 
 case class Attack(target: String)

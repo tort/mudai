@@ -9,11 +9,19 @@ import akka.actor.ActorDSL._
 import scala.annotation.tailrec
 import com.tort.mudai.person.Snoop
 import com.tort.mudai.person.RawWrite
-import com.tort.mudai.mapper.{NameZone, Location, SQLLocationPersister, PathTo}
+import com.tort.mudai.mapper._
 import scala.concurrent.{ExecutionContext, Future}
 import ExecutionContext.Implicits.global
 import akka.util.Timeout
 import scala.concurrent.duration._
+import com.tort.mudai.person.StartQuest
+import com.tort.mudai.person.Snoop
+import com.tort.mudai.mapper.PathTo
+import com.tort.mudai.person.GoTo
+import com.tort.mudai.person.RawWrite
+import com.tort.mudai.person.Roam
+import com.tort.mudai.mapper.NameZone
+import com.tort.mudai.person.Attack
 
 class MudConsole {
   val persister = new SQLLocationPersister
@@ -57,14 +65,14 @@ class MudConsole {
         val targetAndMenu = menu(target)
         targetAndMenu._1.foreach(person ! GoTo(_))
         userInputLoop(person, targetAndMenu._2)
-      case "зонинг" :: zone =>
-        person ! Roam(zone.mkString(" "))
+      case "зонинг" :: zoneName =>
+        person ! Roam(Zone.name(zoneName.mkString(" ")))
         userInputLoop(person, Map())
       case "стопзонинг" :: Nil =>
         person ! InterruptRoaming
         userInputLoop(person, Map())
-      case "зона" :: zone =>
-        person ! NameZone(zone.mkString(" "))
+      case "зона" :: name =>
+        person ! NameZone(Zone.name(name.mkString(" ")))
         userInputLoop(person, Map())
       case "аттак" :: name =>
         val targetName: String = name.mkString(" ")

@@ -8,10 +8,14 @@ class StatusLineTrigger extends EventTrigger[StatusLineEvent] {
   def fireEvent(text: String) = {
     val Pattern(health, stamina, exp, mem, level, gold) = text
 
-    val secondsAndMinutes = mem.split(":")
-    val seconds = secondsAndMinutes(0).toInt * 60 + secondsAndMinutes(1).toInt
+    StatusLineEvent(health.toInt, stamina.toInt, exp.toInt, seconds(mem), level.toInt, gold.toInt)
+  }
 
-    StatusLineEvent(health.toInt, stamina.toInt, exp.toInt, seconds, level.toInt, gold.toInt)
+  private def seconds(mem: String) = mem match {
+    case "0" => 0
+    case m =>
+      val secondsAndMinutes = mem.split(":")
+      secondsAndMinutes(0).toInt * 60 + secondsAndMinutes(1).toInt
   }
 }
 
