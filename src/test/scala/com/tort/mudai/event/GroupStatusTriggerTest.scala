@@ -20,7 +20,6 @@ class GroupStatusTriggerTest extends FunSuite with ShouldMatchers {
   }
 
   test("group member name extraction") {
-    val name: scalaz.@@[String, ShortName] = new GroupStatusTrigger().fireEvent(sample).shortName
-    name should be("Батрак")
+    new GroupStatusTrigger().fireEvent(sample).shortName should be("Батрак")
   }
 }
