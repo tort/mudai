@@ -42,17 +42,10 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
       person ! new SimpleCommand("дать клевец дружинник")
       person ! new SimpleCommand("прик все воор клевец")
     case TargetAssistedEvent(assister, targetGenitive) =>
-      persister.mobByShortName(assister) match {
-        case Some(m) if m.alias.isDefined =>
-          persister.mobByGenitive(targetGenitive) match {
-            case Some(t) if t.alias.isDefined =>
-              if (m /== t) person ! CurseCommand(m.alias.get)
-              else person ! CurseCommand(s"2.${m.alias.get}")
-            case None =>
-              person ! CurseCommand(m.alias.get)
-          }
-        case None =>
-      }
+      for {
+        mob <- persister.mobByShortName(assister)
+        alias <- mob.alias
+      } yield person ! CurseCommand(alias)
     case RequestPulses => person ! RequestPulses
     case YieldPulses => person ! YieldPulses
     case c: RenderableCommand if sender == antiBasher => person ! c
