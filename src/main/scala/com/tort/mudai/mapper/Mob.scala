@@ -8,7 +8,8 @@ class Mob(val id: String,
                val shortName: Option[String],
                val alias: Option[String],
                val killable: Boolean,
-               val genitive: Option[String]) {
+               val genitive: Option[String],
+               val isAssisting: Boolean) {
 
   override def equals(obj: scala.Any) = obj match {
     case mob: Mob => this.id === mob.id

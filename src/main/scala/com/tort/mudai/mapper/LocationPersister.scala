@@ -72,7 +72,7 @@ trait TransitionPersister {
 
 class SQLLocationPersister extends LocationPersister with TransitionPersister {
   implicit val getLocationResult = GetResult(l => new Location(l.<<, l.<<, l.<<, zone = loadZone(l.<<)))
-  implicit val getMobResult = GetResult(l => new Mob(l.<<, l.<<, Option(l.<<), Option(l.<<), l.<<, Option(l.<<)))
+  implicit val getMobResult = GetResult(l => new Mob(l.<<, l.<<, Option(l.<<), Option(l.<<), l.<<, Option(l.<<), l.<<))
   implicit val getItemResult = GetResult(l => new Item(l.<<, l.<<, Option(l.<<), Option(l.<<), Option(l.<<)))
   implicit val getZoneResult = GetResult(z => new Zone(z.<<, z.<<))
 
@@ -206,11 +206,11 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def mobByShortName(shortName: String @@ ShortName) = DB.db withSession {
-    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive from mob m where m.shortName = $shortName".as[Mob].firstOption
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting from mob m where m.shortName = $shortName".as[Mob].firstOption
   }
 
   def mobByFullName(name: String): Option[Mob] = DB.db withSession {
-    val mob = sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive from mob m where m.fullName = $name".as[Mob].firstOption
+    val mob = sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting from mob m where m.fullName = $name".as[Mob].firstOption
     mob match {
       case None =>
         val id = generateId()
@@ -218,7 +218,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
         val shortName: String = null
         val fullName = name
         sqlu"insert into mob(id, alias, shortName, fullName) values($id, $alias, $shortName, $fullName)".first
-        Some(new Mob(id, fullName, Option(alias), Option(shortName), killable = false, None))
+        Some(new Mob(id, fullName, Option(alias), Option(shortName), killable = false, None, false))
       case mob => mob
     }
   }
@@ -322,7 +322,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def killableMobsBy(zone: Zone): Set[Mob] = DB.db withSession {
-    sql"select distinct m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive from mob m join habitation h on h.mob = m.id join location l on h.location = l.id join zone z on l.zone = z.id where z.id = ${zone.id} and m.iskillable = 1".as[Mob].list.toSet
+    sql"select distinct m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting from mob m join habitation h on h.mob = m.id join location l on h.location = l.id join zone z on l.zone = z.id where z.id = ${zone.id} and m.iskillable = 1".as[Mob].list.toSet
   }
 
   def updateGenitive(mob: Mob, genitive: String @@ Genitive) = DB.db withSession {

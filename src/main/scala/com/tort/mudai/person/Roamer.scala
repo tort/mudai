@@ -1,7 +1,7 @@
 package com.tort.mudai.person
 
 import akka.actor._
-import com.tort.mudai.mapper.{Location, LocationPersister, PathHelper}
+import com.tort.mudai.mapper.{Mob, Location, LocationPersister, PathHelper}
 import com.tort.mudai.command.SimpleCommand
 import akka.pattern.ask
 import akka.util.Timeout
@@ -44,13 +44,26 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
   }
 
   def waitTarget(current: Location)(searcher: ActorRef): Receive = {
-    case MobFound(alias) =>
-      person ! Attack(alias)
-      become(waitKill(searcher, current, 0, isSitting = false))
+    case MobFound(targets, visibles) =>
+      if (!moreThanTwoSameAssistsPresent(visibles)) {
+        val group = visibles.filter(_.isAssisting).groupBy(x => x).toSeq.sortBy(x => x._2.size).reverse.filter(m => targets.contains(m._1))
+        group.headOption match {
+          case Some((m, xs)) if (m.alias.isDefined) =>
+            person ! Attack(s"${xs.size}.${m.alias.get}")
+            become(waitKill(searcher, current, 0, isSitting = false))
+          case None =>
+            targets.headOption.foreach(m => person ! Attack(m.alias.get))
+            become(waitKill(searcher, current, 0, isSitting = false))
+        }
+      }
     case SearchFinished =>
       finishRoaming(current)
     case e => searcher ! e
   }
+
+
+  protected def moreThanTwoSameAssistsPresent(visibles: Seq[Mob]): Boolean =
+    visibles.filter(_.isAssisting).groupBy(_.id).map(x => x._1 -> x._2.size).find(x => x._2 > 2).isDefined
 
   private def finishRoaming(current: Location) {
     goAndDo(current, person, (visited) => {

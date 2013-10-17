@@ -24,13 +24,11 @@ class Searcher(val mapper: ActorRef, val persister: LocationPersister, val pathH
     visit(lookForMob(mobs, caller), onAllVisited)(toVisit)
   }
 
-  private def lookForMob(mobs: Set[Mob], caller: ActorRef)(travel: ActorRef): Receive = {
+  private def lookForMob(targets: Set[Mob], caller: ActorRef)(travel: ActorRef): Receive = {
     case e@GlanceEvent(roomSnapshot, _) =>
-      val needed: Seq[String] = roomSnapshot.mobs.toSet.intersect(mobs.map(_.fullName)).toList
-      needed match {
-        case x :: xs =>
-          caller ! MobFound(mobs.find(m => m.fullName === x).flatMap(_.alias).get)
-        case Nil =>
+      if (roomSnapshot.mobs.toSet.intersect(targets.map(_.fullName)).size > 0) {
+        val visibles = roomSnapshot.mobs.map(fullName => persister.mobByFullName(fullName)).flatten
+          caller ! MobFound(visibles.toSet.intersect(targets), visibles)
       }
       travel ! e
   }
@@ -58,4 +56,4 @@ case class FindMobs(mobs: Set[Mob])
 
 case object SearchFinished
 
-case class MobFound(alias: String)
+case class MobFound(targets: Set[Mob], visibles: Seq[Mob])

@@ -42,7 +42,7 @@ class SimpleQuest(val mapper: ActorRef, val persister: LocationPersister, val pa
   }
 
   private def waitMobFound(searcher: ActorRef, location: Location): Receive = {
-    case MobFound(_) =>
+    case MobFound(_, _) =>
       person ! new SimpleCommand("нанять батрак 10")
       watch(searcher)
       searcher ! PoisonPill
@@ -70,8 +70,8 @@ class SimpleQuest(val mapper: ActorRef, val persister: LocationPersister, val pa
   }
 
   def waitTargetFound(searcher: ActorRef, startLocation: Location): Receive = {
-    case MobFound(alias) =>
-      person ! Attack(alias)
+    case MobFound(targets, _) =>
+      person ! Attack(targets.head.alias.get)
       become(waitKill(searcher, startLocation))
     case SearchFinished =>
       goAndDo(hunterLocation, person, (visited) => {
