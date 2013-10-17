@@ -23,20 +23,20 @@ class Adapter extends Actor {
     new LoginPromptTrigger,
     new PasswordPromptTrigger,
     new FightRoundTrigger,
-    new KillTrigger,
     new GlanceTrigger,
     new DiscoverObstacleTrigger,
     new MemFinishedTrigger,
     new LightDimmedTrigger,
-    new StatusLineTrigger,
     new TargetAssistedTrigger,
     new TargetFleeTrigger,
     new DisarmTrigger,
+    new DisarmAssistantTrigger,
     new CurseFailedTrigger,
     new BashTrigger,
-    new GroupStatusTrigger,
     new CurseSucceededTrigger,
-    new DisarmAssistantTrigger
+    new KillTrigger,
+    new GroupStatusTrigger,
+    new StatusLineTrigger
   )
 
   private def parse(text: String) =
