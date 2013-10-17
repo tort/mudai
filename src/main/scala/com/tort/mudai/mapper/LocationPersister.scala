@@ -57,7 +57,7 @@ trait LocationPersister {
 
   def loadZoneByName(name: String @@ ZoneName): Option[Zone]
 
-  def updateGenitive(shortName: String @@ ShortName, genitive: String @@ Genitive)
+  def updateGenitive(mob: Mob, genitive: String @@ Genitive)
 }
 
 trait TransitionPersister {
@@ -325,9 +325,8 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     sql"select distinct m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive from mob m join habitation h on h.mob = m.id join location l on h.location = l.id join zone z on l.zone = z.id where z.id = ${zone.id} and m.iskillable = 1".as[Mob].list.toSet
   }
 
-  def updateGenitive(shortName: String @@ ShortName, genitive: String @@ Genitive) = DB.db withSession {
-    println(s"UPDATE $shortName with GENITIVE $genitive")
-    sqlu"update mob set genitive = $genitive where shortname = $shortName".first
+  def updateGenitive(mob: Mob, genitive: String @@ Genitive) = DB.db withSession {
+    sqlu"update mob set genitive = $genitive where id = ${mob.id}".first
   }
 
   def mobByGenitive(genitive: String @@ Genitive) = DB.db withSession {

@@ -103,7 +103,10 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
       val path = pathTo(previous, target)
       sender ! RawRead(path.mkString)
     case KillEvent(shortName, exp, genitive) =>
-      updateGenitive(shortName, genitive)
+      for {
+        mob <- locationPersister.mobByShortName(shortName)
+        if mob.genitive.isEmpty
+      } yield updateGenitive(mob, genitive)
     case NameZone(zoneName, initLocation) =>
       val zone = zoneByName(zoneName)
       initLocation.orElse(previous).foreach {
