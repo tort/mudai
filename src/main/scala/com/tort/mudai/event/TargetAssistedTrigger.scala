@@ -1,17 +1,18 @@
 package com.tort.mudai.event
 
-class TargetAssistedTrigger extends EventTrigger[TargetAssistedEvent] {
-  val Pattern = ("(?ms).*\n(.*) вступил[ао]? в битву на стороне .*").r
+import com.tort.mudai.mapper.Mob._
+import scalaz.@@
 
-  def matches(text: String) = text.matches(Pattern.toString)
+class TargetAssistedTrigger extends EventTrigger[TargetAssistedEvent] {
+  val Pattern = "(?ms).*\n(.*) вступил[ао]? в битву на стороне (.*).".r
+
+  def matches(text: String) = text.matches(Pattern.toString())
 
   def fireEvent(text: String) = {
-    val Pattern(target) = text
-    println("NEW")
-    println("FIRE TARGET ASSISTED !%s!".format(target))
+    val Pattern(assister, target) = text
 
-    TargetAssistedEvent(target)
+    TargetAssistedEvent(shortName(assister), genitive(target))
   }
 }
 
-case class TargetAssistedEvent(target: String) extends Event
+case class TargetAssistedEvent(assister: String @@ ShortName, target: String @@ Genitive) extends Event

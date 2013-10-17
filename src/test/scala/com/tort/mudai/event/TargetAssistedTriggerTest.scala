@@ -14,6 +14,6 @@ class TargetAssistedTriggerTest extends FunSuite with ShouldMatchers {
   }
 
   test("assister extraction") {
-    new TargetAssistedTrigger().fireEvent(sample).target should be("Бобер")
+    new TargetAssistedTrigger().fireEvent(sample).assister should be("Бобер")
   }
 }

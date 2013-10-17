@@ -102,8 +102,8 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
     case PathTo(target) =>
       val path = pathTo(previous, target)
       sender ! RawRead(path.mkString)
-    case KillEvent(shortName, exp) =>
-      makeKillable(shortName)
+    case KillEvent(shortName, exp, genitive) =>
+      updateGenitive(shortName, genitive)
     case NameZone(zoneName, initLocation) =>
       val zone = zoneByName(zoneName)
       initLocation.orElse(previous).foreach {

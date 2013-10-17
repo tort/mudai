@@ -32,7 +32,7 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
 
       antiBasher ! e
       curser ! e
-    case KillEvent(target, exp) =>
+    case KillEvent(target, exp, _) =>
       person ! new SimpleCommand("группа")
       become(waitGroupStatus)
     case TargetFleeEvent(target, direction) =>
@@ -41,6 +41,18 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
       person ! new SimpleCommand("взять клевец")
       person ! new SimpleCommand("дать клевец дружинник")
       person ! new SimpleCommand("прик все воор клевец")
+    case TargetAssistedEvent(assister, targetGenitive) =>
+      persister.mobByShortName(assister) match {
+        case Some(m) if m.alias.isDefined =>
+          persister.mobByGenitive(targetGenitive) match {
+            case Some(t) if t.alias.isDefined =>
+              if (m /== t) person ! CurseCommand(m.alias.get)
+              else person ! CurseCommand(s"2.${m.alias.get}")
+            case None =>
+              person ! CurseCommand(m.alias.get)
+          }
+        case None =>
+      }
     case RequestPulses => person ! RequestPulses
     case YieldPulses => person ! YieldPulses
     case c: RenderableCommand if sender == antiBasher => person ! c
@@ -53,9 +65,9 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
   def waitGroupStatus: Receive = {
     case GroupStatusEvent(name, health, _, "Стоит") =>
       if ((health.trim === "Ранен") || (health.trim === "Лег.ранен") || (health.trim === "Тяж.ранен") || (health.trim === "Оч.тяж.ранен") || (health.trim === "При смерти")) {
-        val mob: Option[Mob] = persister.mobBy(name)
+        val mob: Option[Mob] = persister.mobByShortName(name)
         mob.flatMap(_.alias) foreach {
-          case alias => person ! new SimpleCommand(s"кол !к и! ${alias}")
+          case alias => person ! new SimpleCommand(s"кол !к и! $alias")
         }
       }
 
@@ -70,17 +82,17 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
     case Pulse =>
       person ! RequestWalkCommand(direction)
       become(waitMove(target))
-    case KillEvent(target, exp) =>
+    case KillEvent(target, exp, _) =>
       person ! new SimpleCommand("группа")
       become(waitGroupStatus)
   }
 
   def waitMove(target: String @@ ShortName): Receive = {
     case MoveEvent(from, Some(direction), to) =>
-      persister.mobBy(target).flatMap(_.alias) match {
+      persister.mobByShortName(target).flatMap(_.alias) match {
         case None => println(s"### UNKNOWN ALIAS FOR $target")
         case Some(alias) =>
-          person ! new SimpleCommand(s"прик все убить ${alias}")
+          person ! new SimpleCommand(s"прик все убить $alias")
       }
       become(rec)
   }

@@ -62,7 +62,7 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
   }
 
   private def waitKill(searcher: ActorRef, current: Location, mem: Int, isSitting: Boolean): Receive = {
-    case KillEvent(_, _) =>
+    case KillEvent(_, _, _) =>
       person ! new SimpleCommand("взять все труп")
     case InterruptRoaming =>
       watch(searcher)
