@@ -38,5 +38,20 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
       person ! MoveEvent(persister.loadLocation("2b7f6585-69eb-4e9f-8d46-bb649b42ca36").some,
         direction.some,
         persister.loadLocation("fcb3a6b8-0393-423e-aae6-7c2335e2c3bc"))
+    case TriggeredMoveRequest("У ямы", direction, "У ямы") if direction == "trigger_jump_north" =>
+      sender ! new SimpleCommand("перепрыгнуть яма")
+      person ! MoveEvent(persister.loadLocation("b29f1fc5-01f9-42ca-a7ca-662e11e8866f").some,
+        direction.some,
+        persister.loadLocation("a2fb7b2f-4830-4900-94f2-9e6dea318daf"))
+    case TriggeredMoveRequest("У ямы", direction, "У ямы") if direction == "trigger_jump_south" =>
+      sender ! new SimpleCommand("перепрыгнуть яма")
+      person ! MoveEvent(persister.loadLocation("a2fb7b2f-4830-4900-94f2-9e6dea318daf").some,
+        direction.some,
+        persister.loadLocation("b29f1fc5-01f9-42ca-a7ca-662e11e8866f"))
+    case r@TriggeredMoveRequest("Сокровищница", direction, "Широкий проход") if direction == "trigger_treasure_down" =>
+      sender ! new SimpleCommand("сезам откройся")
+      person ! MoveEvent(persister.locationByTitle(r.from).headOption,
+        direction.some,
+        persister.locationByTitle(r.to).headOption)
   }
 }
