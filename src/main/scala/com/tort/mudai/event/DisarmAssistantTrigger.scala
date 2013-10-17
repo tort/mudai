@@ -1,7 +1,7 @@
 package com.tort.mudai.event
 
 class DisarmAssistantTrigger extends EventTrigger[DisarmAssistantEvent] {
-  val Pattern = """(?ms).*([^\n]*) ловко выбил ([^\n]*) из рук ([^\n]*)\..*""".r
+  val Pattern = """(?ms).*(?:\u001B\[\d\;\d\d?m)([^\n]*) ловко выбил ([^\n]*) из рук ([^\n]*)\..*""".r
 
   def matches(text: String) = text.matches(Pattern.toString)
 
