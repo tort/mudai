@@ -5,11 +5,14 @@ import com.tort.mudai.command.SimpleCommand
 import com.tort.mudai.mapper.{LocationPersister, MoveEvent}
 import scalaz._
 import Scalaz._
+import com.tort.mudai.event.StatusLineEvent
 
 class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
-  val level = 22
+  def receive = rec(0)
 
-  def receive = {
+  def rec(level: Int): Receive = {
+    case StatusLineEvent(_, _, _, _, level, _) =>
+      rec(level)
     case TriggeredMoveRequest("У шалаша", direction, "Тихий угол") =>
       sender ! new SimpleCommand(s"дать $level кун следопыт")
     case TriggeredMoveRequest("Тихий угол", direction, "У шалаша") =>
