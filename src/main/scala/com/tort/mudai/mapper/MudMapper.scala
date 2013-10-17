@@ -1,6 +1,6 @@
 package com.tort.mudai.mapper
 
-import com.tort.mudai.event.{KillEvent, GlanceEvent}
+import com.tort.mudai.event.{TargetAssistedEvent, KillEvent, GlanceEvent}
 import com.tort.mudai.person.{TriggeredMoveRequest, RawRead, CurrentLocation}
 import akka.actor.Actor
 import com.google.inject.Inject
@@ -107,6 +107,11 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
         mob <- locationPersister.mobByShortName(shortName)
         if mob.genitive.isEmpty
       } yield updateGenitive(mob, genitive)
+    case TargetAssistedEvent(assist, _) =>
+      for {
+        mob <- locationPersister.mobByShortName(assist)
+        if(!mob.isAssisting)
+      } yield locationPersister.markAsAssisting(mob)
     case NameZone(zoneName, initLocation) =>
       val zone = zoneByName(zoneName)
       initLocation.orElse(previous).foreach {

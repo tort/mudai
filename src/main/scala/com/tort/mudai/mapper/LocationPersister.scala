@@ -58,6 +58,8 @@ trait LocationPersister {
   def loadZoneByName(name: String @@ ZoneName): Option[Zone]
 
   def updateGenitive(mob: Mob, genitive: String @@ Genitive)
+
+  def markAsAssisting(mob: Mob): Unit
 }
 
 trait TransitionPersister {
@@ -331,6 +333,10 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
 
   def mobByGenitive(genitive: String @@ Genitive) = DB.db withSession {
     sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive from mob m where m.genitive = $genitive".as[Mob].firstOption
+  }
+
+  def markAsAssisting(mob: Mob) = DB.db withSession {
+    sqlu"update mob set isassisting = 1 where id = ${mob.id}".first
   }
 }
 

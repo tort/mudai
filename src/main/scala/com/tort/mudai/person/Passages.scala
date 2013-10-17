@@ -11,8 +11,9 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
   def receive = rec(0)
 
   def rec(level: Int): Receive = {
-    case StatusLineEvent(_, _, _, _, level, _) =>
-      rec(level)
+    case StatusLineEvent(_, _, _, _, lvl, _) =>
+      if(level != lvl)
+      context.become(rec(lvl))
     case TriggeredMoveRequest("У шалаша", direction, "Тихий угол") =>
       sender ! new SimpleCommand(s"дать $level кун следопыт")
     case TriggeredMoveRequest("Тихий угол", direction, "У шалаша") =>
