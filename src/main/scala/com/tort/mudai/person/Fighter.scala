@@ -38,9 +38,9 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
     case TargetFleeEvent(target, direction) =>
       become(waitPulse(target, direction))
     case DisarmAssistantEvent(_, _, _) =>
-      person ! new SimpleCommand("взять клевец")
-      person ! new SimpleCommand("дать клевец дружинник")
-      person ! new SimpleCommand("прик все воор клевец")
+      person ! new SimpleCommand("взять чудск")
+      person ! new SimpleCommand("дать чудск дружинник")
+      person ! new SimpleCommand("прик все воор чудск")
     case TargetAssistedEvent(assister, targetGenitive) =>
       for {
         mob <- persister.mobByShortName(assister)
