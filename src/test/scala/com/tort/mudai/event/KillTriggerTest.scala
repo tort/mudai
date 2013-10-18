@@ -11,6 +11,13 @@ class KillTriggerTest extends FunSuite with ShouldMatchers {
     "\n" +
     "\n\u001B[0;32m41H\u001B[0;37m \u001B[0;32m92M\u001B[0;37m 949о Зауч:0 2L 12G Вых:ВЗ> "
 
+  val magicalDeath = "Дружинник изрубил дикую яблоньку. От дикой яблоньки осталось только кровавое месиво.\n" +
+    "Дикая яблонька вспыхнула и рассыпалась в прах.\n" +
+    "Ваш опыт повысился на 7000 очков.\n" +
+    "Кровушка стынет в жилах от предсмертного крика дикой яблоньки.\n" +
+    "\n" +
+    "378H 228M 529398о Зауч:0 23L 62G Вых:СВЮЗ> "
+
   test("kill trigger matches") {
     new KillTrigger().matches(Sample) should be(true)
   }
@@ -19,5 +26,9 @@ class KillTriggerTest extends FunSuite with ShouldMatchers {
     val event = new KillTrigger().fireEvent(Sample)
     event.target should be("Толстая муха")
     event.exp should be(63)
+  }
+
+  test("magical mob death") {
+    new KillTrigger().fireEvent(magicalDeath).target should be("Дикая яблонька")
   }
 }

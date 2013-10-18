@@ -102,7 +102,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
     case PathTo(target) =>
       val path = pathTo(previous, target)
       sender ! RawRead(path.mkString)
-    case KillEvent(shortName, exp, genitive) =>
+    case KillEvent(shortName, exp, genitive, _) =>
       for {
         mob <- locationPersister.mobByShortName(shortName)
         if mob.genitive.isEmpty

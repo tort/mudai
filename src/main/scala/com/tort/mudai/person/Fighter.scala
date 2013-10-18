@@ -32,7 +32,7 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
 
       antiBasher ! e
       curser ! e
-    case KillEvent(target, exp, _) =>
+    case KillEvent(target, exp, _, _) =>
       person ! new SimpleCommand("группа")
       become(waitGroupStatus)
     case TargetFleeEvent(target, direction) =>
@@ -75,7 +75,7 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
     case Pulse =>
       person ! RequestWalkCommand(direction)
       become(waitMove(target))
-    case KillEvent(target, exp, _) =>
+    case KillEvent(target, exp, _, _) =>
       person ! new SimpleCommand("группа")
       become(waitGroupStatus)
   }

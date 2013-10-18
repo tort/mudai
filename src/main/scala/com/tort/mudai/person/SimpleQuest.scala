@@ -82,7 +82,7 @@ class SimpleQuest(val mapper: ActorRef, val persister: LocationPersister, val pa
   }
 
   def waitKill(searcher: ActorRef, startLocation: Location): Receive = {
-    case KillEvent(_, _, _) =>
+    case KillEvent(_, _, _, _) =>
       person ! new SimpleCommand("взять все все.труп")
       person ! new SimpleCommand("взять все.труп")
       become(waitTargetFound(searcher, startLocation))
