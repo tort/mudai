@@ -8,16 +8,16 @@ import Scalaz._
 
 class Searcher(val mapper: ActorRef, val persister: LocationPersister, val pathHelper: PathHelper, val person: ActorRef) extends QuestHelper {
   def receive = {
-    case FindMobs(mobs) =>
-      findMobs(mobs, sender, () => onAllVisited(sender))
+    case FindMobs(mobs, area) =>
+      findMobs(mobs, area, sender, () => onAllVisited(sender))
   }
 
   private def onAllVisited(caller: ActorRef) {
     caller ! SearchFinished
   }
 
-  private def findMobs(mobs: Set[Mob], caller: ActorRef, onAllVisited: () => Unit) {
-    whereMobLives(mobs) |> visitAll(mobs, caller, onAllVisited)
+  private def findMobs(mobs: Set[Mob], area: Set[Location], caller: ActorRef, onAllVisited: () => Unit) {
+    area |> visitAll(mobs, caller, onAllVisited)
   }
 
   private def visitAll(mobs: Set[Mob], caller: ActorRef, onAllVisited: () => Unit)(toVisit: Set[Location]): Unit = {
@@ -43,16 +43,9 @@ class Searcher(val mapper: ActorRef, val persister: LocationPersister, val pathH
         })
     }
   }
-
-  //TODO fix get
-  private def whereMobLives(mobs: Set[Mob]): Set[Location] = persister.loadLocations(mobZone(mobs.head).get)
-
-  private def mobZone(mob: Mob): Option[Zone] = {
-    persister.locationByMob(mob.fullName).head.zone
-  }
 }
 
-case class FindMobs(mobs: Set[Mob])
+case class FindMobs(mobs: Set[Mob], area: Set[Location])
 
 case object SearchFinished
 

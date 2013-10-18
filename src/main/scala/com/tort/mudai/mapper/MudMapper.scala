@@ -10,10 +10,11 @@ import scalaz._
 import Scalaz._
 import com.tort.mudai.command.{WalkCommand, RequestWalkCommand}
 import com.tort.mudai.mapper.Zone.ZoneName
+import com.tort.mudai.mapper.Location.LocationId
 
 
 class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPersister, transitionPersister: TransitionPersister)
-  extends Actor {
+  extends Actor with ReachabilityHelper {
 
   import context._
   import locationPersister._
@@ -130,16 +131,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
   }
 
   private def updateZone(location: Location, zone: Zone) {
-    zoneLocations(location).foreach(updateLocation(zone.id))
-  }
-
-  def zoneLocations(l: Location): Set[String] = {
-    def internal(visited: Set[String])(loc: String): Set[String] = {
-      val neighbors: Set[Location] = nonBorderNeighbors(loc)
-      (neighbors.map(_.id) -- visited).flatMap(internal(visited ++ neighbors.map(_.id) + loc)) + loc
-    }
-
-    internal(Set())(l.id)
+    reachableFrom(location, nonBorderNeighbors).foreach(updateLocation(zone.id))
   }
 
   private def updateMobAndArea(room: RoomSnapshot, current: Option[Location]) {

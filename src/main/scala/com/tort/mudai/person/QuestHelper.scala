@@ -6,6 +6,8 @@ import com.tort.mudai.mapper._
 import com.tort.mudai.task.TravelTo
 import com.tort.mudai.command.SimpleCommand
 import com.tort.mudai.task.TravelToTerminated
+import scalaz.@@
+import com.tort.mudai.mapper.Location.LocationId
 
 trait QuestHelper extends Actor {
   def pathHelper: PathHelper
@@ -23,9 +25,9 @@ trait QuestHelper extends Actor {
     context.become(pfProcess(travelTask).orElse(onArrived(travelTask, toDo)))
   }
 
-  def search(mobs: Set[Mob])(onEvent: (ActorRef) => Receive) = {
+  def search(mobs: Set[Mob], area: Set[Location])(onEvent: (ActorRef) => Receive) = {
     val searcher = context.actorOf(Props(classOf[Searcher], mapper, persister, pathHelper, person))
-    searcher ! FindMobs(mobs)
+    searcher ! FindMobs(mobs, area)
     context.become(onEvent(searcher).orElse(passEvents(searcher)))
   }
 

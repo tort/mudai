@@ -17,7 +17,9 @@ class PathHelper(transitionPersister: TransitionPersister) {
 
     transitionPersister.allTransitions.foreach {
       case transition =>
-        val edge = (transition.from.id ~+> transition.to.id)(transition.direction)
+        val fromId: String = transition.from.id
+        val toId: String = transition.to.id
+        val edge = (fromId ~+> toId)(transition.direction)
         graph += edge
     }
 

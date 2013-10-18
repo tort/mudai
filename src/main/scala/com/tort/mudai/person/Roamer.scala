@@ -1,16 +1,19 @@
 package com.tort.mudai.person
 
 import akka.actor._
-import com.tort.mudai.mapper.{Mob, Location, LocationPersister, PathHelper}
+import com.tort.mudai.mapper._
 import com.tort.mudai.command.SimpleCommand
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
-import akka.actor.Terminated
-import com.tort.mudai.event.{StatusLineEvent, KillEvent}
+import com.tort.mudai.event.KillEvent
 import scala.Some
+import akka.actor.Terminated
+import com.tort.mudai.event.StatusLineEvent
 
-class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister, val person: ActorRef) extends QuestHelper {
+class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister, val person: ActorRef)
+  extends QuestHelper
+  with ReachabilityHelper {
 
   import context._
 
@@ -36,11 +39,15 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
 
           future onSuccess {
             case Some(current) =>
-              search(persister.killableMobsBy(zone))(waitTarget(current))
+              search(persister.killableMobsBy(zone), area(zone))(waitTarget(current))
             case None =>
               println("### CURRENT LOCATION UNKNOWN")
           }
       }
+  }
+
+  private def area(zone: Zone): Set[Location] = {
+    reachableFrom(entrance(zone), nonBorderNonLockableNeighbors, locationsOfSummoners(zone)).map(x => persister.loadLocation(x))
   }
 
   def waitTarget(current: Location)(searcher: ActorRef): Receive = {

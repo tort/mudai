@@ -63,7 +63,7 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: Loca
           context.stop(self)
         case Some(path) =>
           direction match {
-            case Some(dir) if path.head.size > 0 && dir === path.head && from.id === current.id =>
+            case Some(dir) if path.head.size > 0 && dir === path.head && from === current =>
               become(pulse(path.tail.some, to, target, visited + from + to))
             case _ =>
               become(pulse(None, to, target, visited + from + to))

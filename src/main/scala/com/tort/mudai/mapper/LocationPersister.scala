@@ -11,11 +11,12 @@ import java.util
 import com.tort.mudai.mapper.Direction._
 import com.tort.mudai.mapper.Mob._
 import com.tort.mudai.mapper.Zone.ZoneName
+import com.tort.mudai.mapper.Location.LocationId
 
 trait LocationPersister {
   def locationByTitle(title: String): Seq[Location]
 
-  def locationByMob(shortName: String): Seq[Location]
+  def locationByMob(fullName: String): Set[Location]
 
   def locationByMobShortName(shortName: String): Seq[Location]
 
@@ -45,9 +46,11 @@ trait LocationPersister {
 
   def killableMobsBy(zone: Zone): Set[Mob]
 
-  def updateLocation(zone: String)(location: String)
+  def updateLocation(zone: String)(location: String @@ LocationId)
 
-  def nonBorderNeighbors(location: String): Set[Location]
+  def nonBorderNeighbors(location: String @@ LocationId): Set[Location]
+
+  def nonBorderNonLockableNeighbors(location: String @@ LocationId): Set[Location]
 
   def zoneByName(zoneName: String @@ ZoneName): Zone
 
@@ -60,6 +63,10 @@ trait LocationPersister {
   def updateGenitive(mob: Mob, genitive: String @@ Genitive)
 
   def markAsAssisting(mob: Mob): Unit
+
+  def entrance(zone: Zone): Location
+
+  def locationsOfSummoners(zone: Zone): Set[Location]
 }
 
 trait TransitionPersister {
@@ -73,7 +80,7 @@ trait TransitionPersister {
 }
 
 class SQLLocationPersister extends LocationPersister with TransitionPersister {
-  implicit val getLocationResult = GetResult(l => new Location(l.<<, l.<<, l.<<, zone = loadZone(l.<<)))
+  implicit val getLocationResult = GetResult(l => new Location(Location.locationId(l.<<), l.<<, l.<<, zone = loadZone(l.<<)))
   implicit val getMobResult = GetResult(l => new Mob(l.<<, l.<<, Option(l.<<), Option(l.<<), l.<<, Option(l.<<), l.<<))
   implicit val getItemResult = GetResult(l => new Item(l.<<, l.<<, Option(l.<<), Option(l.<<), Option(l.<<)))
   implicit val getZoneResult = GetResult(z => new Zone(z.<<, z.<<))
@@ -281,14 +288,16 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     sql"select distinct l.* from habitation h join mob m on h.mob = m.id join location l on h.location = l.id where m.iskillable = 1 and l.zone = $zoneId".as[Location].list
   }
 
-  def nonBorderNeighbors(location: String) = DB.db withSession {
-    val locFrom = location
+  def nonBorderNonLockableNeighbors(locFrom: String @@ LocationId) = DB.db withSession {
+    sql"select lt.* from location lf join transition t on t.locfrom = lf.id join location lt on t.locto = lt.id where lf.id = $locFrom and t.isborder = 0 and t.islockable = 0".as[Location].list().toSet
+  }
+
+  def nonBorderNeighbors(locFrom: String @@ LocationId) = DB.db withSession {
     sql"select lt.* from location lf join transition t on t.locfrom = lf.id join location lt on t.locto = lt.id where lf.id = $locFrom and t.isborder = 0".as[Location].list().toSet
   }
 
-  def updateLocation(zoneId: String)(location: String) = DB.db withSession {
-    val locId = location
-    sqlu"update location set zone = $zoneId where id = $locId".first
+  def updateLocation(zoneId: String)(location: String @@ LocationId) = DB.db withSession {
+    sqlu"update location set zone = $zoneId where id = $location".first
   }
 
   def loadZoneByName(name: String @@ ZoneName) = DB.db withSession {
@@ -312,7 +321,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def locationByMob(fullName: String) = DB.db withSession {
-    sql"select distinct l.* from habitation h join mob m on h.mob = m.id join location l on h.location = l.id where m.fullName = $fullName".as[Location].list
+    sql"select distinct l.* from habitation h join mob m on h.mob = m.id join location l on h.location = l.id where m.fullName = $fullName".as[Location].list.toSet
   }
 
   def locationByMobShortName(shortName: String) = DB.db withSession {
@@ -337,6 +346,14 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
 
   def markAsAssisting(mob: Mob) = DB.db withSession {
     sqlu"update mob set isassisting = 1 where id = ${mob.id}".first
+  }
+
+  def entrance(zone: Zone): Location = DB.db withSession {
+    sql"select l.* from location l join transition t on t.locto = l.id where l.zone = ${zone.id} and t.isborder = 1".as[Location].first
+  }
+
+  def locationsOfSummoners(zone: Zone): Set[Location] = DB.db withSession {
+    sql"select l.* from location l join habitation h on h.location = l.id join mob m on h.mob = m.id where l.zone = ${zone.id} and m.summoner = 1".as[Location].list.toSet
   }
 }
 
