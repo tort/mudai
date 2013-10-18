@@ -52,6 +52,6 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
       sender ! new SimpleCommand("сезам откройся")
       person ! MoveEvent(persister.locationByTitle(r.from).headOption,
         direction.some,
-        persister.locationByTitle(r.to).headOption)
+        persister.locationByTitle(r.to).head)
   }
 }
