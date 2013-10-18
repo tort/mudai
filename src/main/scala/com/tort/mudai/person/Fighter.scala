@@ -56,7 +56,11 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
   }
 
   def waitGroupStatus: Receive = {
-    case GroupStatusEvent(name, health, _, "Стоит") =>
+    case GroupStatusEvent(name, health, _, status) if status === "Стоит" || status === "Сидит" =>
+      if(status === "Сидит") {
+        person ! new SimpleCommand("прик все встать")
+      }
+
       if ((health.trim === "Ранен") || (health.trim === "Лег.ранен") || (health.trim === "Тяж.ранен") || (health.trim === "Оч.тяж.ранен") || (health.trim === "При смерти")) {
         val mob: Option[Mob] = persister.mobByShortName(name)
         mob.flatMap(_.alias) foreach {
