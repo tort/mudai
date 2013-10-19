@@ -8,7 +8,8 @@ import com.tort.mudai.task.TravelTo
 import scala.concurrent.duration._
 import akka.actor.Terminated
 import com.tort.mudai.mapper.Zone.ZoneName
-import scalaz.@@
+import scalaz._
+import Scalaz._
 import com.tort.mudai.quest.MainRogueQuest
 
 class Person(login: String, password: String, mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersister) extends Actor {
@@ -35,7 +36,9 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
 
   def rec(tasks: Seq[ActorRef], pulseSubscribers: Seq[ActorRef]): Receive = {
     case snoop: Snoop => snoopable ! snoop
-    case rawRead: RawRead => snoopable ! rawRead
+    case rawRead: RawRead =>
+      snoopable ! rawRead
+      quests.foreach(_._2 ! rawRead)
     case rawWrite: RawWrite => adapter ! rawWrite
     case Login =>
       become(rec(tasks :+ sender, pulseSubscribers))
@@ -52,6 +55,12 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
     case StartQuest(quest) =>
       quests(quest) ! StartQuest
       provisioner ! StartQuest(quest)
+    case e@MoveEvent(Some(from), Some(direction), to) if from.zone.map(_.id) /== to.zone.map(_.id) =>
+      from.zone.foreach {
+        case z =>
+          mapper ! NameZone(z.name, from.some)
+      }
+      tasks.filter(_ != sender).foreach(_ ! e)
     case RequestPulses =>
       val newSubscribers: Seq[ActorRef] = tasks.filter(t => (sender +: pulseSubscribers).contains(t))
       become(rec(tasks, newSubscribers))
