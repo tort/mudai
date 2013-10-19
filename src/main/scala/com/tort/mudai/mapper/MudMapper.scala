@@ -10,7 +10,6 @@ import scalaz._
 import Scalaz._
 import com.tort.mudai.command.{WalkCommand, RequestWalkCommand}
 import com.tort.mudai.mapper.Zone.ZoneName
-import com.tort.mudai.mapper.Location.LocationId
 
 
 class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPersister, transitionPersister: TransitionPersister)
@@ -111,16 +110,26 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
     case TargetAssistedEvent(assist, _) =>
       for {
         mob <- locationPersister.mobByShortName(assist)
-        if(!mob.isAssisting)
+        if !mob.isAssisting
       } yield locationPersister.markAsAssisting(mob)
     case NameZone(zoneName, initLocation) =>
       val zone = zoneByName(zoneName)
-      initLocation.orElse(previous).foreach {
-        case location =>
-          updateZone(location, zone)
-      }
+      initLocation.orElse(previous).foreach(l => updateZone(l, zone))
+    case CheckUnreachable =>
+      checkUnreachable.foreach(x => println(s"${x.id}"))
   }
 
+  def checkUnreachable: Set[Location] = {
+    val unique = locationPersister.locationByTitle("Изба деда и бабки").headOption
+    locationPersister.allLocations.map {
+      case l =>
+        try {
+          l -> pathHelper.pathTo(unique, l)
+        } catch {
+          case x => l -> Nil
+        }
+    }.filterNot(x => x._2.size > 0).map(_._1).toSet
+  }
 
   def checkZoneChange(zone: Option[Zone], newCurrent: Option[Location]) {
     for {
@@ -172,3 +181,5 @@ case class PathTo(target: Location)
 case class NameZone(zoneName: String @@ ZoneName, initLocation: Option[Location] = None)
 
 case class MoveEvent(from: Option[Location], direction: Option[String @@ Direction], to: Location)
+
+case object CheckUnreachable

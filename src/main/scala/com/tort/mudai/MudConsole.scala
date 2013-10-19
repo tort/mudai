@@ -85,6 +85,9 @@ class MudConsole {
         else
           person ! StartQuest(questName)
         userInputLoop(person, Map())
+      case "проверка" :: Nil =>
+        person ! CheckUnreachable
+        userInputLoop(person, Map())
       case _ =>
         person ! RawWrite(line + '\n')
         userInputLoop(person, Map())
