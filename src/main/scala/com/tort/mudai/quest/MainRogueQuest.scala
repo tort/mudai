@@ -3,15 +3,15 @@ package com.tort.mudai.quest
 import com.tort.mudai.command.SimpleCommand
 import com.tort.mudai.person._
 import com.tort.mudai.mapper.{Location, PathHelper, LocationPersister, Zone}
-import akka.actor.ActorRef
+import akka.actor.{Cancellable, ActorRef}
 import com.tort.mudai.event.KillEvent
-import com.tort.mudai.person.Attack
 import com.tort.mudai.person.Roam
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
 
 class MainRogueQuest(val mapper: ActorRef, val persister: LocationPersister, val pathHelper: PathHelper, val person: ActorRef) extends QuestHelper {
+
   import context._
 
   implicit val timeout = Timeout(5 seconds)
@@ -30,33 +30,42 @@ class MainRogueQuest(val mapper: ActorRef, val persister: LocationPersister, val
       future onSuccess {
         case current =>
           current.foreach {
-            case l =>
+            case startLocation =>
               goAndDo(persister.locationByMob("Старик-отшельник отрешенно смотрит сквозь Вас.").head, person, (l) => {
-                system.scheduler.scheduleOnce(5 second, self, FiveSeconds)
-                become(waitTime)
+                val future = system.scheduler.scheduleOnce(5 second, self, FiveSeconds)
+                person ! new SimpleCommand("г помогу")
+                become(waitTime(startLocation, future))
               })
           }
       }
   }
 
-  private def waitTime: Receive = {
+  def interruptQuest(startLocation: Location) {
+    goAndDo(startLocation, person, (l) => {
+      finishQuest(person)
+      become(quest)
+    })
+  }
+
+  private def waitTime(startLocation: Location, future: Cancellable): Receive = {
     case FiveSeconds =>
-      person ! new SimpleCommand("г помогу")
+      println("### QUEST NOT RESPONDING")
+      interruptQuest(startLocation)
+    case RawRead(text) if text.matches( """(?ms).*Ступай, сынок, очисти святое место от этого недостойного человека\.\..*""") =>
       person ! Roam(Zone.name("Посыльная дорога - у главы"))
+      future.cancel()
       become(waitRoamFinish)
   }
 
   private def waitRoamFinish: Receive = {
     case RoamingFinished =>
-      goAndDo(persister.locationByMob("Главарь разбойников стоит здесь.").head, person, (l) => {
-        person ! Attack("главарь")
-        become(waitKill)
-      })
+      person ! KillMobRequest(persister.mobByFullName("Главарь разбойников стоит здесь.").get)
+      become(waitKill)
   }
 
   private def waitKill: Receive = {
-    case KillEvent(_, _, _, _) =>
-      person ! new SimpleCommand("взять труп")
+    case KillEvent(shortName, _, _, _) if shortName == "Главарь разбойников" =>
+      person ! new SimpleCommand("взять глав")
       goAndDo(persister.locationByMob("Старик-отшельник отрешенно смотрит сквозь Вас.").head, person, (l) => {
         person ! new SimpleCommand("сн шап")
         person ! new SimpleCommand("дать труп стар")

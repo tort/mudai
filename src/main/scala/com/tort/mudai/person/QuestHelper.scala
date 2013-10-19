@@ -45,6 +45,7 @@ trait QuestHelper extends Actor {
 
   def finishQuest(person: ActorRef) {
     person ! QuestFinished
+    person ! YieldPulses
     println("QUEST FINISHED")
   }
 }

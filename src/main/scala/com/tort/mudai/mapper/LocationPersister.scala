@@ -83,7 +83,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   implicit val getLocationResult = GetResult(l => new Location(Location.locationId(l.<<), l.<<, l.<<, zone = loadZone(l.<<)))
   implicit val getMobResult = GetResult(l => new Mob(l.<<, l.<<, Option(l.<<), Option(l.<<), l.<<, Option(l.<<), l.<<))
   implicit val getItemResult = GetResult(l => new Item(l.<<, l.<<, Option(l.<<), Option(l.<<), Option(l.<<)))
-  implicit val getZoneResult = GetResult(z => new Zone(z.<<, z.<<))
+  implicit val getZoneResult = GetResult(z => new Zone(z.<<, Zone.name(z.<<)))
 
   def locationByTitle(title: String): Seq[Location] = DB.db withSession {
     sql"select * from location where title like '%#$title%'".as[Location].list
@@ -171,8 +171,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def loadLocation(current: Location, direction: String @@ Direction): Option[Location] = DB.db withSession {
-    val loc = current.id
-    sql"select l.* from transition t join location l on t.locTo = l.id where t.locFrom = $loc and t.direction = $direction"
+    sql"select l.* from transition t join location l on t.locTo = l.id where t.locFrom = ${current.id} and t.direction = $direction"
       .as[Location]
       .list match {
       case Nil => None

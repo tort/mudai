@@ -31,7 +31,7 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
         case Some(zone) =>
           val person = sender
           person ! RequestPulses
-          println("ROAMING STARTED")
+          println("### ROAMING STARTED")
 
           val future = for {
             f <- (mapper ? CurrentLocation).mapTo[Option[Location]]
@@ -43,6 +43,20 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
             case None =>
               println("### CURRENT LOCATION UNKNOWN")
           }
+      }
+
+    case KillMobRequest(mob) =>
+      person ! RequestPulses
+
+      val future = for {
+        f <- (mapper ? CurrentLocation).mapTo[Option[Location]]
+      } yield f
+
+      future onSuccess {
+        case Some(current) =>
+          search(Set(mob), persister.locationByMob(mob.fullName))(waitTarget(current))
+        case None =>
+          println("### CURRENT LOCATION UNKNOWN")
       }
   }
 
@@ -114,3 +128,5 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
 case object RoamingFinished
 
 case object InterruptRoaming
+
+case class KillMobRequest(mob: Mob)
