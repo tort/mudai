@@ -9,6 +9,7 @@ import scala.concurrent.duration._
 import akka.actor.Terminated
 import com.tort.mudai.mapper.Zone.ZoneName
 import scalaz.@@
+import com.tort.mudai.quest.MainRogueQuest
 
 class Person(login: String, password: String, mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersister) extends Actor {
 
@@ -23,7 +24,8 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
   val whiteSpiderQuest = actorOf(Props(classOf[WhiteSpiderQuest], mapper, pathHelper, persister, self))
   val villageWellQuest = actorOf(Props(classOf[VillageWellQuest]))
   val simpleQuest = actorOf(Props(classOf[SimpleQuest], mapper, persister, pathHelper, self))
-  val quests = Map[String, ActorRef]("белый паук" -> whiteSpiderQuest, "колодец" -> villageWellQuest, "рысь" -> simpleQuest)
+  val mainRoqueQuest = actorOf(Props(classOf[MainRogueQuest], mapper, persister, pathHelper, self))
+  val quests = Map[String, ActorRef]("белый паук" -> whiteSpiderQuest, "колодец" -> villageWellQuest, "рысь" -> simpleQuest, "глава" -> mainRoqueQuest)
   val passages = actorOf(Props(classOf[Passages], persister, self))
   val coreTasks = Seq(mapper, fighter, statusTranslator, provisioner, roamer, passages) ++ quests.values
 

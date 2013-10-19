@@ -44,7 +44,6 @@ trait QuestHelper extends Actor {
   }
 
   def finishQuest(person: ActorRef) {
-    person ! new SimpleCommand("рассчитать")
     person ! QuestFinished
     println("QUEST FINISHED")
   }
