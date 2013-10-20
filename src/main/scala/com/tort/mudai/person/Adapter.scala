@@ -22,8 +22,8 @@ class Adapter extends Actor {
     new PeaceTrigger,
     new LoginPromptTrigger,
     new PasswordPromptTrigger,
-    new FightRoundTrigger,
     new GlanceTrigger,
+    new FightRoundTrigger,
     new DiscoverObstacleTrigger,
     new MemFinishedTrigger,
     new LightDimmedTrigger,
@@ -37,7 +37,8 @@ class Adapter extends Actor {
     new KillTrigger,
     new KillMagicMobTrigger,
     new GroupStatusTrigger,
-    new StatusLineTrigger
+    new StatusLineTrigger,
+    new FleeTrigger
   )
 
   private def parse(text: String) =

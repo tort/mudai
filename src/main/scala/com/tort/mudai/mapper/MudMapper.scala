@@ -1,7 +1,7 @@
 package com.tort.mudai.mapper
 
 import com.tort.mudai.event.{TargetAssistedEvent, KillEvent, GlanceEvent}
-import com.tort.mudai.person.{TriggeredMoveRequest, RawRead, CurrentLocation}
+import com.tort.mudai.person.{FleeMove, TriggeredMoveRequest, RawRead, CurrentLocation}
 import akka.actor.Actor
 import com.google.inject.Inject
 import com.tort.mudai.RoomSnapshot
@@ -41,6 +41,8 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
   }
 
   def rec(previous: Option[Location]): Receive = {
+    case FleeMove(_, _, to) =>
+      become(rec(to.some))
     case RequestWalkCommand(direction) =>
       previous.foreach {
         case current =>
@@ -126,7 +128,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
         try {
           l -> pathHelper.pathTo(unique, l)
         } catch {
-          case x => l -> Nil
+          case x: Throwable => l -> Nil
         }
     }.filterNot(x => x._2.size > 0).map(_._1).toSet
   }

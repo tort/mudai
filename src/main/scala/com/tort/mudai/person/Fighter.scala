@@ -1,14 +1,24 @@
 package com.tort.mudai.person
 
 import akka.actor.{ActorRef, Props, Actor}
-import com.tort.mudai.event._
-import com.tort.mudai.command.{RenderableCommand, RequestWalkCommand, SimpleCommand}
-import com.tort.mudai.event.TargetFleeEvent
-import com.tort.mudai.event.MemFinishedEvent
-import com.tort.mudai.mapper.{Mob, Direction, LocationPersister, MoveEvent}
+import com.tort.mudai.command.{RenderableCommand, SimpleCommand}
+import com.tort.mudai.mapper._
 import scalaz._
 import Scalaz._
 import com.tort.mudai.mapper.Mob.ShortName
+import com.tort.mudai.event._
+import com.tort.mudai.command.RequestWalkCommand
+import com.tort.mudai.event.TargetFleeEvent
+import com.tort.mudai.event.KillEvent
+import scala.Some
+import com.tort.mudai.event.MemFinishedEvent
+import com.tort.mudai.event.GroupStatusEvent
+import com.tort.mudai.event.FightRoundEvent
+import com.tort.mudai.event.CurseSucceededEvent
+import com.tort.mudai.event.TargetAssistedEvent
+import com.tort.mudai.mapper.MoveEvent
+import com.tort.mudai.event.CurseFailedEvent
+import com.tort.mudai.event.DisarmAssistantEvent
 
 class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
 
@@ -16,6 +26,7 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
 
   val antiBasher = actorOf(Props(classOf[AntiBasher]))
   val curser = actorOf(Props(classOf[Curser]))
+  val fleeker = actorOf(Props(classOf[Fleeker]))
 
   def receive = rec
 
@@ -32,6 +43,7 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
 
       antiBasher ! e
       curser ! e
+      fleeker ! e
     case KillEvent(target, exp, _, _) =>
       person ! new SimpleCommand("группа")
       become(waitGroupStatus)
@@ -50,14 +62,17 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
     case YieldPulses => person ! YieldPulses
     case c: RenderableCommand if sender == antiBasher => person ! c
     case c: RenderableCommand if sender == curser => person ! c
+    case c: RenderableCommand if sender == fleeker => person ! c
+    case c: FleeMove if sender == fleeker => person ! c
     case e =>
       antiBasher ! e
       curser ! e
+      fleeker ! e
   }
 
   def waitGroupStatus: Receive = {
     case GroupStatusEvent(name, health, _, status) if status === "Стоит" || status === "Сидит" =>
-      if(status === "Сидит") {
+      if (status === "Сидит") {
         person ! new SimpleCommand("прик все встать")
       }
 
@@ -79,7 +94,7 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
     case Pulse =>
       person ! RequestWalkCommand(direction)
       become(waitMove(target))
-    case KillEvent(target, exp, _, _) =>
+    case KillEvent(_, exp, _, _) =>
       person ! new SimpleCommand("группа")
       become(waitGroupStatus)
   }
@@ -109,6 +124,56 @@ class Curser extends Actor {
       }
   }
 }
+
+class Fleeker extends Actor {
+
+  import Direction._
+
+  def receive = rec(None, None, None)
+
+  def rec(from: Option[Location], direction: Option[String @@ Direction], to: Option[Location]): Receive = {
+    case GlanceEvent(_, _) =>
+      context.become(rec(None, None, None))
+    case FightRoundEvent(_, target, _) =>
+      sender ! RequestPulses
+      sender ! new SimpleCommand("прик все пом")
+      for {
+        f <- from
+        d <- direction
+        t <- to
+      } yield {
+        flee(f, d, t)
+        context.become(waitFlee(f, d, t))
+      }
+    case MoveEvent(f, d, t) =>
+      context.become(rec(f, d, t.some))
+    case KillEvent(target, _, _, _) =>
+      sender ! YieldPulses
+      context.become(rec(from, direction, to))
+
+  }
+
+  def onFight(from: Option[Location], direction: Option[String @@ Direction], to: Option[Location]): Receive = {
+    case KillEvent(target, _, _, _) =>
+      sender ! YieldPulses
+      context.become(rec(from, direction, to))
+  }
+
+  def flee(from: Location, direction: String @@ Direction, to: Location) {
+    sender ! new SimpleCommand(s"беж ${oppositeDirection(direction)}")
+  }
+
+  def waitFlee(from: Location, direction: String @@ Direction, to: Location): Receive = {
+    case FightRoundEvent(_, target, _) =>
+      flee(from, direction, to)
+    case FleeEvent() =>
+      context.become(rec(None, None, None))
+      sender ! new SimpleCommand(s"$direction")
+      sender ! FleeMove(to, oppositeDirection(direction), from)
+  }
+}
+
+case class FleeMove(from: Location, direction: String @@ Direction, to: Location)
 
 case class CurseCommand(target: String) extends RenderableCommand {
   def render = s"кол !прок! $target"
