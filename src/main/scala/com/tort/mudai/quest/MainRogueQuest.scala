@@ -2,13 +2,17 @@ package com.tort.mudai.quest
 
 import com.tort.mudai.command.SimpleCommand
 import com.tort.mudai.person._
-import com.tort.mudai.mapper.{Location, PathHelper, LocationPersister, Zone}
+import com.tort.mudai.mapper._
 import akka.actor.{Cancellable, ActorRef}
-import com.tort.mudai.event.KillEvent
-import com.tort.mudai.person.Roam
-import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
+import com.tort.mudai.person.RawRead
+import com.tort.mudai.person.StartQuest
+import com.tort.mudai.person.KillMobRequest
+import com.tort.mudai.event.KillEvent
+import com.tort.mudai.person.Roam
+import scalaz._
+import Scalaz._
 
 class MainRogueQuest(val mapper: ActorRef, val persister: LocationPersister, val pathHelper: PathHelper, val person: ActorRef) extends QuestHelper {
 
@@ -18,40 +22,28 @@ class MainRogueQuest(val mapper: ActorRef, val persister: LocationPersister, val
 
   def receive = quest
 
+  val quester: Location = persister.locationByMob("Старик-отшельник отрешенно смотрит сквозь Вас.").head
+  val mainRogue: Mob = persister.mobByFullName("Главарь разбойников стоит здесь.").get
+  val QuestTakenPattern = """(?ms).*Ступай, сынок, очисти святое место от этого недостойного человека\.\..*"""
+
   def quest: Receive = {
     case StartQuest =>
       println("QUEST STARTED")
       person ! RequestPulses
 
-      val future = for {
-        f <- (mapper ? CurrentLocation).mapTo[Option[Location]]
-      } yield f
-
-      future onSuccess {
-        case current =>
-          current.foreach {
-            case startLocation =>
-              goAndDo(persister.locationByMob("Старик-отшельник отрешенно смотрит сквозь Вас.").head, person, (l) => {
-                val future = system.scheduler.scheduleOnce(5 second, self, FiveSeconds)
-                person ! new SimpleCommand("г помогу")
-                become(waitTime(startLocation, future))
-              })
-          }
-      }
+      goAndDo(quester, person, (l) => {
+        val future = system.scheduler.scheduleOnce(5 second, self, FiveSeconds)
+        person ! new SimpleCommand("г помогу")
+        become(waitTime(future))
+      })
   }
 
-  def interruptQuest(startLocation: Location) {
-    goAndDo(startLocation, person, (l) => {
-      finishQuest(person)
-      become(quest)
-    })
-  }
-
-  private def waitTime(startLocation: Location, future: Cancellable): Receive = {
+  private def waitTime(future: Cancellable): Receive = {
     case FiveSeconds =>
       println("### QUEST NOT RESPONDING")
-      interruptQuest(startLocation)
-    case RawRead(text) if text.matches( """(?ms).*Ступай, сынок, очисти святое место от этого недостойного человека\.\..*""") =>
+      finishQuest(person)
+      become(quest)
+    case RawRead(text) if text.matches(QuestTakenPattern) =>
       person ! Roam(Zone.name("Посыльная дорога - у главы"))
       future.cancel()
       become(waitRoamFinish)
@@ -59,17 +51,16 @@ class MainRogueQuest(val mapper: ActorRef, val persister: LocationPersister, val
 
   private def waitRoamFinish: Receive = {
     case RoamingFinished =>
-      person ! KillMobRequest(persister.mobByFullName("Главарь разбойников стоит здесь.").get)
+      person ! KillMobRequest(mainRogue)
       become(waitKill)
   }
 
+  import Mob._
   private def waitKill: Receive = {
-    case KillEvent(shortName, _, _, _) if shortName == "Главарь разбойников" =>
+    case KillEvent(shortName, _, _, _) if shortName === mainRogue.shortName.get =>
       person ! new SimpleCommand("взять глав")
-      goAndDo(persister.locationByMob("Старик-отшельник отрешенно смотрит сквозь Вас.").head, person, (l) => {
-        person ! new SimpleCommand("сн шап")
+      goAndDo(quester, person, (l) => {
         person ! new SimpleCommand("дать труп стар")
-        person ! new SimpleCommand("одеть шап")
         finishQuest(person)
       })
   }

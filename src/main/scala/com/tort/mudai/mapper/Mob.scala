@@ -2,10 +2,11 @@ package com.tort.mudai.mapper
 
 import scalaz._
 import Scalaz._
+import com.tort.mudai.mapper.Mob.ShortName
 
 class Mob(val id: String,
                val fullName: String,
-               val shortName: Option[String],
+               val shortName: Option[String @@ ShortName],
                val alias: Option[String],
                val killable: Boolean,
                val genitive: Option[String],
@@ -21,6 +22,7 @@ class Mob(val id: String,
 
 object Mob {
   implicit val mobEquality: Equal[Mob] = Equal.equal(_.id === _.id)
+  implicit val shortNameEquality: Equal[String @@ ShortName] = Equal.equal(_ == _)
 
   trait ShortName
   trait Genitive

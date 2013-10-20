@@ -81,7 +81,7 @@ trait TransitionPersister {
 
 class SQLLocationPersister extends LocationPersister with TransitionPersister {
   implicit val getLocationResult = GetResult(l => new Location(Location.locationId(l.<<), l.<<, l.<<, zone = loadZone(l.<<)))
-  implicit val getMobResult = GetResult(l => new Mob(l.<<, l.<<, Option(l.<<), Option(l.<<), l.<<, Option(l.<<), l.<<))
+  implicit val getMobResult = GetResult(l => new Mob(l.<<, l.<<, Option(Mob.shortName(l.<<)), Option(l.<<), l.<<, Option(l.<<), l.<<))
   implicit val getItemResult = GetResult(l => new Item(l.<<, l.<<, Option(l.<<), Option(l.<<), Option(l.<<)))
   implicit val getZoneResult = GetResult(z => new Zone(z.<<, Zone.name(z.<<)))
 
@@ -222,12 +222,10 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     mob match {
       case None =>
         val id = generateId()
-        val alias: String = null
-        val shortName: String = null
         val fullName = name
-        sqlu"insert into mob(id, alias, shortName, fullName) values($id, $alias, $shortName, $fullName)".first
-        Some(new Mob(id, fullName, Option(alias), Option(shortName), killable = false, None, false))
-      case mob => mob
+        sqlu"insert into mob(id, fullName) values($id, $fullName)".first
+        Some(new Mob(id, fullName, shortName = None, alias = None, killable = false, genitive = None, isAssisting = false))
+      case m: Option[Mob] => m
     }
   }
 
@@ -241,7 +239,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
         val fullName = name
         sqlu"insert into item(id, alias, shortName, fullName) values($id, $alias, $shortName, $fullName)".first
         Some(new Item(id, fullName, Option(shortName), Option(alias), objectType = None))
-      case item => item
+      case i => i
     }
   }
 
@@ -275,7 +273,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
         val count = sql"select count(*) from habitation h join mob m on m.id = h.mob where m.id = $mobId and h.location = $locId".as[Int].first
         count match {
           case 0 =>
-            sqlu"insert into habitation(id, mob, location) values($generateId, $mobId, $locId)".first
+            sqlu"insert into habitation(id, mob, location) values(${generateId()}, $mobId, $locId)".first
           case x if x > 0 =>
         }
       case None =>
