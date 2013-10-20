@@ -53,5 +53,3 @@ trait QuestHelper extends Actor {
 case class StartQuest(quest: String)
 
 case object QuestFinished
-
-case object DoneWithMob

@@ -39,7 +39,7 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
 
           future onSuccess {
             case Some(current) =>
-              search(persister.killableMobsBy(zone), area(zone))(waitTarget(current))
+              search(persister.killableMobsBy(zone), area(zone))(waitTarget)
             case None =>
               println("### CURRENT LOCATION UNKNOWN")
           }
@@ -47,55 +47,42 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
 
     case KillMobRequest(mob) =>
       person ! RequestPulses
-
-      val future = for {
-        f <- (mapper ? CurrentLocation).mapTo[Option[Location]]
-      } yield f
-
-      future onSuccess {
-        case Some(current) =>
-          search(Set(mob), persister.locationByMob(mob.fullName))(waitTarget(current))
-        case None =>
-          println("### CURRENT LOCATION UNKNOWN")
-      }
+      search(Set(mob), persister.locationByMob(mob.fullName))(waitTarget)
   }
 
   private def area(zone: Zone): Set[Location] = {
     reachableFrom(entrance(zone), nonBorderNonLockableNeighbors, locationsOfSummoners(zone)).map(x => persister.loadLocation(x))
   }
 
-  def waitTarget(current: Location)(searcher: ActorRef): Receive = {
+  def waitTarget(searcher: ActorRef): Receive = {
     case MobFound(targets, visibles) =>
       if (!moreThanTwoSameAssistsPresent(visibles)) {
         val group = visibles.filter(_.isAssisting).groupBy(x => x).toSeq.sortBy(x => x._2.size).reverse.filter(m => targets.contains(m._1))
         group.headOption match {
-          case Some((m, xs)) if (m.alias.isDefined) =>
+          case Some((m, xs)) if m.alias.isDefined =>
             person ! Attack(s"${xs.size}.${m.alias.get}")
-            become(waitKill(searcher, current, 0, isSitting = false))
+            become(waitKill(searcher, 0, isSitting = false))
           case None =>
             targets.headOption.foreach(m => person ! Attack(m.alias.get))
-            become(waitKill(searcher, current, 0, isSitting = false))
+            become(waitKill(searcher, 0, isSitting = false))
         }
       }
     case SearchFinished =>
-      finishRoaming(current)
+      finishRoaming()
     case e => searcher ! e
   }
 
 
   protected def moreThanTwoSameAssistsPresent(visibles: Seq[Mob]): Boolean =
-    visibles.filter(_.isAssisting).groupBy(_.id).map(x => x._1 -> x._2.size).find(x => x._2 > 2).isDefined
+    visibles.filter(_.isAssisting).groupBy(_.id).map(x => x._1 -> x._2.size).exists(x => x._2 > 2)
 
-  private def finishRoaming(current: Location) {
-    goAndDo(current, person, (visited) => {
-      person ! YieldPulses
-      person ! RoamingFinished
-      become(roam)
-      println("### TRAVEL SUBTASK TERMINATED")
-    })
+  private def finishRoaming() {
+    person ! YieldPulses
+    person ! RoamingFinished
+    become(roam)
   }
 
-  private def waitKill(searcher: ActorRef, current: Location, mem: Int, isSitting: Boolean): Receive = {
+  private def waitKill(searcher: ActorRef, mem: Int, isSitting: Boolean): Receive = {
     case KillEvent(_, _, _, magic) =>
       if (magic) {
         person ! new SimpleCommand("взять все")
@@ -107,20 +94,20 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
       searcher ! PoisonPill
       become {
         case Terminated(ref) if ref == searcher =>
-          finishRoaming(current)
+          finishRoaming()
       }
     case Pulse =>
       if (mem > 0) {
         if (!isSitting) {
           person ! new SimpleCommand("отд")
-          become(waitKill(searcher, current, mem, isSitting = true))
+          become(waitKill(searcher, mem, isSitting = true))
         }
       } else {
         person ! new SimpleCommand("вст")
-        become(waitTarget(current)(searcher))
+        become(waitTarget(searcher))
       }
-    case StatusLineEvent(_, _, _, mem, _, _) =>
-      become(waitKill(searcher, current, mem, isSitting))
+    case StatusLineEvent(_, _, _, m, _, _) =>
+      become(waitKill(searcher, m, isSitting))
     case e => searcher ! e
   }
 }
