@@ -6,11 +6,15 @@ import com.tort.mudai.command.{RenderableCommand, SimpleCommand}
 import com.tort.mudai.mapper._
 import com.tort.mudai.task.TravelTo
 import scala.concurrent.duration._
-import akka.actor.Terminated
 import com.tort.mudai.mapper.Zone.ZoneName
 import scalaz._
 import Scalaz._
-import com.tort.mudai.quest.{RogueCampQuest, ForestKeeperQuest, OldHunterQuest, MainRogueQuest}
+import com.tort.mudai.quest._
+import scala.Some
+import com.tort.mudai.mapper.NameZone
+import akka.actor.Terminated
+import com.tort.mudai.event.StatusLineEvent
+import com.tort.mudai.mapper.MoveEvent
 
 class Person(login: String, password: String, mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersister) extends Actor {
 
@@ -29,6 +33,7 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
   val oldHunterQuest = actorOf(Props(classOf[OldHunterQuest], mapper, persister, pathHelper, self))
   val forestKeeperQuest = actorOf(Props(classOf[ForestKeeperQuest], mapper, persister, pathHelper, self))
   val rogueCampQuest = actorOf(Props(classOf[RogueCampQuest], mapper, persister, pathHelper, self))
+  val rogueForestQuest = actorOf(Props(classOf[RogueForestQuest], mapper, persister, pathHelper, self))
   val quests = Map[String, ActorRef](
     "белый паук" -> whiteSpiderQuest,
     "колодец" -> villageWellQuest,
@@ -36,7 +41,8 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
     "глава" -> mainRoqueQuest,
     "угодья" -> oldHunterQuest,
     "хозяин леса" -> forestKeeperQuest,
-    "лагерь разбойников" -> rogueCampQuest)
+    "лагерь разбойников" -> rogueCampQuest,
+    "инструмент кузнеца" -> rogueForestQuest)
   val passages = actorOf(Props(classOf[Passages], persister, self))
   val coreTasks = Seq(mapper, fighter, statusTranslator, provisioner, roamer, passages) ++ quests.values
 
