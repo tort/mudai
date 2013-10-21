@@ -10,7 +10,6 @@ import com.tort.mudai.person.RawRead
 import com.tort.mudai.person.StartQuest
 import com.tort.mudai.person.KillMobRequest
 import com.tort.mudai.event.KillEvent
-import com.tort.mudai.person.Roam
 import scalaz._
 import Scalaz._
 
