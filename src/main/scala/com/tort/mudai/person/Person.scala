@@ -124,4 +124,6 @@ case object YieldPulses
 
 case class Roam(zoneName: String @@ ZoneName)
 
+case class RoamArea(targets: Set[Mob], area: Set[Location])
+
 case class Attack(target: String)

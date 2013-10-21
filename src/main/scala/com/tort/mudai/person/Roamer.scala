@@ -29,21 +29,15 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
         case None =>
           println(s"### ZONE $zoneName NOT FOUND")
         case Some(zone) =>
-          val person = sender
           person ! RequestPulses
           println("### ROAMING STARTED")
 
-          val future = for {
-            f <- (mapper ? CurrentLocation).mapTo[Option[Location]]
-          } yield f
-
-          future onSuccess {
-            case Some(current) =>
-              search(persister.killableMobsBy(zone), area(zone))(waitTarget)
-            case None =>
-              println("### CURRENT LOCATION UNKNOWN")
-          }
+          search(persister.killableMobsBy(zone), area(zone))(waitTarget)
       }
+
+    case RoamArea(targets: Set[Mob], area: Set[Location]) =>
+      person ! RequestPulses
+      search(targets, area)(waitTarget)
 
     case KillMobRequest(mob) =>
       person ! RequestPulses

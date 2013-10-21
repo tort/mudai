@@ -35,7 +35,6 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
     case e@Attack(target) =>
       person ! RequestPulses
       person ! new SimpleCommand(s"прик все убить $target")
-      person ! CurseCommand(target)
 
       antiBasher ! e
       curser ! e
@@ -115,6 +114,7 @@ class Curser extends Actor {
 
   def receive = {
     case Attack(target) =>
+      sender ! CurseCommand(target)
       become {
         case CurseFailedEvent() =>
           sender ! CurseCommand(target)

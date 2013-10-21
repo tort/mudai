@@ -2,9 +2,11 @@ package com.tort.mudai.quest
 
 import akka.actor.ActorRef
 import com.tort.mudai.mapper.{PathHelper, LocationPersister}
-import com.tort.mudai.person.{RawRead, StartQuest, RequestPulses, QuestHelper}
+import com.tort.mudai.person._
 import com.tort.mudai.command.SimpleCommand
+import com.tort.mudai.person.RawRead
 import com.tort.mudai.event.KillEvent
+import com.tort.mudai.person.StartQuest
 
 class RogueCampQuest(val mapper: ActorRef, val persister: LocationPersister, val pathHelper: PathHelper, val person: ActorRef) extends QuestHelper {
   import context._

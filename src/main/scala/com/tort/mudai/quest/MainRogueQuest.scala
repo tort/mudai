@@ -25,6 +25,7 @@ class MainRogueQuest(val mapper: ActorRef, val persister: LocationPersister, val
   val quester: Location = persister.locationByMob("Старик-отшельник отрешенно смотрит сквозь Вас.").head
   val mainRogue: Mob = persister.mobByFullName("Главарь разбойников стоит здесь.").get
   val QuestTakenPattern = """(?ms).*Ступай, сынок, очисти святое место от этого недостойного человека\.\..*"""
+  val assists: Mob = persister.mobByFullName("Разбойник крадется мимо Вас.").get
 
   def quest: Receive = {
     case StartQuest =>
@@ -44,7 +45,7 @@ class MainRogueQuest(val mapper: ActorRef, val persister: LocationPersister, val
       finishQuest(person)
       become(quest)
     case RawRead(text) if text.matches(QuestTakenPattern) =>
-      person ! Roam(Zone.name("Посыльная дорога - у главы"))
+      person ! RoamArea(Set(assists), persister.locationByMob(assists.fullName).toSet)
       future.cancel()
       become(waitRoamFinish)
   }

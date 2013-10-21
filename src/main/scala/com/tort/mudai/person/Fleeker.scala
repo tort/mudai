@@ -16,6 +16,7 @@ class Fleeker extends Actor {
     case GlanceEvent(_, _) =>
       context.become(rec(None, None, None))
     case FightRoundEvent(_, target, _) =>
+      sender ! RequestPulses
       sender ! Assist
       for {
         f <- from
