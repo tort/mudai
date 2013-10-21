@@ -18,7 +18,7 @@ class KillTrigger extends EventTrigger[KillEvent] {
 
 
 class KillMagicMobTrigger extends EventTrigger[KillEvent] {
-  val Pattern = ("""(?ms).*\n(?:\u001B\[\d\;\dm)?([^\n]*) вспыхнул[иао]? и рассыпал[аио]сь в прах\..*""" +
+  val Pattern = ("""(?ms).*\n(?:\u001B\[\d\;\dm)?([^\n]*) вспыхнул[иао]? и рассыпал[аио]?с[ья] в прах\..*""" +
             """Ваш опыт повысился на ([1234567890]*) (?:очка|очков?)\..*Кровушка стынет в жилах от предсмертного крика ([^\n]*)\..*"""
     ).r
 
