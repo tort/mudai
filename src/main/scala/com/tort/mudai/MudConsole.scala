@@ -30,7 +30,7 @@ class MudConsole {
 
   implicit val timeout = Timeout(5 seconds)
 
-  val quests = Set("бобры", "белый паук", "рысь", "глава", "угодья")
+  val quests = Set("бобры", "белый паук", "рысь", "глава", "угодья", "хозяин леса")
 
   @tailrec
   final def userInputLoop(person: ActorRef, menuMap: Map[Int, Location]) {
