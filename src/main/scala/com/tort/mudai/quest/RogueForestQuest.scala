@@ -36,7 +36,7 @@ class RogueForestQuest(val mapper: ActorRef, val persister: LocationPersister, v
     "В шалаше",
     "У лаза",
     "Подземный лаз"
-  ).flatMap(fullName => persister.locationByTitle(fullName))
+  ).flatMap(fullName => persister.locationByTitle(fullName)) -- persister.locationByMob(mainRogue.fullName)
 
   val quester = "Крепкого вида дедок, внимательно смотрит на вас."
   val questerLocation = persister.locationByMob(quester).head
