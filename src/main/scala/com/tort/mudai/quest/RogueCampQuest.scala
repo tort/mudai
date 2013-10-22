@@ -7,6 +7,8 @@ import com.tort.mudai.command.SimpleCommand
 import com.tort.mudai.person.RawRead
 import com.tort.mudai.event.KillEvent
 import com.tort.mudai.person.StartQuest
+import scalaz._
+import Scalaz._
 
 class RogueCampQuest(val mapper: ActorRef, val persister: LocationPersister, val pathHelper: PathHelper, val person: ActorRef) extends QuestHelper {
 
@@ -25,6 +27,9 @@ class RogueCampQuest(val mapper: ActorRef, val persister: LocationPersister, val
     "Разбойник идет, припадая на правую ногу.",
     "Грязная лохматая псина роется в помоях."
   ).map(name => persister.mobByFullName(name).get)
+
+  val mainRogue = persister.mobByFullName("Высокий плечистый человек прохаживается из угла в угол.").get
+  val hostageLocation = persister.locationByMob("Богатый пленник ожидает своей участи.").head
 
   def quest: Receive = {
     case StartQuest =>
@@ -58,18 +63,21 @@ class RogueCampQuest(val mapper: ActorRef, val persister: LocationPersister, val
 
   private def killAssisters {
     person ! Roam(Zone.name("Разбойничий лагерь"))
-//    become(waitRoamingFInish)
+    become(waitRoamingFInish)
   }
 
-//  private def waitRoamingFInish: Receive = {
-//    case RoamingFinished =>
-//      person ! KillMobRequest(mainRogue)
-//      become(waitKillMainRogue)
-//  }
+  private def waitRoamingFInish: Receive = {
+    case RoamingFinished =>
+      person ! KillMobRequest(mainRogue)
+      become(waitKillMainRogue)
+  }
 
   import Mob._
-//  private def waitKillMainRogue: Receive = {
-//    case KillEvent(shortName, _, _, _) if shortName === mainRogue.shortName.get =>
-//      goAndDo()
-//  }
+  private def waitKillMainRogue: Receive = {
+    case KillEvent(shortName, _, _, _) if shortName === mainRogue.shortName.get =>
+      goAndDo(hostageLocation, person, (l) => {
+        finishQuest(person)
+        become(quest)
+      })
+  }
 }

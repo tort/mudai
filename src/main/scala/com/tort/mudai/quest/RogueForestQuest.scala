@@ -78,6 +78,7 @@ class RogueForestQuest(val mapper: ActorRef, val persister: LocationPersister, v
       goAndDo(questerLocation, person, (l) => {
         person ! new SimpleCommand("дать инструм глав")
         finishQuest(person)
+        become(quest)
       })
   }
 }
