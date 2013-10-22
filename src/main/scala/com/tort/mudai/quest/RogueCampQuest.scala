@@ -15,7 +15,7 @@ class RogueCampQuest(val mapper: ActorRef, val persister: LocationPersister, val
   def receive = quest
 
   val keyLocation = persister.locationByItem("Странное приспособление с зажимами и винтами висит на стене.").head
-  val beforeDoor = persister.loadLocation("8596c4b9-f6f8-4441-96b8-b7e5c2308022")
+  val beforeDoor = persister.loadLocation("f18809f7-40d5-4b69-ad5a-fb2dddf4a1dc")
   val chestLocation = persister.locationByItem("Расписанный непонятными знаками ларец светится в темноте. ..блестит!").head
   val assisters = Set(
     "Мужичок-разбойничек охраняет вход в избу.",
