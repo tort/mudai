@@ -65,7 +65,7 @@ class RogueCampQuest(val mapper: ActorRef, val persister: LocationPersister, val
 //    case RoamingFinished =>
 //      person ! KillMobRequest(mainRogue)
 //      become(waitKillMainRogue)
-  }
+//  }
 
   import Mob._
 //  private def waitKillMainRogue: Receive = {
