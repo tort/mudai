@@ -49,7 +49,7 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
       become(waitPulse(target, direction))
     case DisarmAssistantEvent(_, _, _) =>
       person ! new SimpleCommand("взять чудск")
-      person ! new SimpleCommand("дать чудск дружинник")
+      person ! new SimpleCommand("дать чудск молод.воин")
       person ! new SimpleCommand("прик все воор чудск")
     case TargetAssistedEvent(assister, targetGenitive) =>
       for {

@@ -31,7 +31,7 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
     case TriggeredMoveRequest("Дорога", direction, "Дорога") if direction == "trigger_swamp_south" =>
       sender ! new SimpleCommand(s"дать ${level * 2} кун болотник")
       context.become {
-        case RawRead(text) if text.matches("(?ms).*Казалось, что твари болотные наблюдают за Вами..*") =>
+        case RawRead(text) if text.matches("(?ms).*Но наконец путь кончился, и Вы уже за болотами..*") =>
           person ! MoveEvent(persister.loadLocation("f6c1f708-c24c-41cc-b653-9ff36a64e731").some,
             direction.some,
             persister.loadLocation("9e0df04f-4bf2-4313-b305-fa84d574300b"))
