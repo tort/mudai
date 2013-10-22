@@ -16,6 +16,8 @@ import com.tort.mudai.mapper.Location.LocationId
 trait LocationPersister {
   def locationByTitle(title: String): Seq[Location]
 
+  def locationByTitleAndZone(title: String, zone: Zone): Seq[Location]
+
   def locationByMob(fullName: String): Set[Location]
 
   def locationByMobShortName(shortName: String): Seq[Location]
@@ -87,6 +89,10 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
 
   def locationByTitle(title: String): Seq[Location] = DB.db withSession {
     sql"select * from location where title like '%#$title%'".as[Location].list
+  }
+
+  def locationByTitleAndZone(title: String, zone: Zone): Seq[Location] = DB.db withSession {
+    sql"select * from location where title like '%#$title%' and l.zone = ${zone.id}".as[Location].list
   }
 
   def allLocations = DB.db withSession {

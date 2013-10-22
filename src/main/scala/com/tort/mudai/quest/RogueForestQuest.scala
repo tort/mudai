@@ -1,7 +1,7 @@
 package com.tort.mudai.quest
 
 import akka.actor.{Cancellable, ActorRef}
-import com.tort.mudai.mapper.{Mob, PathHelper, LocationPersister}
+import com.tort.mudai.mapper.{Zone, Mob, PathHelper, LocationPersister}
 import com.tort.mudai.person._
 import com.tort.mudai.person.RawRead
 import com.tort.mudai.person.StartQuest
@@ -18,6 +18,8 @@ class RogueForestQuest(val mapper: ActorRef, val persister: LocationPersister, v
   import context._
 
   implicit val timeout = Timeout(5 seconds)
+
+  val zone = persister.zoneByName(Zone.name("Разбойничий лес"))
 
   val rogues = Set(
     "Огромных размеров человек, в грязной одежде и с огромной, увесистой дубиной в руках.",
@@ -36,7 +38,7 @@ class RogueForestQuest(val mapper: ActorRef, val persister: LocationPersister, v
     "В шалаше",
     "У лаза",
     "Подземный лаз"
-  ).flatMap(fullName => persister.locationByTitle(fullName)) -- persister.locationByMob(mainRogue.fullName)
+  ).flatMap(fullName => persister.locationByTitleAndZone(fullName, zone)) -- persister.locationByMob(mainRogue.fullName)
 
   val quester = "Крепкого вида дедок, внимательно смотрит на вас."
   val questerLocation = persister.locationByMob(quester).head
