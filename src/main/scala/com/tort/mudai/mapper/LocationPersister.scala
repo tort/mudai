@@ -92,7 +92,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def locationByTitleAndZone(title: String, zone: Zone): Seq[Location] = DB.db withSession {
-    sql"select * from location where title like '%#$title%' and l.zone = ${zone.id}".as[Location].list
+    sql"select * from location where title like '%#$title%' and zone = ${zone.id}".as[Location].list
   }
 
   def allLocations = DB.db withSession {
