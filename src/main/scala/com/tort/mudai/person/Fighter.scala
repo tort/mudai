@@ -45,11 +45,13 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
     case KillEvent(target, exp, _, _) =>
       person ! new SimpleCommand("группа")
       become(waitGroupStatus)
+    case GroupStatusEvent(name, health, _, status) if status === "Стоит" || status === "Сидит" =>
+      healOnStatus(name, health)
     case TargetFleeEvent(target, direction) =>
       become(waitPulse(target, direction))
     case DisarmAssistantEvent(_, _, _) =>
       person ! new SimpleCommand("взять чудск")
-      person ! new SimpleCommand("дать чудск молод.воин")
+      person ! new SimpleCommand("дать чудск дружин")
       person ! new SimpleCommand("прик все воор чудск")
     case TargetAssistedEvent(assister, targetGenitive) =>
       for {
@@ -74,18 +76,23 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
         person ! new SimpleCommand("прик все встать")
       }
 
-      if ((health.trim === "Ранен") || (health.trim === "Лег.ранен") || (health.trim === "Тяж.ранен") || (health.trim === "Оч.тяж.ранен") || (health.trim === "При смерти")) {
-        val mob: Option[Mob] = persister.mobByShortName(name)
-        mob.flatMap(_.alias) foreach {
-          case alias => person ! new SimpleCommand(s"кол !к и! $alias")
-        }
-      }
+      healOnStatus(name, health)
 
       person ! YieldPulses
       become(rec)
     case GroupStatusEvent(_, _, _, status) =>
       println(status)
       become(rec)
+  }
+
+
+  private def healOnStatus(name: String @@ ShortName, health: String) {
+    if ((health.trim === "Ранен") || (health.trim === "Лег.ранен") || (health.trim === "Тяж.ранен") || (health.trim === "Оч.тяж.ранен") || (health.trim === "При смерти")) {
+      val mob: Option[Mob] = persister.mobByShortName(name)
+      mob.flatMap(_.alias) foreach {
+        case alias => person ! new SimpleCommand(s"кол !к и! $alias")
+      }
+    }
   }
 
   def waitPulse(target: String @@ ShortName, direction: String @@ Direction): Receive = {
