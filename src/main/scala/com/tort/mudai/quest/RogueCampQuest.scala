@@ -7,6 +7,8 @@ import com.tort.mudai.command.SimpleCommand
 import com.tort.mudai.person.RawRead
 import com.tort.mudai.event.KillEvent
 import com.tort.mudai.person.StartQuest
+import scalaz._
+import Scalaz._
 
 class RogueCampQuest(val mapper: ActorRef, val persister: LocationPersister, val pathHelper: PathHelper, val person: ActorRef) extends QuestHelper {
 
@@ -15,7 +17,7 @@ class RogueCampQuest(val mapper: ActorRef, val persister: LocationPersister, val
   def receive = quest
 
   val keyLocation = persister.locationByItem("Странное приспособление с зажимами и винтами висит на стене.").head
-  val beforeDoor = persister.loadLocation("8596c4b9-f6f8-4441-96b8-b7e5c2308022")
+  val beforeDoor = persister.loadLocation("f18809f7-40d5-4b69-ad5a-fb2dddf4a1dc")
   val chestLocation = persister.locationByItem("Расписанный непонятными знаками ларец светится в темноте. ..блестит!").head
   val assisters = Set(
     "Мужичок-разбойничек охраняет вход в избу.",
@@ -25,6 +27,9 @@ class RogueCampQuest(val mapper: ActorRef, val persister: LocationPersister, val
     "Разбойник идет, припадая на правую ногу.",
     "Грязная лохматая псина роется в помоях."
   ).map(name => persister.mobByFullName(name).get)
+
+  val mainRogue = persister.mobByFullName("Высокий плечистый человек прохаживается из угла в угол.").get
+  val hostageLocation = persister.locationByMob("Богатый пленник ожидает своей участи.").head
 
   def quest: Receive = {
     case StartQuest =>
@@ -57,19 +62,22 @@ class RogueCampQuest(val mapper: ActorRef, val persister: LocationPersister, val
   }
 
   private def killAssisters {
-    person ! Roam(Zone.name("Разбойничий лагерь"))
-//    become(waitRoamingFInish)
+    person ! Roam(Zone.name("Притон"))
+    become(waitRoamingFInish)
   }
 
-//  private def waitRoamingFInish: Receive = {
-//    case RoamingFinished =>
-//      person ! KillMobRequest(mainRogue)
-//      become(waitKillMainRogue)
-//  }
+  private def waitRoamingFInish: Receive = {
+    case RoamingFinished =>
+      person ! KillMobRequest(mainRogue)
+      become(waitKillMainRogue)
+  }
 
   import Mob._
-//  private def waitKillMainRogue: Receive = {
-//    case KillEvent(shortName, _, _, _) if shortName === mainRogue.shortName.get =>
-//      goAndDo()
-//  }
+  private def waitKillMainRogue: Receive = {
+    case KillEvent(shortName, _, _, _) if shortName === mainRogue.shortName.get =>
+      goAndDo(hostageLocation, person, (l) => {
+        finishQuest(person)
+        become(quest)
+      })
+  }
 }
