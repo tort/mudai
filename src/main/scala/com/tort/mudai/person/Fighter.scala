@@ -72,20 +72,22 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
   }
 
   private def recoverAfterFight: Receive = {
-    case GroupStatusEvent(name, health, _, status) if status === "Стоит" || status === "Сидит" =>
+    case GroupStatusEvent(name, health, _, status) if status === "Стоит" || status === "Сидит" || status === "Сражается" =>
       healOnStatus(name, health)
 
       status match {
         case "Сидит" =>
+          println("ON SITTING")
           person ! new SimpleCommand("прик все встать")
           system.scheduler.scheduleOnce(1 second, person, new SimpleCommand("группа"))
         case "Стоит" =>
+          println("ON STAND")
           person ! YieldPulses
           become(rec)
+        case _ =>
       }
-    case GroupStatusEvent(_, _, _, status) =>
-      println(status)
-      become(rec)
+    case KillEvent(target, exp, _, _) =>
+      person ! new SimpleCommand("группа")
   }
 
 
