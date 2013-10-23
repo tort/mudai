@@ -54,9 +54,9 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
         persister.loadLocation("b29f1fc5-01f9-42ca-a7ca-662e11e8866f"))
     case r@TriggeredMoveRequest("Сокровищница", direction, "Широкий проход") if direction == "trigger_treasure_down" =>
       sender ! new SimpleCommand("г сезам откройся")
-      person ! MoveEvent(persister.locationByTitle(r.from).headOption,
+      person ! MoveEvent(persister.loadLocation("145016ed-b151-46d4-8db6-86dc7ae33137").some,
         direction.some,
-        persister.loadLocation("198a99ad-0e32-49c6-a189-7378c1b774ae"))
+        persister.loadLocation("bc745d10-571f-4298-9fea-2a108a207e7c"))
     case r@TriggeredMoveRequest("У реки", direction, "Пристань") if direction == "trigger_fortress_pereyaslavl" =>
       sender ! new SimpleCommand("дать 10 кун лодочник")
       context.become {
