@@ -45,7 +45,7 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
     case KillEvent(target, exp, _, _) =>
       person ! new SimpleCommand("группа")
       become(waitGroupStatus)
-    case GroupStatusEvent(name, health, _, status) if status === "Стоит" || status === "Сидит" =>
+    case GroupStatusEvent(name, health, _, status) =>
       healOnStatus(name, health)
     case TargetFleeEvent(target, direction) =>
       become(waitPulse(target, direction))
