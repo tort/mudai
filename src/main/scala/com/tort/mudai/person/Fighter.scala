@@ -92,7 +92,7 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
 
 
   private def healOnStatus(name: String @@ ShortName, health: String) {
-    if ((health.trim === "Ранен") || (health.trim === "Лег.ранен") || (health.trim === "Тяж.ранен") || (health.trim === "Оч.тяж.ранен") || (health.trim === "При смерти")) {
+    if ((health.trim === "Ранен") || (health.trim === "Лег.ранен") || (health.trim === "Тяж.ранен") || (health.trim === "Оч.тяж.ран") || (health.trim === "При смерти")) {
       val mob: Option[Mob] = persister.mobByShortName(name)
       mob.flatMap(_.alias) foreach {
         case alias => person ! new SimpleCommand(s"кол !к и! $alias")
