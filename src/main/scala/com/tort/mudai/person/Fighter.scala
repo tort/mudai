@@ -17,6 +17,7 @@ import com.tort.mudai.event.TargetAssistedEvent
 import com.tort.mudai.mapper.MoveEvent
 import com.tort.mudai.event.CurseFailedEvent
 import com.tort.mudai.event.DisarmAssistantEvent
+import scala.concurrent.duration._
 
 class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
 
@@ -44,8 +45,8 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
       person ! new SimpleCommand("прик все пом")
     case KillEvent(target, exp, _, _) =>
       person ! new SimpleCommand("группа")
-      become(waitGroupStatus)
-    case GroupStatusEvent(name, health, _, status) if status === "Стоит" || status === "Сидит" =>
+      become(recoverAfterFight)
+    case GroupStatusEvent(name, health, _, status) =>
       healOnStatus(name, health)
     case TargetFleeEvent(target, direction) =>
       become(waitPulse(target, direction))
@@ -70,19 +71,23 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
       fleeker ! e
   }
 
-  def waitGroupStatus: Receive = {
-    case GroupStatusEvent(name, health, _, status) if status === "Стоит" || status === "Сидит" =>
-      if (status === "Сидит") {
-        person ! new SimpleCommand("прик все встать")
-      }
-
+  private def recoverAfterFight: Receive = {
+    case GroupStatusEvent(name, health, _, status) if status === "Стоит" || status === "Сидит" || status === "Сражается" =>
       healOnStatus(name, health)
 
-      person ! YieldPulses
-      become(rec)
-    case GroupStatusEvent(_, _, _, status) =>
-      println(status)
-      become(rec)
+      status match {
+        case "Сидит" =>
+          println("ON SITTING")
+          person ! new SimpleCommand("прик все встать")
+          system.scheduler.scheduleOnce(1 second, person, new SimpleCommand("группа"))
+        case "Стоит" =>
+          println("ON STAND")
+          person ! YieldPulses
+          become(rec)
+        case _ =>
+      }
+    case KillEvent(target, exp, _, _) =>
+      person ! new SimpleCommand("группа")
   }
 
 
@@ -101,7 +106,7 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
       become(waitMove(target))
     case KillEvent(_, exp, _, _) =>
       person ! new SimpleCommand("группа")
-      become(waitGroupStatus)
+      become(recoverAfterFight)
   }
 
   def waitMove(target: String @@ ShortName): Receive = {
