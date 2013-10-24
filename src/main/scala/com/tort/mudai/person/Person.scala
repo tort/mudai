@@ -55,6 +55,7 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
     case rawRead: RawRead =>
       snoopable ! rawRead
       quests.foreach(_._2 ! rawRead)
+      passages ! rawRead
     case rawWrite: RawWrite => adapter ! rawWrite
     case Login =>
       become(rec(tasks :+ sender, pulseSubscribers))

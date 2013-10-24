@@ -12,8 +12,8 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
 
   def rec(level: Int): Receive = {
     case StatusLineEvent(_, _, _, _, lvl, _) =>
-      if(level != lvl)
-      context.become(rec(lvl))
+      if (level != lvl)
+        context.become(rec(lvl))
     case TriggeredMoveRequest("У шалаша", direction, "Тихий угол") =>
       sender ! new SimpleCommand(s"дать $level кун следопыт")
     case TriggeredMoveRequest("Тихий угол", direction, "У шалаша") =>
@@ -30,9 +30,13 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
         persister.loadLocation("a2487caf-444f-4736-978f-0f1fbbd6083d"))
     case TriggeredMoveRequest("Дорога", direction, "Дорога") if direction == "trigger_swamp_south" =>
       sender ! new SimpleCommand(s"дать ${level * 2} кун болотник")
-      person ! MoveEvent(persister.loadLocation("f6c1f708-c24c-41cc-b653-9ff36a64e731").some,
-        direction.some,
-        persister.loadLocation("9e0df04f-4bf2-4313-b305-fa84d574300b"))
+      context.become {
+        case RawRead(text) if text.matches("(?ms).*Но наконец путь кончился, и Вы уже за болотами..*") =>
+          person ! MoveEvent(persister.loadLocation("f6c1f708-c24c-41cc-b653-9ff36a64e731").some,
+            direction.some,
+            persister.loadLocation("9e0df04f-4bf2-4313-b305-fa84d574300b"))
+          context.unbecome()
+      }
     case TriggeredMoveRequest("Дорога", direction, "Дорога") if direction == "trigger_swamp_north" =>
       sender ! new SimpleCommand(s"дать ${level} кун болотник")
       person ! MoveEvent(persister.loadLocation("2b7f6585-69eb-4e9f-8d46-bb649b42ca36").some,
@@ -50,8 +54,44 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
         persister.loadLocation("b29f1fc5-01f9-42ca-a7ca-662e11e8866f"))
     case r@TriggeredMoveRequest("Сокровищница", direction, "Широкий проход") if direction == "trigger_treasure_down" =>
       sender ! new SimpleCommand("г сезам откройся")
-      person ! MoveEvent(persister.locationByTitle(r.from).headOption,
+      person ! MoveEvent(persister.loadLocation("145016ed-b151-46d4-8db6-86dc7ae33137").some,
         direction.some,
-        persister.loadLocation("198a99ad-0e32-49c6-a189-7378c1b774ae"))
+        persister.loadLocation("bc745d10-571f-4298-9fea-2a108a207e7c"))
+    case r@TriggeredMoveRequest("У реки", direction, "Пристань") if direction == "trigger_fortress_pereyaslavl" =>
+      sender ! new SimpleCommand("дать 10 кун лодочник")
+      context.become {
+        case RawRead(text) if text.matches("(?ms).*Вы приплыли на Переяславльский берег и вылезли из лодки..*") =>
+          person ! MoveEvent(persister.locationByTitle(r.from).headOption,
+            direction.some,
+            persister.locationByTitle(r.to).head)
+          context.unbecome()
+      }
+    case r@TriggeredMoveRequest("Пристань", direction, "У реки") if direction == "trigger_pereyaslavl_fortress" =>
+      sender ! new SimpleCommand("дать 10 кун лодочник")
+      context.become {
+        case RawRead(text) if text.matches("(?ms).*Вы приплыли к южному берегу реки..*") =>
+          person ! MoveEvent(persister.locationByTitle(r.from).headOption,
+            direction.some,
+            persister.locationByTitle(r.to).head)
+          context.unbecome()
+      }
+    case r@TriggeredMoveRequest("Пристань", direction, "Крутой берег") if direction == "trigger_pereyaslavl_fisherman_village" =>
+      sender ! new SimpleCommand("дать 100 кун лодочник")
+      context.become {
+        case RawRead(text) if text.matches("(?ms).*Вы приплыли к рыбацкой деревне..*") =>
+          person ! MoveEvent(persister.locationByTitle(r.from).headOption,
+            direction.some,
+            persister.locationByTitle(r.to).head)
+          context.unbecome()
+      }
+    case r@TriggeredMoveRequest("Крутой берег", direction, "Пристань") if direction == "trigger_fisherman_village_pereyaslavl" =>
+      sender ! new SimpleCommand("дать 100 кун лодочник")
+      context.become {
+        case RawRead(text) if text.matches("(?ms).*Вы приплыли к Переяславлю и вылезли из лодки..*") =>
+          person ! MoveEvent(persister.locationByTitle(r.from).headOption,
+            direction.some,
+            persister.locationByTitle(r.to).head)
+          context.unbecome()
+      }
   }
 }
