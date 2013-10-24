@@ -3,7 +3,6 @@ package com.tort.mudai.person
 import akka.actor._
 import com.tort.mudai.mapper._
 import com.tort.mudai.command.SimpleCommand
-import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
 import com.tort.mudai.event.KillEvent
@@ -55,10 +54,10 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
         group.headOption match {
           case Some((m, xs)) if m.alias.isDefined =>
             person ! Attack(s"${xs.size}.${m.alias.get}")
-            become(waitKill(searcher, 0, isSitting = false))
+            become(waitKill(searcher, 0, isSitting = false, isFinished = false))
           case None =>
             targets.headOption.foreach(m => person ! Attack(m.alias.get))
-            become(waitKill(searcher, 0, isSitting = false))
+            become(waitKill(searcher, 0, isSitting = false, isFinished = false))
         }
       }
     case SearchFinished =>
@@ -76,7 +75,7 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
     become(roam)
   }
 
-  private def waitKill(searcher: ActorRef, mem: Int, isSitting: Boolean): Receive = {
+  private def waitKill(searcher: ActorRef, mem: Int, isSitting: Boolean, isFinished: Boolean): Receive = {
     case KillEvent(_, _, _, magic) =>
       if (magic) {
         person ! new SimpleCommand("взять все")
@@ -94,14 +93,18 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
       if (mem > 0) {
         if (!isSitting) {
           person ! new SimpleCommand("отд")
-          become(waitKill(searcher, mem, isSitting = true))
+          become(waitKill(searcher, mem, isSitting = true, isFinished))
         }
       } else {
         person ! new SimpleCommand("вст")
         become(waitTarget(searcher))
+        if (isFinished)
+          finishRoaming()
       }
     case StatusLineEvent(_, _, _, m, _, _) =>
-      become(waitKill(searcher, m, isSitting))
+      become(waitKill(searcher, m, isSitting, isFinished))
+    case SearchFinished =>
+      become(waitKill(searcher, mem, isSitting, isFinished = true))
     case e => searcher ! e
   }
 }
