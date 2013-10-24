@@ -21,7 +21,7 @@ class MainRogueQuest(val mapper: ActorRef, val persister: LocationPersister, val
 
   def receive = quest
 
-  val quester: Location = persister.locationByMob("Старик-отшельник отрешенно смотрит сквозь Вас.").head
+  val questerLocation: Location = persister.locationByMob("Старик-отшельник отрешенно смотрит сквозь Вас.").head
   val mainRogue: Mob = persister.mobByFullName("Главарь разбойников стоит здесь.").get
   val QuestTakenPattern = """(?ms).*Ступай, сынок, очисти святое место от этого недостойного человека\.\..*"""
   val assists: Mob = persister.mobByFullName("Разбойник крадется мимо Вас.").get
@@ -31,7 +31,7 @@ class MainRogueQuest(val mapper: ActorRef, val persister: LocationPersister, val
       println("QUEST STARTED")
       person ! RequestPulses
 
-      goAndDo(quester, person, (l) => {
+      goAndDo(questerLocation, person, (l) => {
         val future = system.scheduler.scheduleOnce(5 second, self, FiveSeconds)
         person ! new SimpleCommand("г помогу")
         become(waitTime(future))
@@ -59,7 +59,7 @@ class MainRogueQuest(val mapper: ActorRef, val persister: LocationPersister, val
   private def waitKill: Receive = {
     case KillEvent(shortName, _, _, _) if shortName === mainRogue.shortName.get =>
       person ! new SimpleCommand("взять глав")
-      goAndDo(quester, person, (l) => {
+      goAndDo(questerLocation, person, (l) => {
         person ! new SimpleCommand("дать труп стар")
         finishQuest(person)
       })

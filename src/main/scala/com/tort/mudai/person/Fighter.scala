@@ -17,6 +17,7 @@ import com.tort.mudai.event.TargetAssistedEvent
 import com.tort.mudai.mapper.MoveEvent
 import com.tort.mudai.event.CurseFailedEvent
 import com.tort.mudai.event.DisarmAssistantEvent
+import scala.concurrent.duration._
 
 class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
 
@@ -44,7 +45,9 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
       person ! new SimpleCommand("прик все пом")
     case KillEvent(target, exp, _, _) =>
       person ! new SimpleCommand("группа")
-      become(waitGroupStatus)
+      become(recoverAfterFight)
+    case GroupStatusEvent(name, health, _, status) =>
+      healOnStatus(name, health)
     case TargetFleeEvent(target, direction) =>
       become(waitPulse(target, direction))
     case DisarmAssistantEvent(_, _, _) =>
@@ -68,24 +71,33 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
       fleeker ! e
   }
 
-  def waitGroupStatus: Receive = {
-    case GroupStatusEvent(name, health, _, status) if status === "Стоит" || status === "Сидит" =>
-      if (status === "Сидит") {
-        person ! new SimpleCommand("прик все встать")
-      }
+  private def recoverAfterFight: Receive = {
+    case GroupStatusEvent(name, health, _, status) if status === "Стоит" || status === "Сидит" || status === "Сражается" =>
+      healOnStatus(name, health)
 
-      if ((health.trim === "Ранен") || (health.trim === "Лег.ранен") || (health.trim === "Тяж.ранен") || (health.trim === "Оч.тяж.ранен") || (health.trim === "При смерти")) {
-        val mob: Option[Mob] = persister.mobByShortName(name)
-        mob.flatMap(_.alias) foreach {
-          case alias => person ! new SimpleCommand(s"кол !к и! $alias")
-        }
+      status match {
+        case "Сидит" =>
+          println("ON SITTING")
+          person ! new SimpleCommand("прик все встать")
+          system.scheduler.scheduleOnce(1 second, person, new SimpleCommand("группа"))
+        case "Стоит" =>
+          println("ON STAND")
+          person ! YieldPulses
+          become(rec)
+        case _ =>
       }
+    case KillEvent(target, exp, _, _) =>
+      person ! new SimpleCommand("группа")
+  }
 
-      person ! YieldPulses
-      become(rec)
-    case GroupStatusEvent(_, _, _, status) =>
-      println(status)
-      become(rec)
+
+  private def healOnStatus(name: String @@ ShortName, health: String) {
+    if ((health.trim === "Ранен") || (health.trim === "Лег.ранен") || (health.trim === "Тяж.ранен") || (health.trim === "Оч.тяж.ран") || (health.trim === "При смерти")) {
+      val mob: Option[Mob] = persister.mobByShortName(name)
+      mob.flatMap(_.alias) foreach {
+        case alias => person ! new SimpleCommand(s"кол !к и! $alias")
+      }
+    }
   }
 
   def waitPulse(target: String @@ ShortName, direction: String @@ Direction): Receive = {
@@ -94,7 +106,7 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
       become(waitMove(target))
     case KillEvent(_, exp, _, _) =>
       person ! new SimpleCommand("группа")
-      become(waitGroupStatus)
+      become(recoverAfterFight)
   }
 
   def waitMove(target: String @@ ShortName): Receive = {
