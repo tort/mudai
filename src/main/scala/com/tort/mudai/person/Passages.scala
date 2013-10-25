@@ -93,5 +93,25 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
             persister.locationByTitle(r.to).head)
           context.unbecome()
       }
+    case r@TriggeredMoveRequest(_, direction, _) if direction == "trigger_cursed_village_nk_trees" =>
+      sender ! new SimpleCommand("лезть дерево")
+      person ! MoveEvent(persister.loadLocation("2c9b5a58-c87a-4443-846c-fa3847d6d953").some,
+        direction.some,
+        persister.loadLocation("a4f34817-9335-4c45-8548-6a64f4b8fd95"))
+    case r@TriggeredMoveRequest(_, direction, _) if direction == "trigger_nk_cursed_village_trees" =>
+      sender ! new SimpleCommand("лезть дерево")
+      person ! MoveEvent(persister.loadLocation("a4f34817-9335-4c45-8548-6a64f4b8fd95").some,
+        direction.some,
+        persister.loadLocation("2c9b5a58-c87a-4443-846c-fa3847d6d953"))
+    case r@TriggeredMoveRequest("На полянке", direction, "Опушка в лесу") if direction == "trigger_cursed_village_nk_forester" =>
+      sender ! new SimpleCommand(s"дать ${level * 2} кун стар")
+      person ! MoveEvent(persister.locationByTitle(r.from).head.some,
+        direction.some,
+        persister.locationByTitle(r.to).head)
+    case r@TriggeredMoveRequest("Опушка в лесу", direction, "На полянке") if direction == "trigger_nk_forester_cursed_village" =>
+      sender ! new SimpleCommand(s"дать ${level * 2} кун стар")
+      person ! MoveEvent(persister.locationByTitle(r.from).head.some,
+        direction.some,
+        persister.locationByTitle(r.to).head)
   }
 }
