@@ -2,17 +2,20 @@ package com.tort.mudai
 
 import akka.actor.{Actor, ActorRef, Props, ActorSystem}
 import com.tort.mudai.person._
-import com.tort.mudai.mapper.{MudMapper, PathHelper, SQLLocationPersister}
+import com.tort.mudai.mapper._
 import com.tort.mudai.event.GlanceEvent
 import com.tort.mudai.person.StartQuest
 import com.tort.mudai.person.Snoop
 import com.tort.mudai.command.SimpleCommand
+import com.tort.mudai.event.GlanceEvent
+import com.tort.mudai.person.StartQuest
+import com.tort.mudai.person.Snoop
 
 object Runner {
   def main(args: Array[String]) {
     val system = ActorSystem()
     val persister = new SQLLocationPersister
-    val pathHelper = new PathHelper(persister)
+    val pathHelper = new JGraphtPathHelper(persister)
     val mapper = system.actorOf(Props(classOf[MudMapper], pathHelper, persister, persister))
     val person = system.actorOf(Props(classOf[Person], args(0), args(1), mapper, pathHelper, persister))
     adHocSession(person, new MudConsole)
@@ -23,7 +26,7 @@ object QuestRunner {
   def main(args: Array[String]) {
     val system = ActorSystem()
     val persister = new SQLLocationPersister
-    val pathHelper = new PathHelper(persister)
+    val pathHelper = new JGraphtPathHelper(persister)
     val mapper = system.actorOf(Props(classOf[MudMapper], pathHelper, persister, persister))
     val person = system.actorOf(Props(classOf[Person], args(0), args(1), mapper, pathHelper, persister))
     val mudConsole = new MudConsole

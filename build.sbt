@@ -13,6 +13,8 @@ libraryDependencies += "com.google.inject" % "guice" % "3.0"
 
 libraryDependencies += "com.assembla.scala-incubator" % "graph-core_2.10" % "1.6.1"
 
+libraryDependencies += "net.sf.jgrapht" % "jgrapht" % "0.8.3"
+
 libraryDependencies += "org.scalatest" % "scalatest_2.10" % "1.9.1"
 
 libraryDependencies += "com.h2database" % "h2" % "1.3.168"
