@@ -53,7 +53,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
               sender ! TriggeredMoveRequest(current.title, direction, transition.to.title)
               become(rec(transition.to.some))
             case _ =>
-              println("### NO WAY THERE")
+              println(s"### NO WAY from ${current.title} on $direction")
           }
       }
     case CurrentLocation => sender ! previous
@@ -64,12 +64,6 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
           updateMobAndArea(room, newCurrentLocation.some)
           updateItemAndArea(room, newCurrentLocation.some)
           become(rec(newCurrentLocation.some))
-
-          previous foreach {
-            case p =>
-              if (p /== newCurrentLocation)
-                sender ! MoveEvent(previous, None, newCurrentLocation)
-          }
       }
     case GlanceEvent(room, Some(direction)) =>
       locationFromMap(previous, direction) match {

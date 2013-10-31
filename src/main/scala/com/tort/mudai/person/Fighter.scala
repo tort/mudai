@@ -24,7 +24,6 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
   import context._
 
   val antiBasher = actorOf(Props(classOf[AntiBasher]))
-  val curser = actorOf(Props(classOf[Curser]))
   val fleeker = actorOf(Props(classOf[Fleeker]))
 
   def receive = rec
@@ -38,7 +37,6 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
       person ! new SimpleCommand(s"прик все убить $target")
 
       antiBasher ! e
-      curser ! e
       fleeker ! e
     case Assist =>
       person ! RequestPulses
@@ -52,7 +50,7 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
       become(waitPulse(target, direction))
     case DisarmAssistantEvent(_, _, _) =>
       person ! new SimpleCommand("взять чудск")
-      person ! new SimpleCommand("дать чудск дружинник")
+      person ! new SimpleCommand("дать чудск кабат")
       person ! new SimpleCommand("прик все воор чудск")
     case TargetAssistedEvent(assister, targetGenitive) =>
       for {
@@ -62,12 +60,10 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
     case RequestPulses => person ! RequestPulses
     case YieldPulses => person ! YieldPulses
     case c: RenderableCommand if sender == antiBasher => person ! c
-    case c: RenderableCommand if sender == curser => person ! c
     case c: RenderableCommand if sender == fleeker => person ! c
     case c: FleeMove if sender == fleeker => person ! c
     case e =>
       antiBasher ! e
-      curser ! e
       fleeker ! e
   }
 
