@@ -41,7 +41,7 @@ class Fleeker extends Actor {
     case FleeEvent() =>
       context.become(rec(None, None, None))
       sender ! new SimpleCommand(s"$direction")
-      sender ! FleeMove(to, oppositeDirection(direction), from)
+      sender ! MoveEvent(to.some, oppositeDirection(direction), from)
       sender ! Attack(target)
   }
 }

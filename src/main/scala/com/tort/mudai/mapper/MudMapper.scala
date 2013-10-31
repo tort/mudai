@@ -41,7 +41,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
   }
 
   def rec(previous: Option[Location]): Receive = {
-    case FleeMove(_, _, to) =>
+    case MoveEvent(_, _, to) =>
       become(rec(to.some))
     case RequestWalkCommand(direction) =>
       previous.foreach {
@@ -51,7 +51,6 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
               sender ! WalkCommand(direction)
             case Some(transition) if transition.isTriggered =>
               sender ! TriggeredMoveRequest(current.title, direction, transition.to.title)
-              become(rec(transition.to.some))
             case _ =>
               println(s"### NO WAY from ${current.title} on $direction")
           }

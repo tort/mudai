@@ -132,8 +132,6 @@ class Curser extends Actor {
   }
 }
 
-case class FleeMove(from: Location, direction: String @@ Direction, to: Location)
-
 case class CurseCommand(target: String) extends RenderableCommand {
   def render = s"кол !прок! $target"
 }
