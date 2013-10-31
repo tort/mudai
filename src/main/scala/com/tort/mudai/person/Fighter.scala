@@ -106,7 +106,7 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
   }
 
   def waitMove(target: String @@ ShortName): Receive = {
-    case MoveEvent(from, Some(direction), to) =>
+    case MoveEvent(from, direction, to) =>
       persister.mobByShortName(target).flatMap(_.alias) match {
         case None => println(s"### UNKNOWN ALIAS FOR $target")
         case Some(alias) =>

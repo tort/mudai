@@ -72,7 +72,7 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
     case StartQuest(quest) =>
       quests(quest) ! StartQuest
       provisioner ! StartQuest(quest)
-    case e@MoveEvent(Some(from), Some(direction), to) if from.zone.map(_.id) /== to.zone.map(_.id) =>
+    case e@MoveEvent(Some(from), direction, to) if from.zone.map(_.id) /== to.zone.map(_.id) =>
       from.zone.foreach {
         case z =>
           mapper ! NameZone(z.name, from.some)

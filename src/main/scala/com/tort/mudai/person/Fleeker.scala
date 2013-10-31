@@ -26,7 +26,7 @@ class Fleeker extends Actor {
         context.become(waitFlee(f, d, t, target))
       }
     case MoveEvent(f, d, t) =>
-      context.become(rec(f, d, t.some))
+      context.become(rec(f, d.some, t.some))
     case KillEvent(target, _, _, _) =>
       context.become(rec(from, direction, to))
   }

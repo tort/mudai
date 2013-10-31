@@ -88,12 +88,12 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
           updateMobAndArea(room, loc.some)
           updateItemAndArea(room, loc.some)
           become(rec(loc.some))
-          sender ! MoveEvent(previous, direction.some, loc)
+          sender ! MoveEvent(previous, direction, loc)
         case Some(loc) =>
           updateMobAndArea(room, loc.some)
           updateItemAndArea(room, loc.some)
           become(rec(loc.some))
-          sender ! MoveEvent(previous, direction.some, loc)
+          sender ! MoveEvent(previous, direction, loc)
       }
     case PathTo(target) =>
       val path = pathTo(previous, target)
@@ -176,6 +176,6 @@ case class PathTo(target: Location)
 
 case class NameZone(zoneName: String @@ ZoneName, initLocation: Option[Location] = None)
 
-case class MoveEvent(from: Option[Location], direction: Option[String @@ Direction], to: Location)
+case class MoveEvent(from: Option[Location], direction: String @@ Direction, to: Location)
 
 case object CheckUnreachable
