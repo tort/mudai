@@ -63,7 +63,11 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
     case Zap => adapter ! Zap
     case e: LoginPromptEvent => adapter ! new SimpleCommand(login)
     case e: PasswordPromptEvent => adapter ! new SimpleCommand(password)
-    case c: RenderableCommand => adapter ! c
+    case c@FleeCommand(_) =>
+      mapper ! c
+      adapter ! c
+    case c: RenderableCommand =>
+      adapter ! c
     case e@GoTo(loc) =>
       val travelTask = actorOf(Props(classOf[TravelTo], pathHelper, mapper, persister, self))
       become(rec(travelTask +: tasks, travelTask +: pulseSubscribers))

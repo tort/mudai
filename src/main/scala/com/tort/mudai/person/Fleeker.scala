@@ -21,24 +21,23 @@ class Fleeker(mapper: ActorRef) extends Actor {
 
   def rec: Receive = {
     case FightRoundEvent(_, target, _) =>
-      sender ! Assist
+      val s = sender
+      s ! Assist
       for {
         dirOpt <- (mapper ? LastDirection).mapTo[Option[String @@ Direction]]
       } yield {
-        println("GOT LAST DIRECTION")
-        mapper ! PreMoveHint
+        flee(dirOpt.get, s)
         become(waitFlee(dirOpt.get))
-        flee(dirOpt.get)
       }
   }
 
-  def flee(direction: String @@ Direction) {
-    sender ! FleeCommand(oppositeDirection(direction))
+  def flee(direction: String @@ Direction, s: ActorRef) {
+    s ! FleeCommand(oppositeDirection(direction))
   }
 
   def waitFlee(direction: String @@ Direction): Receive = {
     case FleeEvent() =>
-      context.become(rec)
+      become(rec)
       sender ! new SimpleCommand(s"$direction")
   }
 }
@@ -46,8 +45,6 @@ class Fleeker(mapper: ActorRef) extends Actor {
 case object LastDirection
 
 case object Assist
-
-case object PreMoveHint
 
 case class FleeCommand(direction: String @@ Direction) extends RenderableCommand {
   def render = s"беж ${direction}"

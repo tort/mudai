@@ -10,12 +10,10 @@ import Scalaz._
 import com.tort.mudai.mapper.Zone.ZoneName
 import com.tort.mudai.person.TriggeredMoveRequest
 import scala.Some
-import com.tort.mudai.event.GlanceEvent
+import com.tort.mudai.event.{FleeEvent, GlanceEvent, KillEvent, TargetAssistedEvent}
 import com.tort.mudai.command.RequestWalkCommand
 import com.tort.mudai.command.WalkCommand
-import com.tort.mudai.event.KillEvent
 import com.tort.mudai.person.RawRead
-import com.tort.mudai.event.TargetAssistedEvent
 
 
 class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPersister, transitionPersister: TransitionPersister)
@@ -51,11 +49,17 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
       become(rec(from, dir.some, to.some))
   }
 
+  private def waitFleeHint(from: Option[Location], direction: String @@ Direction, to: Option[Location]): Receive = {
+    case FleeEvent() =>
+      become(rec(from, direction.some, to))
+  }
+
   def rec(previousLocation: Option[Location], previousDirection: Option[String @@ Direction], currentLocation: Option[Location]): Receive = {
     case LastDirection =>
       sender ! previousDirection
     case FleeCommand(direction) =>
-      become(waitMoveHint)
+      val fleeTo = locationPersister.loadLocation(currentLocation.get, direction)
+      become(waitFleeHint(currentLocation, direction, fleeTo))
     case RequestWalkCommand(direction) =>
       currentLocation.foreach {
         case current =>

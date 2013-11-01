@@ -34,7 +34,7 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
       person ! new SimpleCommand("вст")
       person ! ReadyForFight
     case e@Attack(target) =>
-      sender ! RequestPulses
+      person ! RequestPulses
       antiBasher ! e
       fleeker ! e
       attacker ! e
@@ -75,11 +75,9 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
 
       status match {
         case "Сидит" =>
-          println("ON SITTING")
           person ! new SimpleCommand("прик все встать")
           system.scheduler.scheduleOnce(1 second, person, new SimpleCommand("группа"))
         case "Стоит" =>
-          println("ON STAND")
           person ! YieldPulses
           become(rec)
         case _ =>
@@ -137,7 +135,9 @@ class Curser extends Actor {
 class Attacker extends Actor {
   import context._
 
-  def receive = {
+  def receive = rec
+
+  def rec: Receive = {
     case Attack(target) =>
       sender ! new SimpleCommand(s"прик все убить $target")
       system.scheduler.scheduleOnce(1 second, sender, new SimpleCommand("группа"))
@@ -149,7 +149,9 @@ class Attacker extends Actor {
       sender ! new SimpleCommand(s"прик все убить $target")
       system.scheduler.scheduleOnce(1 second, sender, new SimpleCommand("группа"))
     case GroupStatusEvent(_, _, _, status) =>
-      become(receive)
+      become(rec)
+    case KillEvent(target, _, _, _) =>
+      become(rec)
   }
 }
 
