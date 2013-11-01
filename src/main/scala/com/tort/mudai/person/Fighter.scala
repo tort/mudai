@@ -25,6 +25,7 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
 
   val antiBasher = actorOf(Props(classOf[AntiBasher]))
   val fleeker = actorOf(Props(classOf[Fleeker], mapper))
+  val attacker = actorOf(Props(classOf[Attacker]))
 
   def receive = rec
 
@@ -33,19 +34,19 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
       person ! new SimpleCommand("вст")
       person ! ReadyForFight
     case e@Attack(target) =>
-      person ! RequestPulses
-      person ! new SimpleCommand(s"прик все убить $target")
-
+      sender ! RequestPulses
       antiBasher ! e
       fleeker ! e
+      attacker ! e
     case Assist =>
       person ! RequestPulses
       person ! new SimpleCommand("прик все пом")
     case KillEvent(target, exp, _, _) =>
       person ! new SimpleCommand("группа")
       become(recoverAfterFight)
-    case GroupStatusEvent(name, health, _, status) =>
+    case e@GroupStatusEvent(name, health, _, status) =>
       healOnStatus(name, health)
+      attacker ! e
     case TargetFleeEvent(target, direction) =>
       become(waitPulse(target, direction))
     case DisarmAssistantEvent(_, _, _) =>
@@ -61,9 +62,11 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
     case YieldPulses => person ! YieldPulses
     case c: RenderableCommand if sender == antiBasher => person ! c
     case c: RenderableCommand if sender == fleeker => person ! c
+    case c: RenderableCommand if sender == attacker => person ! c
     case e =>
       antiBasher ! e
       fleeker ! e
+      attacker ! e
   }
 
   private def recoverAfterFight: Receive = {
@@ -128,6 +131,25 @@ class Curser extends Actor {
         case CurseSucceededEvent(_) =>
           unbecome()
       }
+  }
+}
+
+class Attacker extends Actor {
+  import context._
+
+  def receive = {
+    case Attack(target) =>
+      sender ! new SimpleCommand(s"прик все убить $target")
+      system.scheduler.scheduleOnce(1 second, sender, new SimpleCommand("группа"))
+      become(waitGroupEvent(target))
+  }
+
+  def waitGroupEvent(target: String): Receive = {
+    case GroupStatusEvent(_, _, _, status) if status === "Стоит" =>
+      sender ! new SimpleCommand(s"прик все убить $target")
+      system.scheduler.scheduleOnce(1 second, sender, new SimpleCommand("группа"))
+    case GroupStatusEvent(_, _, _, status) =>
+      become(receive)
   }
 }
 

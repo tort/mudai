@@ -73,11 +73,15 @@ class RogueCampQuest(val mapper: ActorRef, val persister: LocationPersister, val
   }
 
   import Mob._
+
   private def waitKillMainRogue: Receive = {
     case KillEvent(shortName, _, _, _) if shortName === mainRogue.shortName.get =>
       goAndDo(hostageLocation, person, (l) => {
         finishQuest(person)
         become(quest)
       })
+    case RoamingFinished =>
+      finishQuest(person)
+      become(quest)
   }
 }

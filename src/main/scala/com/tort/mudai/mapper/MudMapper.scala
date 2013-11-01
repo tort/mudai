@@ -52,6 +52,8 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
   }
 
   def rec(previousLocation: Option[Location], previousDirection: Option[String @@ Direction], currentLocation: Option[Location]): Receive = {
+    case LastDirection =>
+      sender ! previousDirection
     case FleeCommand(direction) =>
       become(waitMoveHint)
     case RequestWalkCommand(direction) =>

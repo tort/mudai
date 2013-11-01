@@ -98,6 +98,7 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
       } else {
         person ! new SimpleCommand("вст")
         become(waitTarget(searcher))
+        person ! new SimpleCommand("смотр")
         if (isFinished)
           finishRoaming()
       }
