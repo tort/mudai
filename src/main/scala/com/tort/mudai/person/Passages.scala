@@ -14,10 +14,16 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
     case StatusLineEvent(_, _, _, _, lvl, _) =>
       if (level != lvl)
         context.become(rec(lvl))
-    case TriggeredMoveRequest("У шалаша", direction, "Тихий угол") =>
+    case r@TriggeredMoveRequest("У шалаша", direction, "Тихий угол") =>
       sender ! new SimpleCommand(s"дать $level кун следопыт")
-    case TriggeredMoveRequest("Тихий угол", direction, "У шалаша") =>
+      person ! MoveEvent(persister.locationByTitle(r.from).headOption,
+        direction,
+        persister.locationByTitle(r.to).head)
+    case r@TriggeredMoveRequest("Тихий угол", direction, "У шалаша") =>
       sender ! new SimpleCommand(s"дать $level кун следопыт")
+      person ! MoveEvent(persister.locationByTitle(r.from).headOption,
+        direction,
+        persister.locationByTitle(r.to).head)
     case TriggeredMoveRequest("На лугу", direction, "На лугу") if direction == "v1_v2_trigger" =>
       sender ! new SimpleCommand(s"дать $level кун цыган")
       person ! MoveEvent(persister.loadLocation("a2487caf-444f-4736-978f-0f1fbbd6083d").some,

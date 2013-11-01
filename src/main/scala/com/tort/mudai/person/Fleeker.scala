@@ -1,49 +1,53 @@
 package com.tort.mudai.person
 
-import akka.actor.Actor
-import com.tort.mudai.mapper.{MoveEvent, Direction, Location}
+import akka.pattern.ask
+import akka.actor._
+import scala.concurrent.duration._
+import akka.util.Timeout
+import com.tort.mudai.mapper.Direction
 import scalaz._
-import Scalaz._
-import com.tort.mudai.event.{FleeEvent, KillEvent, FightRoundEvent, GlanceEvent}
-import com.tort.mudai.command.SimpleCommand
+import com.tort.mudai.event.{FleeEvent, FightRoundEvent}
+import com.tort.mudai.command.{RenderableCommand, SimpleCommand}
 
-class Fleeker extends Actor {
+class Fleeker(mapper: ActorRef) extends Actor {
+
+  import context._
+
+  implicit val timeout = Timeout(5 seconds)
+
   import Direction._
 
-  def receive = rec(None, None, None)
+  def receive = rec
 
-  def rec(from: Option[Location], direction: Option[String @@ Direction], to: Option[Location]): Receive = {
-    case GlanceEvent(_, _) =>
-      context.become(rec(None, None, None))
+  def rec: Receive = {
     case FightRoundEvent(_, target, _) =>
       sender ! Assist
       for {
-        f <- from
-        d <- direction
-        t <- to
+        dirOpt <- (mapper ? LastDirection).mapTo[Option[String @@ Direction]]
       } yield {
-        flee(f, d, t)
-        context.become(waitFlee(f, d, t, target))
+        mapper ! PreMoveHint
+        become(waitFlee(dirOpt.get))
+        flee(dirOpt.get)
       }
-    case MoveEvent(f, d, t) =>
-      context.become(rec(f, d.some, t.some))
-    case KillEvent(target, _, _, _) =>
-      context.become(rec(from, direction, to))
   }
 
-  def flee(from: Location, direction: String @@ Direction, to: Location) {
-    sender ! new SimpleCommand(s"беж ${oppositeDirection(direction)}")
+  def flee(direction: String @@ Direction) {
+    sender ! FleeCommand(oppositeDirection(direction))
   }
 
-  def waitFlee(from: Location, direction: String @@ Direction, to: Location, target: String): Receive = {
-    case FightRoundEvent(_, target, _) =>
-      flee(from, direction, to)
+  def waitFlee(direction: String @@ Direction): Receive = {
     case FleeEvent() =>
-      context.become(rec(None, None, None))
+      context.become(rec)
       sender ! new SimpleCommand(s"$direction")
-      sender ! MoveEvent(to.some, oppositeDirection(direction), from)
-      sender ! Attack(target)
   }
 }
 
+case object LastDirection
+
 case object Assist
+
+case object PreMoveHint
+
+case class FleeCommand(direction: String @@ Direction) extends RenderableCommand {
+  def render = s"беж ${direction}"
+}

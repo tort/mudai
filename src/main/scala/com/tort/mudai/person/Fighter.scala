@@ -19,12 +19,12 @@ import com.tort.mudai.event.CurseFailedEvent
 import com.tort.mudai.event.DisarmAssistantEvent
 import scala.concurrent.duration._
 
-class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
+class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) extends Actor {
 
   import context._
 
   val antiBasher = actorOf(Props(classOf[AntiBasher]))
-  val fleeker = actorOf(Props(classOf[Fleeker]))
+  val fleeker = actorOf(Props(classOf[Fleeker], mapper))
 
   def receive = rec
 
@@ -49,9 +49,9 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
     case TargetFleeEvent(target, direction) =>
       become(waitPulse(target, direction))
     case DisarmAssistantEvent(_, _, _) =>
-      person ! new SimpleCommand("взять чудск")
-      person ! new SimpleCommand("дать чудск кабат")
-      person ! new SimpleCommand("прик все воор чудск")
+      person ! new SimpleCommand("взять клев")
+      person ! new SimpleCommand("дать клев галиц")
+      person ! new SimpleCommand("прик все воор клев")
     case TargetAssistedEvent(assister, targetGenitive) =>
       for {
         mob <- persister.mobByShortName(assister)
@@ -61,7 +61,6 @@ class Fighter(person: ActorRef, persister: LocationPersister) extends Actor {
     case YieldPulses => person ! YieldPulses
     case c: RenderableCommand if sender == antiBasher => person ! c
     case c: RenderableCommand if sender == fleeker => person ! c
-    case c: FleeMove if sender == fleeker => person ! c
     case e =>
       antiBasher ! e
       fleeker ! e

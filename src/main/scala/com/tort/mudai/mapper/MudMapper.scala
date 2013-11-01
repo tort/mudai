@@ -1,15 +1,21 @@
 package com.tort.mudai.mapper
 
-import com.tort.mudai.event.{TargetAssistedEvent, KillEvent, GlanceEvent}
-import com.tort.mudai.person.{FleeMove, TriggeredMoveRequest, RawRead, CurrentLocation}
+import com.tort.mudai.person._
 import akka.actor.Actor
 import com.google.inject.Inject
 import com.tort.mudai.RoomSnapshot
 import com.tort.mudai.mapper.Direction._
 import scalaz._
 import Scalaz._
-import com.tort.mudai.command.{WalkCommand, RequestWalkCommand}
 import com.tort.mudai.mapper.Zone.ZoneName
+import com.tort.mudai.person.TriggeredMoveRequest
+import scala.Some
+import com.tort.mudai.event.GlanceEvent
+import com.tort.mudai.command.RequestWalkCommand
+import com.tort.mudai.command.WalkCommand
+import com.tort.mudai.event.KillEvent
+import com.tort.mudai.person.RawRead
+import com.tort.mudai.event.TargetAssistedEvent
 
 
 class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPersister, transitionPersister: TransitionPersister)
@@ -20,7 +26,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
   import transitionPersister._
   import pathHelper._
 
-  def receive: Receive = rec(None)
+  def receive: Receive = rec(None, None, None)
 
   def findAmongKnownRooms(locations: Seq[Location], previous: Option[Location], direction: String @@ Direction): Option[Location] = {
     locations.filter {
@@ -40,62 +46,69 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
     }
   }
 
-  def rec(previous: Option[Location]): Receive = {
-    case MoveEvent(_, _, to) =>
-      become(rec(to.some))
+  private def waitMoveHint: Receive = {
+    case MoveEvent(from, dir, to) =>
+      become(rec(from, dir.some, to.some))
+  }
+
+  def rec(previousLocation: Option[Location], previousDirection: Option[String @@ Direction], currentLocation: Option[Location]): Receive = {
+    case FleeCommand(direction) =>
+      become(waitMoveHint)
     case RequestWalkCommand(direction) =>
-      previous.foreach {
+      currentLocation.foreach {
         case current =>
           loadTransition(current, direction) match {
             case Some(t) if !t.isTriggered =>
               sender ! WalkCommand(direction)
             case Some(transition) if transition.isTriggered =>
               sender ! TriggeredMoveRequest(current.title, direction, transition.to.title)
+              become(waitMoveHint)
             case _ =>
               println(s"### NO WAY from ${current.title} on $direction")
           }
       }
-    case CurrentLocation => sender ! previous
+    case CurrentLocation => sender ! currentLocation
     case GlanceEvent(room, None) =>
       //TODO fix case when recall to non-unique room.
       location(room).foreach {
-        case newCurrentLocation =>
+        case newCurrentLocation if newCurrentLocation.some /== currentLocation =>
           updateMobAndArea(room, newCurrentLocation.some)
           updateItemAndArea(room, newCurrentLocation.some)
-          become(rec(newCurrentLocation.some))
+          become(rec(currentLocation, None, newCurrentLocation.some))
+        case _ =>
       }
     case GlanceEvent(room, Some(direction)) =>
-      locationFromMap(previous, direction) match {
+      locationFromMap(currentLocation, direction) match {
         case None =>
           val loc = loadLocation(room) match {
             case Nil =>
               val newLoc = saveLocation(room)
-              transition(previous, direction, newLoc.some, room)
+              transition(currentLocation, direction, newLoc.some, room)
               newLoc
             case locations =>
-              findAmongKnownRooms(locations, previous, direction) match {
+              findAmongKnownRooms(locations, currentLocation, direction) match {
                 case l@Some(x) =>
-                  transition(previous, direction, l, room)
+                  transition(currentLocation, direction, l, room)
                   x
                 case None =>
                   val newLoc = saveLocation(room)
-                  transition(previous, direction, newLoc.some, room)
+                  transition(currentLocation, direction, newLoc.some, room)
                   newLoc
               }
           }
 
           updateMobAndArea(room, loc.some)
           updateItemAndArea(room, loc.some)
-          become(rec(loc.some))
-          sender ! MoveEvent(previous, direction, loc)
+          become(rec(currentLocation, direction.some, loc.some))
+          sender ! MoveEvent(currentLocation, direction, loc)
         case Some(loc) =>
           updateMobAndArea(room, loc.some)
           updateItemAndArea(room, loc.some)
-          become(rec(loc.some))
-          sender ! MoveEvent(previous, direction, loc)
+          become(rec(currentLocation, direction.some, loc.some))
+          sender ! MoveEvent(currentLocation, direction, loc)
       }
     case PathTo(target) =>
-      val path = pathTo(previous, target)
+      val path = pathTo(currentLocation, target)
       sender ! RawRead(path.mkString)
     case KillEvent(shortName, exp, genitive, _) =>
       for {
@@ -109,7 +122,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
       } yield locationPersister.markAsAssisting(mob)
     case NameZone(zoneName, initLocation) =>
       val zone = zoneByName(zoneName)
-      initLocation.orElse(previous).foreach(l => updateZone(l, zone))
+      initLocation.orElse(currentLocation).foreach(l => updateZone(l, zone))
     case CheckUnreachable =>
       checkUnreachable.foreach(x => println(s"${x.id}"))
   }
