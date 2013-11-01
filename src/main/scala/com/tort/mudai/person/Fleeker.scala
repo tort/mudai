@@ -25,6 +25,7 @@ class Fleeker(mapper: ActorRef) extends Actor {
       for {
         dirOpt <- (mapper ? LastDirection).mapTo[Option[String @@ Direction]]
       } yield {
+        println("GOT LAST DIRECTION")
         mapper ! PreMoveHint
         become(waitFlee(dirOpt.get))
         flee(dirOpt.get)
