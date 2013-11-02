@@ -1,6 +1,6 @@
 package com.tort.mudai.quest
 
-import akka.actor.ActorRef
+import akka.actor.{Cancellable, ActorRef}
 import com.tort.mudai.mapper._
 import com.tort.mudai.person._
 import akka.util.Timeout
@@ -81,14 +81,19 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
       person ! RequestPulses
 
       goAndDo(zoneEntrance, person, (l) => {
-        become(waitBear)
+        val future = system.scheduler.scheduleOnce(15 seconds, self, TimeOut)
+        become(waitBear(future))
       })
   }
 
-  private def waitBear: Receive = {
+  private def waitBear(future: Cancellable): Receive = {
     case RawRead(text) if text.matches("(?ms).*Медведь мечтательно облизнулся и замер в ожидании спасительной выпивки..*") =>
       person ! new SimpleCommand("дать четверть медведь")
       become(waitEntranceOpened)
+    case TimeOut =>
+      println("### QUEST NOT RESPONDING")
+      finishQuest(person)
+      become(quest)
   }
 
   private def waitEntranceOpened: Receive = {
@@ -99,13 +104,13 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
   }
 
   private def waitPrompt: Receive = {
-    case RawRead(text) if text.matches("(?ms).*Леший сказал : 'Не мог бы ты помочь вернуть их?'.*") =>
+    case RawRead(text) if text.matches("(?ms).*Леший сказал : 'Не мог бы ты помочь вернуть их\\?'.*") =>
       person ! new SimpleCommand("г помогу")
       become(waitForGrass)
   }
 
   private def waitForGrass: Receive = {
-    case RawRead(text) if text.matches("(?ms).*Леший сказал : 'Когда спасешь лес, приходи ко мне и потолкуем о спасении белок!'.*") =>
+    case RawRead(text) if text.matches("(?ms).*Леший сказал : 'Когда спасешь лес, приходи ко мне и потолкуем о спасении белок\\!'.*") =>
       goAndDo(logjam, person, (l) => {
         person ! new SimpleCommand("брос трава")
         goAndDo(bearLair, person, (l) => {
@@ -143,7 +148,7 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
   }
 
   private def waitPassRequest: Receive = {
-    case RawRead(text) if text.matches("(?ms).*Услышав удары, хриплый голос за воротами произнес: \"Кто там?\".*") =>
+    case RawRead(text) if text.matches("(?ms).*Услышав удары, хриплый голос за воротами произнес: \"Кто там\\?\".*") =>
       person ! new SimpleCommand("г свои")
       become(waitGatesOpened)
   }
@@ -173,7 +178,7 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
   }
 
   private def waitPentagram: Receive = {
-    case RawRead(text) if text.matches("(?ms).*Леший сказал : 'ступай!'.*") =>
+    case RawRead(text) if text.matches("(?ms).*Леший сказал : 'ступай\\!'.*") =>
       person ! new SimpleCommand("прик все войти пент")
       goAndDo(foresterLair, person, (l) => {
         become(waitForesterPrompt)
@@ -220,3 +225,5 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
       finishQuest(person)
   }
 }
+
+case object TimeOut
