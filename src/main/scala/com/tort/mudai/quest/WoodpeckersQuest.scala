@@ -4,14 +4,15 @@ import akka.actor.ActorRef
 import com.tort.mudai.mapper._
 import com.tort.mudai.person._
 import akka.util.Timeout
-import akka.util.Timeout
 import scala.concurrent.duration._
 import com.tort.mudai.command.SimpleCommand
 import com.tort.mudai.person.RawRead
 import com.tort.mudai.person.StartQuest
-import com.tort.mudai.person.RawRead
-import com.tort.mudai.person.StartQuest
 import com.tort.mudai.person.RoamArea
+import com.tort.mudai.event.KillEvent
+import scalaz._
+import Scalaz._
+import Mob._
 
 class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, val pathHelper: PathHelper, val person: ActorRef) extends QuestHelper with ReachabilityHelper {
 
@@ -20,7 +21,7 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
   implicit val timeout = Timeout(5 seconds)
 
   val zone = persister.zoneByName(Zone.name("Дятлы"))
-  val bearLocation: Location = persister.locationByTitleAndZone("Лесная опушка", zone).head
+  val zoneEntrance: Location = persister.locationByTitleAndZone("Лесная опушка", zone).head
   val bearLair = persister.locationByTitleAndZone("Медвежья берлога", zone).head
   val logjam = persister.loadLocation("9fe7abd5-1ca3-4933-82af-0447a41696ed")
   val littleAnt = persister.locationByTitleAndZone("У огромного камня", zone).head
@@ -31,9 +32,46 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
     "Черный муравей скачет по тропе на огромной боевой тле.",
     "Черный муравей прохаживается по муравейнику.",
     "Гигантский черный муравей неспеша пожирает труп.",
-    "Черный муравей торопливо разбивает уцелевшие яйца."
+    "Черный муравей торопливо разбивает уцелевшие яйца.",
+    "Черный муравей тщательно охраняет ворота.",
+    "Черный муравей бредет по своим делам."
   ).map(persister.mobByFullName(_).get)
   val blackAnthillGates = persister.locationByTitleAndZone("Поваленный ствол сосны", zone).head
+  val blackAntQueenRoom = persister.locationByMob("Черная королева-матка восседает на троне.").head
+  val blackAntQueen = persister.mobByFullName("Черная королева-матка восседает на троне.").head
+  val oldHollow = persister.locationByTitleAndZone("В старом дупле", zone).head
+  val blackAnthillArea = reachableFrom(
+    oldHollow,
+    persister.nonBorderNonLockableNeighbors,
+    Set(blackAnthillGates, blackAntQueenRoom)).map(x => persister.loadLocation(x))
+  val foresterLair = persister.locationByMob("Пучеглазый леший мутным взглядом обводит берлогу.").head
+  val onGreatOak = persister.locationByTitleAndZone("На Царь-Дубе", zone).head
+  val underGreatOak = persister.locationByTitleAndZone("У подножия Царь-Дуба", zone).head
+  val greatOak = reachableFrom(
+    onGreatOak,
+    persister.nonBorderNonLockableNeighbors,
+    Set(underGreatOak)).map(x => persister.loadLocation(x))
+  val onGreatBirch = persister.locationByTitleAndZone("На Царь-Березе", zone).head
+  val underGreatBirch = persister.locationByTitleAndZone("У подножия Царь-Березы", zone).head
+  val woodpeckersKingFullName: String = "Царь Дятлов негодующе машет крыльями."
+  val woodpeckersKingLocation = persister.locationByMob(woodpeckersKingFullName).head
+  val woodpeckersKing = persister.mobByFullName(woodpeckersKingFullName).head
+  val greatBirch = reachableFrom(
+    onGreatBirch,
+    persister.nonBorderNonLockableNeighbors,
+    Set(underGreatBirch, woodpeckersKingLocation)
+  ).map(x => persister.loadLocation(x))
+  val woodpeckers = Set(
+    "(летит) Белокрылый дятел прячется в листве дерева.",
+    "Старый дятел бредет по ветке, часто спотыкаясь.",
+    "(летит) Плотоядный дятел грызет чью-то косточку.",
+    "Златоклювый дятел беспечно прыгает по ветке.",
+    "Пятнистая кукушка о чем-то печально кукует.",
+    "Молодой дятел разминает крылья перед полетом.",
+    "Бескрылый дятел бежит по ветке в поисках пищи.",
+    "(летит) Плотоядный дятел тщательно чистит о листву клюв.",
+    "(летит) Пестрый дятел долбит клювом дерево."
+  ).map(persister.mobByFullName(_).get)
 
   def receive = quest
 
@@ -42,7 +80,7 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
       println("QUEST STARTED")
       person ! RequestPulses
 
-      goAndDo(bearLocation, person, (l) => {
+      goAndDo(zoneEntrance, person, (l) => {
         become(waitBear)
       })
   }
@@ -112,6 +150,73 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
 
   private def waitGatesOpened: Receive = {
     case RawRead(text) if text.matches("(?ms).*Створки ворот со скрипом разошлись в стороны..*") =>
-//      person ! RoamArea(blackAnts, blackAnthill)
+      person ! RoamArea(blackAnts, blackAnthillArea)
+      become(waitFinishRoamBlackAnthill)
+  }
+
+  private def waitFinishRoamBlackAnthill: Receive = {
+    case RoamingFinished =>
+      person ! KillMobRequest(blackAntQueen)
+      become(waitKillBlackAntQueen)
+  }
+
+  private def waitKillBlackAntQueen: Receive = {
+    case KillEvent(shortName, _, _, _) if shortName === blackAntQueen.shortName.get =>
+      goAndDo(littleAnt, person, (l) => {
+        person ! new SimpleCommand("дать яйцо мурав")
+        person ! new SimpleCommand("брос мешоч")
+        person ! new SimpleCommand("вз мешоч")
+        goAndDo(bearLair, person, (l) => {
+          become(waitPentagram)
+        })
+      })
+  }
+
+  private def waitPentagram: Receive = {
+    case RawRead(text) if text.matches("(?ms).*Леший сказал : 'ступай!'.*") =>
+      person ! new SimpleCommand("прик все войти пент")
+      goAndDo(foresterLair, person, (l) => {
+        become(waitForesterPrompt)
+      })
+  }
+
+  private def waitForesterPrompt: Receive = {
+    case RawRead(text) if text.matches("(?ms).*Пучеглазый Леший сказал : 'И я так и быть отпущу с тобой белок. А теперь ступай...'.*") =>
+      person ! RoamArea(woodpeckers, greatOak)
+      become(waitFinishRoamOak)
+  }
+
+  private def waitFinishRoamOak: Receive = {
+    case RoamingFinished =>
+      person ! RoamArea(woodpeckers, greatBirch)
+      become(waitFinishRoamBirch)
+  }
+
+  private def waitFinishRoamBirch: Receive = {
+    case RoamingFinished =>
+      person ! KillMobRequest(woodpeckersKing)
+      become(waitKillWoodpeckersKing)
+  }
+
+  private def waitKillWoodpeckersKing: Receive = {
+    case RoamingFinished =>
+      goAndDo(foresterLair, person, (l) => {
+        person ! new SimpleCommand("дать череп леший")
+        become(waitForesterPentagram)
+      })
+  }
+
+  private def waitForesterPentagram: Receive = {
+    case RawRead(text) if text.matches("(?ms).*Лазурная пентаграмма возникла в воздухе..*") =>
+      person ! new SimpleCommand("прик все войти пент")
+      goAndDo(bearLair, person, (l) => {
+        person ! new SimpleCommand("дать связ леший")
+        become(waitReward)
+      })
+  }
+
+  private def waitReward: Receive = {
+    case RawRead(text) if text.matches("(?ms).*Леший сказал : 'Спасибо. Выручил ты меня!'.*") =>
+      finishQuest(person)
   }
 }
