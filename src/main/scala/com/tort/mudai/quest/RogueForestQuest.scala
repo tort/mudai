@@ -1,7 +1,7 @@
 package com.tort.mudai.quest
 
 import akka.actor.{Cancellable, ActorRef}
-import com.tort.mudai.mapper.{Zone, Mob, PathHelper, LocationPersister}
+import com.tort.mudai.mapper._
 import com.tort.mudai.person._
 import com.tort.mudai.person.RawRead
 import com.tort.mudai.person.StartQuest
@@ -12,8 +12,13 @@ import scalaz._
 import Scalaz._
 import akka.util.Timeout
 import scala.concurrent.duration._
+import com.tort.mudai.person.RawRead
+import com.tort.mudai.person.StartQuest
+import com.tort.mudai.person.KillMobRequest
+import com.tort.mudai.event.KillEvent
+import com.tort.mudai.person.RoamArea
 
-class RogueForestQuest(val mapper: ActorRef, val persister: LocationPersister, val pathHelper: PathHelper, val person: ActorRef) extends QuestHelper {
+class RogueForestQuest(val mapper: ActorRef, val persister: LocationPersister, val pathHelper: PathHelper, val person: ActorRef) extends QuestHelper with ReachabilityHelper {
 
   import context._
 
@@ -30,15 +35,11 @@ class RogueForestQuest(val mapper: ActorRef, val persister: LocationPersister, v
 
   val mainRogue = persister.mobByFullName("Здоровенный детина внимательно рассматривает вас.").get
 
-  val roguesHabitation = Set(
-    "Неприметная тропа",
-    "В землянке",
-    "В лагере разбойников",
-    "К шалашу",
-    "В шалаше",
-    "У лаза",
-    "Подземный лаз"
-  ).flatMap(fullName => persister.locationByTitleAndZone(fullName, zone)) -- persister.locationByMob(mainRogue.fullName)
+  val roguesHabitation = reachableFrom(
+    persister.locationByTitleAndZone("В лагере разбойников", zone).head,
+    persister.nonBorderNonLockableNeighbors,
+    Set(persister.locationByMob(mainRogue.fullName).head, persister.locationByTitleAndZone("У дубовых ворот", zone).head)
+  ).flatMap(fullName => persister.locationByTitleAndZone(fullName, zone))
 
   val quester = "Крепкого вида дедок, внимательно смотрит на вас."
   val questerLocation = persister.locationByMob(quester).head
@@ -73,6 +74,7 @@ class RogueForestQuest(val mapper: ActorRef, val persister: LocationPersister, v
   }
 
   import Mob._
+
   private def waitKill: Receive = {
     case KillEvent(shortName, _, _, _) if shortName === mainRogue.shortName.get =>
       goAndDo(questerLocation, person, (l) => {

@@ -90,6 +90,7 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
     case RawRead(text) if text.matches("(?ms).*Медведь мечтательно облизнулся и замер в ожидании спасительной выпивки..*") =>
       person ! new SimpleCommand("дать четверть медведь")
       become(waitEntranceOpened)
+      future.cancel()
     case TimeOut =>
       println("### QUEST NOT RESPONDING")
       finishQuest(person)
