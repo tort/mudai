@@ -14,6 +14,7 @@ import Scalaz._
 import Mob._
 
 class AwfulTaleQuest(val mapper: ActorRef, val persister: LocationPersister, val pathHelper: PathHelper, val person: ActorRef) extends QuestHelper {
+
   import context._
 
   val zone = persister.zoneByName(Zone.name("Страшная сказка"))
@@ -53,6 +54,9 @@ class AwfulTaleQuest(val mapper: ActorRef, val persister: LocationPersister, val
 
   private def waitKillHedgehog: Receive = {
     case KillEvent(shortName, _, _, _) if shortName === hedgehog.shortName.get =>
+      person ! new SimpleCommand("встать")
+      println("STANDUP")
+    case RoamingFinished =>
       person ! KillMobRequest(evilSorcerer)
       become(waitKillSorcerer)
   }

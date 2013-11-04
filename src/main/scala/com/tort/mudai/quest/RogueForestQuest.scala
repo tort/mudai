@@ -64,10 +64,10 @@ class RogueForestQuest(val mapper: ActorRef, val persister: LocationPersister, v
     case RawRead(text) if text.matches("(?ms).*Глава поселения сказал : 'А инструменты ежели обнаружите - уж мне принесите, я кузнецу передам...'.*") =>
       future.cancel()
       person ! RoamArea(rogues, roguesHabitation)
-      become(waitRoamFinish)
+      become(waitRoamFinish())
   }
 
-  private def waitRoamFinish: Receive = {
+  def waitRoamFinish(): Receive = {
     case RoamingFinished =>
       person ! KillMobRequest(mainRogue)
       become(waitKill)
