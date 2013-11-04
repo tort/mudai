@@ -7,8 +7,6 @@ import Scalaz._
 import com.tort.mudai.person._
 import akka.actor.ActorDSL._
 import scala.annotation.tailrec
-import com.tort.mudai.person.Snoop
-import com.tort.mudai.person.RawWrite
 import com.tort.mudai.mapper._
 import scala.concurrent.{ExecutionContext, Future}
 import ExecutionContext.Implicits.global
@@ -22,6 +20,7 @@ import com.tort.mudai.person.RawWrite
 import com.tort.mudai.person.Roam
 import com.tort.mudai.mapper.NameZone
 import com.tort.mudai.person.Attack
+import Mob._
 
 class MudConsole {
   val persister = new SQLLocationPersister
@@ -76,7 +75,7 @@ class MudConsole {
         userInputLoop(person, Map())
       case "аттак" :: name =>
         val targetName: String = name.mkString(" ")
-        person ! Attack(targetName)
+        person ! Attack(alias(targetName))
         userInputLoop(person, Map())
       case "квест" :: name =>
         val questName: String = name.mkString(" ")

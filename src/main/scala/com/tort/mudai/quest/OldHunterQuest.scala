@@ -13,6 +13,7 @@ import com.tort.mudai.person.RawRead
 import com.tort.mudai.person.StartQuest
 import com.tort.mudai.person.KillMobRequest
 import com.tort.mudai.event.KillEvent
+import Mob._
 
 class OldHunterQuest(val mapper: ActorRef, val persister: LocationPersister, val pathHelper: PathHelper, val person: ActorRef) extends QuestHelper {
 
@@ -24,7 +25,7 @@ class OldHunterQuest(val mapper: ActorRef, val persister: LocationPersister, val
 
   val quester: Location = persister.locationByMob("Старый охотник подслеповато щурясь, смотрит на Вас.").head
 
-  val bear = persister.mobByFullName("Огромный медведь развалился здесь в своей берлоге.").head
+  val bear = persister.mobByFullName(fullName("Огромный медведь развалился здесь в своей берлоге.")).head
 
   val QuestPrompt = """(?ms).*Старый охотник сказал : 'Я в долгу не останусь!'.*"""
 

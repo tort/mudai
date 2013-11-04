@@ -15,6 +15,7 @@ import com.tort.mudai.mapper.NameZone
 import akka.actor.Terminated
 import com.tort.mudai.event.StatusLineEvent
 import com.tort.mudai.mapper.MoveEvent
+import com.tort.mudai.mapper.Mob.Alias
 
 class Person(login: String, password: String, mapper: ActorRef, pathHelper: PathHelper, persister: LocationPersister) extends Actor {
 
@@ -141,4 +142,4 @@ case class Roam(zoneName: String @@ ZoneName)
 
 case class RoamArea(targets: Set[Mob], area: Set[Location])
 
-case class Attack(target: String)
+case class Attack(target: String @@ Alias)

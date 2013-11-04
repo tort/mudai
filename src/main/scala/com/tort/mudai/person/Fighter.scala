@@ -47,8 +47,8 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
     case e@GroupStatusEvent(name, health, _, status) =>
       healOnStatus(name, health)
       attacker ! e
-    case TargetFleeEvent(target, direction) =>
-      become(waitPulse(target, direction))
+//    case TargetFleeEvent(target, direction) =>
+//      become(waitPulse(target, direction))
     case DisarmAssistantEvent(_, _, _) =>
       person ! new SimpleCommand("взять клев")
       person ! new SimpleCommand("дать клев галиц")

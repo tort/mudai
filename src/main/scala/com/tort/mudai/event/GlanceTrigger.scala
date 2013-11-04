@@ -1,8 +1,9 @@
 package com.tort.mudai.event
 
 import com.tort.mudai.RoomSnapshot
+import com.tort.mudai.mapper.{Mob, Exit, Direction}
+import Mob._
 import com.tort.mudai.mapper.Direction._
-import com.tort.mudai.mapper.{Exit, Direction}
 import scalaz._
 
 class GlanceTrigger extends EventTrigger[GlanceEvent] {
@@ -48,7 +49,7 @@ class GlanceTrigger extends EventTrigger[GlanceEvent] {
       locationDesc,
       exits,
       objects,
-      mobs
+      mobs.map(fullName(_))
     )
 
     GlanceEvent(roomSnapshot, direction)

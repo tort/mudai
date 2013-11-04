@@ -20,8 +20,8 @@ class AwfulTaleQuest(val mapper: ActorRef, val persister: LocationPersister, val
 
   val zone = persister.zoneByName(Zone.name("Страшная сказка"))
   val questerLocation = persister.locationByTitleAndZone(title("На старом клене"), zone).head
-  val hedgehog = persister.mobByFullName("Еж величиной с хорошую избу сейчас растерзает вас в клочья.").head
-  val evilSorcerer = persister.mobByFullName("Сгорбленный старичок стоит в углу.").head
+  val hedgehog = persister.mobByFullName(fullName("Еж величиной с хорошую избу сейчас растерзает вас в клочья.")).head
+  val evilSorcerer = persister.mobByFullName(fullName("Сгорбленный старичок стоит в углу.")).head
 
   def receive = quest
 

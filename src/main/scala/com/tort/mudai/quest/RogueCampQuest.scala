@@ -29,9 +29,9 @@ class RogueCampQuest(val mapper: ActorRef, val persister: LocationPersister, val
     "Здоровый детина сидит у входа в землянку.",
     "Разбойник идет, припадая на правую ногу.",
     "Грязная лохматая псина роется в помоях."
-  ).map(name => persister.mobByFullName(name).get)
+  ).map(fullName(_)).map(name => persister.mobByFullName(name).get)
 
-  val mainRogue = persister.mobByFullName("Высокий плечистый человек прохаживается из угла в угол.").get
+  val mainRogue = persister.mobByFullName(fullName("Высокий плечистый человек прохаживается из угла в угол.")).get
   val hostageLocation = persister.locationByMob("Богатый пленник ожидает своей участи.").head
 
   def quest: Receive = {

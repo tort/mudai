@@ -12,6 +12,7 @@ import com.tort.mudai.person.KillMobRequest
 import com.tort.mudai.event.KillEvent
 import scalaz._
 import Scalaz._
+import Mob._
 
 class MainRogueQuest(val mapper: ActorRef, val persister: LocationPersister, val pathHelper: PathHelper, val person: ActorRef) extends QuestHelper {
 
@@ -22,9 +23,9 @@ class MainRogueQuest(val mapper: ActorRef, val persister: LocationPersister, val
   def receive = quest
 
   val questerLocation: Location = persister.locationByMob("Старик-отшельник отрешенно смотрит сквозь Вас.").head
-  val mainRogue: Mob = persister.mobByFullName("Главарь разбойников стоит здесь.").get
+  val mainRogue: Mob = persister.mobByFullName("Главарь разбойников стоит здесь." |> fullName).get
   val QuestTakenPattern = """(?ms).*Ступай, сынок, очисти святое место от этого недостойного человека\.\..*"""
-  val assists: Mob = persister.mobByFullName("Разбойник крадется мимо Вас.").get
+  val assists: Mob = persister.mobByFullName("Разбойник крадется мимо Вас." |> fullName).get
 
   def quest: Receive = {
     case StartQuest =>
@@ -55,7 +56,6 @@ class MainRogueQuest(val mapper: ActorRef, val persister: LocationPersister, val
       become(waitKill)
   }
 
-  import Mob._
   private def waitKill: Receive = {
     case KillEvent(shortName, _, _, _) if shortName === mainRogue.shortName.get =>
       person ! new SimpleCommand("взять глав")

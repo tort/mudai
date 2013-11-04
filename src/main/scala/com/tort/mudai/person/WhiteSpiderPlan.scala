@@ -1,13 +1,17 @@
 package com.tort.mudai.person
 
-import com.tort.mudai.command.{RequestWalkCommand, RenderableCommand, WalkCommand, SimpleCommand}
+import com.tort.mudai.command.{RenderableCommand, SimpleCommand}
 import scalaz.@@
-import com.tort.mudai.mapper.{PathHelper, LocationPersister, Location, Direction}
+import com.tort.mudai.mapper._
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
-import com.tort.mudai.event.PeaceStatusEvent
 import akka.actor.{Props, Actor, ActorRef}
+import com.tort.mudai.command.RequestWalkCommand
+import com.tort.mudai.command.WalkCommand
+import scala.Some
+import com.tort.mudai.event.PeaceStatusEvent
+import Mob._
 
 class WhiteSpiderPlan(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister, val person: ActorRef) extends QuestHelper {
   implicit val timeout = Timeout(5 seconds)
@@ -29,7 +33,7 @@ class WhiteSpiderPlan(val mapper: ActorRef, val pathHelper: PathHelper, val pers
       future onSuccess {
         case Some(current) =>
           goAndDo(targetLocation, person, (visited) => {
-            person ! Attack("паук")
+            person ! Attack(alias("паук"))
             become(onFinishFight(person, current))
           })
         case None =>

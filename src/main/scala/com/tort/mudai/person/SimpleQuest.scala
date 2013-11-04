@@ -1,6 +1,8 @@
 package com.tort.mudai.person
 
 import akka.pattern.ask
+import com.tort.mudai.mapper._
+import Mob._
 import akka.util.Timeout
 import scala.concurrent.duration._
 import com.tort.mudai.mapper._
@@ -37,7 +39,7 @@ class SimpleQuest(val mapper: ActorRef, val persister: LocationPersister, val pa
 
   private def hirePart(location: Location) {
     val searcher = context.actorOf(Props(classOf[Searcher], mapper, persister, pathHelper, person))
-    val mob: Mob = persister.mobByFullName("Батрак работает здесь.").get
+    val mob: Mob = persister.mobByFullName(fullName("Батрак работает здесь.")).get
     searcher ! FindMobs(Set(mob), persister.locationByMob(mob.fullName)) //TODO refactor
     become(waitMobFound(searcher, location))
   }
@@ -62,7 +64,7 @@ class SimpleQuest(val mapper: ActorRef, val persister: LocationPersister, val pa
       "Пятнистая рысь изогнула спину перед прыжком здесь.",
       "Бобер строит здесь запруду.",
       "Волк готовится к нападению здесь."
-    )
+    ).map(fullName)
 
     val searcher = context.actorOf(Props(classOf[Searcher], mapper, persister, pathHelper, person))
     val area: Set[Location] = persister.loadLocations(persister.loadZoneByName(Zone.name("Лесная дорога")).get)

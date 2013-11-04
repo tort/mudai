@@ -35,11 +35,13 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
     "Гигантский черный муравей неспеша пожирает труп.",
     "Черный муравей торопливо разбивает уцелевшие яйца.",
     "Черный муравей тщательно охраняет ворота.",
-    "Черный муравей бредет по своим делам."
-  ).map(persister.mobByFullName(_).get)
+    "Черный муравей бредет по своим делам.",
+    "Черный муравей навострил усики, почуяв опасность.",
+    "Груженый желудями кузнечик ползет в кладовую."
+  ).map(fullName).map(persister.mobByFullName(_).get)
   val blackAnthillGates = persister.locationByTitleAndZone(title("Поваленный ствол сосны"), zone).head
   val blackAntQueenRoom = persister.locationByMob("Черная королева-матка восседает на троне.").head
-  val blackAntQueen = persister.mobByFullName("Черная королева-матка восседает на троне.").head
+  val blackAntQueen = persister.mobByFullName(fullName("Черная королева-матка восседает на троне.")).head
   val oldHollow = persister.locationByTitleAndZone(title("В старом дупле"), zone).head
   val blackAnthillArea = reachableFrom(
     oldHollow,
@@ -54,7 +56,7 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
     Set(underGreatOak)).map(x => persister.loadLocation(x))
   val onGreatBirch = persister.locationByTitleAndZone(title("На Царь-Березе"), zone).head
   val underGreatBirch = persister.locationByTitleAndZone(title("У подножия Царь-Березы"), zone).head
-  val woodpeckersKingFullName: String = "Царь Дятлов негодующе машет крыльями."
+  val woodpeckersKingFullName: String @@ FullName = fullName("Царь Дятлов негодующе машет крыльями.")
   val woodpeckersKingLocation = persister.locationByMob(woodpeckersKingFullName).head
   val woodpeckersKing = persister.mobByFullName(woodpeckersKingFullName).head
   val greatBirch = reachableFrom(
@@ -72,7 +74,7 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
     "Бескрылый дятел бежит по ветке в поисках пищи.",
     "(летит) Плотоядный дятел тщательно чистит о листву клюв.",
     "(летит) Пестрый дятел долбит клювом дерево."
-  ).map(persister.mobByFullName(_).get)
+  ).map(fullName(_)).map(persister.mobByFullName(_).get)
 
   def receive = quest
 
@@ -116,7 +118,7 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
       goAndDo(logjam, person, (l) => {
         person ! new SimpleCommand("брос трава")
         goAndDo(bearLair, person, (l) => {
-          system.scheduler.scheduleOnce(3 second, self, FiveSeconds)
+          system.scheduler.scheduleOnce(5 second, self, FiveSeconds)
           become(waitExplosion)
         })
       })
@@ -171,11 +173,17 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
     case KillEvent(shortName, _, _, _) if shortName === blackAntQueen.shortName.get =>
       goAndDo(littleAnt, person, (l) => {
         person ! new SimpleCommand("дать яйцо мурав")
-        person ! new SimpleCommand("брос мешоч")
-        person ! new SimpleCommand("вз мешоч")
-        goAndDo(bearLair, person, (l) => {
-          become(waitPentagram)
-        })
+        system.scheduler.scheduleOnce(10 seconds, self, FiveSeconds)
+        become(waitRewardFromLittleAnt)
+      })
+  }
+
+  private def waitRewardFromLittleAnt: Receive = {
+    case FiveSeconds =>
+      person ! new SimpleCommand("брос мешоч")
+      person ! new SimpleCommand("вз мешоч")
+      goAndDo(bearLair, person, (l) => {
+        become(waitPentagram)
       })
   }
 

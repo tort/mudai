@@ -29,9 +29,9 @@ class RogueForestQuest(val mapper: ActorRef, val persister: LocationPersister, v
     "Грязный человек, явно разбойничьей наружности пристально смотрит на вас.",
     "Здоровенный детина, пристально смотрит на вас.",
     "Пьяный разбойник неспешно бредет куда-то."
-  ).map(persister.mobByFullName(_).get)
+  ).map(fullName(_)).map(persister.mobByFullName(_).get)
 
-  val mainRogue = persister.mobByFullName("Здоровенный детина внимательно рассматривает вас.").head
+  val mainRogue = persister.mobByFullName(fullName("Здоровенный детина внимательно рассматривает вас.")).head
 
   val roguesHabitation = reachableFrom(
     persister.locationByTitleAndZone(title("В лагере разбойников"), zone).head,

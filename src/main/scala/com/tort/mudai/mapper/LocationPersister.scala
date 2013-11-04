@@ -33,7 +33,7 @@ trait LocationPersister {
 
   def allLocations: Seq[Location]
 
-  def persistMobAndArea(mob: String, location: Location)
+  def persistMobAndArea(mob: String @@ FullName, location: Location)
 
   def persistItemAndArea(mob: String, location: Location)
 
@@ -41,7 +41,7 @@ trait LocationPersister {
 
   def killablesHabitation(zone: Zone): Seq[Location]
 
-  def mobByFullName(name: String): Option[Mob]
+  def mobByFullName(name: String @@ FullName): Option[Mob]
 
   def mobByShortName(shortName: String @@ ShortName): Option[Mob]
 
@@ -84,7 +84,7 @@ trait TransitionPersister {
 
 class SQLLocationPersister extends LocationPersister with TransitionPersister {
   implicit val getLocationResult = GetResult(l => new Location(Location.locationId(l.<<), title(l.<<), l.<<, zone = loadZone(l.<<)))
-  implicit val getMobResult = GetResult(l => new Mob(l.<<, l.<<, Option(Mob.shortName(l.<<)), Option(l.<<), l.<<, Option(l.<<), l.<<))
+  implicit val getMobResult = GetResult(l => new Mob(l.<<, l.<<, Option(Mob.shortName(l.<<)), Option(alias(l.<<)), l.<<, Option(l.<<), l.<<))
   implicit val getItemResult = GetResult(l => new Item(l.<<, l.<<, Option(l.<<), Option(l.<<), Option(l.<<)))
   implicit val getZoneResult = GetResult(z => new Zone(z.<<, Zone.name(z.<<)))
 
@@ -190,7 +190,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting from mob m where m.shortName = $shortName".as[Mob].firstOption
   }
 
-  def mobByFullName(name: String): Option[Mob] = DB.db withSession {
+  def mobByFullName(name: String @@ FullName): Option[Mob] = DB.db withSession {
     val mob = sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting from mob m where m.fullName = $name".as[Mob].firstOption
     mob match {
       case None =>
@@ -238,7 +238,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     }
   }
 
-  def persistMobAndArea(mobName: String, location: Location) = DB.db withSession {
+  def persistMobAndArea(mobName: String @@ FullName, location: Location) = DB.db withSession {
     mobByFullName(mobName) match {
       case Some(mob) =>
         val locId = location.id

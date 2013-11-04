@@ -7,6 +7,7 @@ import com.tort.mudai.command.SimpleCommand
 import com.tort.mudai.person.RawRead
 import com.tort.mudai.person.StartQuest
 import com.tort.mudai.event.KillEvent
+import Mob._
 import scalaz._
 import Scalaz._
 
@@ -17,7 +18,7 @@ class ForestKeeperQuest(val mapper: ActorRef, val persister: LocationPersister, 
 
   val anthill = persister.locationByItem("Огромный муравейник прилегает к южной стороне дерева.").head
 
-  val forestKeeperFullName = "Хозяин леса аж трясется от ярости, заметив Вас."
+  val forestKeeperFullName = fullName("Хозяин леса аж трясется от ярости, заметив Вас.")
   val forestKeeperLocation = persister.locationByMob(forestKeeperFullName).head
 
   val forestKeeper = persister.mobByFullName(forestKeeperFullName).head

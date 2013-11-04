@@ -9,6 +9,7 @@ import com.tort.mudai.event.KillEvent
 import scala.Some
 import akka.actor.Terminated
 import com.tort.mudai.event.StatusLineEvent
+import Mob._
 
 class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister, val person: ActorRef)
   extends QuestHelper
@@ -53,10 +54,13 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
         val group = visibles.filter(_.isAssisting).groupBy(x => x).toSeq.sortBy(x => x._2.size).reverse.filter(m => targets.contains(m._1))
         group.headOption match {
           case Some((m, xs)) if m.alias.isDefined =>
-            person ! Attack(s"${xs.size}.${m.alias.get}")
+            person ! Attack(alias(s"${xs.size}.${m.alias.get}"))
             become(waitKill(searcher, 0, isSitting = false, isFinished = false))
           case None =>
-            targets.headOption.foreach(m => person ! Attack(m.alias.get))
+            targets.headOption.foreach {
+              case m =>
+                person ! Attack(m.alias.get)
+            }
             become(waitKill(searcher, 0, isSitting = false, isFinished = false))
         }
       }
