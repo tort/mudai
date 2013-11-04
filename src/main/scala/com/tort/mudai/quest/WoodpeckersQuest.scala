@@ -13,6 +13,7 @@ import com.tort.mudai.event.KillEvent
 import scalaz._
 import Scalaz._
 import Mob._
+import Location._
 
 class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, val pathHelper: PathHelper, val person: ActorRef) extends QuestHelper with ReachabilityHelper {
 
@@ -21,12 +22,12 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
   implicit val timeout = Timeout(5 seconds)
 
   val zone = persister.zoneByName(Zone.name("Дятлы"))
-  val zoneEntrance: Location = persister.locationByTitleAndZone("Лесная опушка", zone).head
-  val bearLair = persister.locationByTitleAndZone("Медвежья берлога", zone).head
-  val logjam = persister.loadLocation("9fe7abd5-1ca3-4933-82af-0447a41696ed")
-  val littleAnt = persister.locationByTitleAndZone("У огромного камня", zone).head
-  val thronePlace = persister.locationByTitleAndZone("У трона королевы", zone).head
-  val meadowBeforeAnthill = persister.locationByTitleAndZone("Поляна перед муравейником", zone).head
+  val zoneEntrance: Location = persister.locationByTitleAndZone(title("Лесная опушка"), zone).head
+  val bearLair = persister.locationByTitleAndZone(title("Медвежья берлога"), zone).head
+  val logjam = persister.loadLocation(locationId("9fe7abd5-1ca3-4933-82af-0447a41696ed"))
+  val littleAnt = persister.locationByTitleAndZone(title("У огромного камня"), zone).head
+  val thronePlace = persister.locationByTitleAndZone(title("У трона королевы"), zone).head
+  val meadowBeforeAnthill = persister.locationByTitleAndZone(title("Поляна перед муравейником"), zone).head
   val pillagedAnthill = reachableFrom(thronePlace, persister.nonBorderNonLockableNeighbors, Set(meadowBeforeAnthill)).map(x => persister.loadLocation(x))
   val blackAnts = Set(
     "Черный муравей скачет по тропе на огромной боевой тле.",
@@ -36,23 +37,23 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
     "Черный муравей тщательно охраняет ворота.",
     "Черный муравей бредет по своим делам."
   ).map(persister.mobByFullName(_).get)
-  val blackAnthillGates = persister.locationByTitleAndZone("Поваленный ствол сосны", zone).head
+  val blackAnthillGates = persister.locationByTitleAndZone(title("Поваленный ствол сосны"), zone).head
   val blackAntQueenRoom = persister.locationByMob("Черная королева-матка восседает на троне.").head
   val blackAntQueen = persister.mobByFullName("Черная королева-матка восседает на троне.").head
-  val oldHollow = persister.locationByTitleAndZone("В старом дупле", zone).head
+  val oldHollow = persister.locationByTitleAndZone(title("В старом дупле"), zone).head
   val blackAnthillArea = reachableFrom(
     oldHollow,
     persister.nonBorderNonLockableNeighbors,
     Set(blackAnthillGates, blackAntQueenRoom)).map(x => persister.loadLocation(x))
   val foresterLair = persister.locationByMob("Пучеглазый леший мутным взглядом обводит берлогу.").head
-  val onGreatOak = persister.locationByTitleAndZone("На Царь-Дубе", zone).head
-  val underGreatOak = persister.locationByTitleAndZone("У подножия Царь-Дуба", zone).head
+  val onGreatOak = persister.locationByTitleAndZone(title("На Царь-Дубе"), zone).head
+  val underGreatOak = persister.locationByTitleAndZone(title("У подножия Царь-Дуба"), zone).head
   val greatOak = reachableFrom(
     onGreatOak,
     persister.nonBorderNonLockableNeighbors,
     Set(underGreatOak)).map(x => persister.loadLocation(x))
-  val onGreatBirch = persister.locationByTitleAndZone("На Царь-Березе", zone).head
-  val underGreatBirch = persister.locationByTitleAndZone("У подножия Царь-Березы", zone).head
+  val onGreatBirch = persister.locationByTitleAndZone(title("На Царь-Березе"), zone).head
+  val underGreatBirch = persister.locationByTitleAndZone(title("У подножия Царь-Березы"), zone).head
   val woodpeckersKingFullName: String = "Царь Дятлов негодующе машет крыльями."
   val woodpeckersKingLocation = persister.locationByMob(woodpeckersKingFullName).head
   val woodpeckersKing = persister.mobByFullName(woodpeckersKingFullName).head

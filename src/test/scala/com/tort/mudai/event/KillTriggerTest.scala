@@ -29,6 +29,10 @@ class KillTriggerTest extends FunSuite with ShouldMatchers {
   }
 
   test("magical mob death") {
-    new KillTrigger().fireEvent(magicalDeath).target should be("Дикая яблонька")
+    new KillTrigger().matches(magicalDeath)
+  }
+
+  test("magical mob params extraction"){
+    new KillTrigger().fireEvent(magicalDeath)
   }
 }

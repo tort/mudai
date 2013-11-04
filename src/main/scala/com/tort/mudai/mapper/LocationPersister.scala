@@ -10,13 +10,14 @@ import Q.interpolation
 import java.util
 import com.tort.mudai.mapper.Direction._
 import com.tort.mudai.mapper.Mob._
+import com.tort.mudai.mapper.Location._
 import com.tort.mudai.mapper.Zone.ZoneName
-import com.tort.mudai.mapper.Location.LocationId
+import com.tort.mudai.mapper.Location.{Title, LocationId}
 
 trait LocationPersister {
   def locationByTitle(title: String): Seq[Location]
 
-  def locationByTitleAndZone(title: String, zone: Zone): Seq[Location]
+  def locationByTitleAndZone(title: String @@ Title, zone: Zone): Seq[Location]
 
   def locationByMob(fullName: String): Set[Location]
 
@@ -24,7 +25,7 @@ trait LocationPersister {
 
   def locationByItem(fullName: String): Seq[Location]
 
-  def loadLocation: (String) => Location
+  def loadLocation: (String @@ LocationId) => Location
 
   def loadLocation(room: RoomKey): Seq[Location]
 
@@ -82,7 +83,7 @@ trait TransitionPersister {
 }
 
 class SQLLocationPersister extends LocationPersister with TransitionPersister {
-  implicit val getLocationResult = GetResult(l => new Location(Location.locationId(l.<<), l.<<, l.<<, zone = loadZone(l.<<)))
+  implicit val getLocationResult = GetResult(l => new Location(Location.locationId(l.<<), title(l.<<), l.<<, zone = loadZone(l.<<)))
   implicit val getMobResult = GetResult(l => new Mob(l.<<, l.<<, Option(Mob.shortName(l.<<)), Option(l.<<), l.<<, Option(l.<<), l.<<))
   implicit val getItemResult = GetResult(l => new Item(l.<<, l.<<, Option(l.<<), Option(l.<<), Option(l.<<)))
   implicit val getZoneResult = GetResult(z => new Zone(z.<<, Zone.name(z.<<)))
@@ -91,7 +92,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     sql"select * from location where title like '%#$title%'".as[Location].list
   }
 
-  def locationByTitleAndZone(title: String, zone: Zone): Seq[Location] = DB.db withSession {
+  def locationByTitleAndZone(title: String @@ Title, zone: Zone): Seq[Location] = DB.db withSession {
     sql"select * from location where title like '%#$title%' and zone = ${zone.id}".as[Location].list
   }
 
@@ -102,7 +103,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   def allTransitions = DB.db withSession {
     sql"select id, locFrom, direction, locTo, isTriggered from transition".as[(String, String, String, String, Boolean)]
       .list
-      .map(x => new Transition(x._1, loadLocation(x._2), Direction(x._3), loadLocation(x._4), isTriggered = x._5))
+      .map(x => new Transition(x._1, loadLocation(locationId(x._2)), Direction(x._3), loadLocation(locationId(x._4)), isTriggered = x._5))
   }
 
   def loadLocation(room: RoomKey) = DB.db withSession {
@@ -111,7 +112,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     sql"select * from location l where l.title = $title and l.desc = $desc".as[Location].list
   }
 
-  val loadLocation: (String) => Location = Memo.immutableHashMapMemo {
+  val loadLocation: (String @@ LocationId) => Location = Memo.immutableHashMapMemo {
     case id => DB.db withSession {
       sql"select * from location l where l.id = $id".as[Location].firstOption match {
         case None => throw new RuntimeException("NO LOC FOUND FOR " + id)
@@ -140,7 +141,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     sql"select l.id, l.locFrom, l.direction, l.locTo, l.isTriggered from transition l where l.locFrom = $prevId and l.direction = $direction and l.locTo = $newId"
       .as[(String, String, String, String, Boolean)]
       .list
-      .map(x => new Transition(x._1, loadLocation(x._2), Direction(x._3), loadLocation(x._4), isTriggered = x._5)) match {
+      .map(x => new Transition(x._1, loadLocation(locationId(x._2)), Direction(x._3), loadLocation(locationId(x._4)), isTriggered = x._5)) match {
       case trans :: Nil => trans.some
       case _ => None
     }
@@ -151,7 +152,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     sql"select l.id, l.locFrom, l.direction, l.locTo, l.isTriggered from transition l where l.locFrom = $prevId and l.direction = $direction"
       .as[(String, String, String, String, Boolean)]
       .list
-      .map(x => new Transition(x._1, loadLocation(x._2), Direction(x._3), loadLocation(x._4), isTriggered = x._5)) match {
+      .map(x => new Transition(x._1, loadLocation(locationId(x._2)), Direction(x._3), loadLocation(locationId(x._4)), isTriggered = x._5)) match {
       case trans :: Nil => trans.some
       case _ => None
     }
@@ -183,40 +184,6 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
       case Nil => None
       case l :: Nil => l.some
     }
-  }
-
-  def weakChainIntersection: Seq[(Transition, Transition)] = DB.db withSession {
-    Q.queryNA[(String, String, String, String, Boolean, Boolean, String, String, String, String, Boolean, Boolean)]("select tw.*, t.* " +
-      "from transition t join location lf on t.locFrom = lf.id join location lt on t.locTo = lt.id " +
-      "join transition tw join location lfw on tw.locFrom = lfw.id join location ltw on tw.locTo = ltw.id " +
-      "where t.isweak = 0 " +
-      "and tw.isweak = 1 " +
-      "and lf.title = lfw.title " +
-      "and lf.desc = lfw.desc " +
-      "and lt.title = ltw.title " +
-      "and lt.desc = ltw.desc " +
-      "and t.direction = tw.direction ").list
-      .map(x =>
-      (new Transition(x._1, loadLocation(x._2), Direction(x._3), loadLocation(x._4), x._5, x._6),
-        new Transition(x._7, loadLocation(x._8), Direction(x._9), loadLocation(x._10), x._11, x._12)))
-  }
-
-  def allWeakTransitions: Seq[Transition] = DB.db withSession {
-    sql"select * from transition where isweak = 1"
-      .as[(String, String, String, String, Boolean)]
-      .list
-      .map(x => new Transition(x._1, loadLocation(x._2), Direction(x._3), loadLocation(x._4), x._5))
-  }
-
-  def deleteWeakIntersection(locations: Iterable[Location], transitions: Seq[Transition]): Unit = DB.db withSession {
-    val tids = transitions.map("'" + _.id + "'").mkString(",")
-    val lids = locations.map("'" + _.id + "'").mkString(",")
-    sqlu"delete from transition where id in (#$tids)".first
-    sqlu"delete from location where id in (#$lids)".first
-  }
-
-  def replaceWeakWithStrong(): Unit = DB.db withSession {
-    sqlu"update transition set isweak = 0 where isweak = 1".first
   }
 
   def mobByShortName(shortName: String @@ ShortName) = DB.db withSession {

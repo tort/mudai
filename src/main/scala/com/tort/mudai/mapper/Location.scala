@@ -3,11 +3,11 @@ package com.tort.mudai.mapper
 import com.tort.mudai.RoomSnapshot
 import scalaz._
 import Scalaz._
-import com.tort.mudai.mapper.Location.LocationId
+import com.tort.mudai.mapper.Location.{Title, LocationId}
 
 class Location(
                 val id: String @@ LocationId,
-                val title: String,
+                val title: String @@ Title,
                 val desc: String,
                 var zone: Option[Zone] = None,
                 var waterSource: Option[String] = None,
@@ -34,11 +34,15 @@ case class Exit(direction: String @@ Direction, isBorder: Boolean = false, close
 object Location {
   trait LocationId
 
+  trait Title
+
   def locationId(id: String): String @@ LocationId = Tag(id)
 
-  def apply(room: RoomSnapshot) = new Location(locationId("0"), room.title, room.desc)
+  def title(t: String): String @@ Title = Tag(t)
 
-  def apply(id: String, title: String, desc: String) = new Location(locationId(id), title, desc)
+  def apply(room: RoomSnapshot) = new Location(locationId("0"), title(room.title), room.desc)
+
+  def apply(id: String, t: String, desc: String) = new Location(locationId(id), title(t), desc)
 
   implicit val locationsEqual: Equal[Location] = Equal.equal(_.id === _.id)
   implicit val locationIdEqual: Equal[String @@ LocationId] = Equal.equal(_ == _)

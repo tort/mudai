@@ -1,7 +1,8 @@
 package com.tort.mudai.quest
 
 import akka.actor.ActorRef
-import com.tort.mudai.mapper.{Mob, Zone, PathHelper, LocationPersister}
+import com.tort.mudai.mapper._
+import com.tort.mudai.mapper.{Zone, PathHelper, LocationPersister}
 import com.tort.mudai.person._
 import com.tort.mudai.command.SimpleCommand
 import com.tort.mudai.person.RawRead
@@ -9,6 +10,8 @@ import com.tort.mudai.event.KillEvent
 import com.tort.mudai.person.StartQuest
 import scalaz._
 import Scalaz._
+import Location._
+import Mob._
 
 class RogueCampQuest(val mapper: ActorRef, val persister: LocationPersister, val pathHelper: PathHelper, val person: ActorRef) extends QuestHelper {
 
@@ -17,7 +20,7 @@ class RogueCampQuest(val mapper: ActorRef, val persister: LocationPersister, val
   def receive = quest
 
   val keyLocation = persister.locationByItem("Странное приспособление с зажимами и винтами висит на стене.").head
-  val beforeDoor = persister.loadLocation("f18809f7-40d5-4b69-ad5a-fb2dddf4a1dc")
+  val beforeDoor = persister.loadLocation(locationId("f18809f7-40d5-4b69-ad5a-fb2dddf4a1dc"))
   val chestLocation = persister.locationByItem("Расписанный непонятными знаками ларец светится в темноте. ..блестит!").head
   val assisters = Set(
     "Мужичок-разбойничек охраняет вход в избу.",
@@ -72,7 +75,6 @@ class RogueCampQuest(val mapper: ActorRef, val persister: LocationPersister, val
       become(waitKillMainRogue)
   }
 
-  import Mob._
 
   private def waitKillMainRogue: Receive = {
     case KillEvent(shortName, _, _, _) if shortName === mainRogue.shortName.get =>

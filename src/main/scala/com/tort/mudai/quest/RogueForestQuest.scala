@@ -3,10 +3,6 @@ package com.tort.mudai.quest
 import akka.actor.{Cancellable, ActorRef}
 import com.tort.mudai.mapper._
 import com.tort.mudai.person._
-import com.tort.mudai.person.RawRead
-import com.tort.mudai.person.StartQuest
-import com.tort.mudai.person.RoamArea
-import com.tort.mudai.event.KillEvent
 import com.tort.mudai.command.SimpleCommand
 import scalaz._
 import Scalaz._
@@ -17,6 +13,8 @@ import com.tort.mudai.person.StartQuest
 import com.tort.mudai.person.KillMobRequest
 import com.tort.mudai.event.KillEvent
 import com.tort.mudai.person.RoamArea
+import Mob._
+import Location._
 
 class RogueForestQuest(val mapper: ActorRef, val persister: LocationPersister, val pathHelper: PathHelper, val person: ActorRef) extends QuestHelper with ReachabilityHelper {
 
@@ -33,13 +31,13 @@ class RogueForestQuest(val mapper: ActorRef, val persister: LocationPersister, v
     "Пьяный разбойник неспешно бредет куда-то."
   ).map(persister.mobByFullName(_).get)
 
-  val mainRogue = persister.mobByFullName("Здоровенный детина внимательно рассматривает вас.").get
+  val mainRogue = persister.mobByFullName("Здоровенный детина внимательно рассматривает вас.").head
 
   val roguesHabitation = reachableFrom(
-    persister.locationByTitleAndZone("В лагере разбойников", zone).head,
+    persister.locationByTitleAndZone(title("В лагере разбойников"), zone).head,
     persister.nonBorderNonLockableNeighbors,
-    Set(persister.locationByMob(mainRogue.fullName).head, persister.locationByTitleAndZone("У дубовых ворот", zone).head)
-  ).flatMap(fullName => persister.locationByTitleAndZone(fullName, zone))
+    Set(persister.locationByMob(mainRogue.fullName).head, persister.locationByTitleAndZone(title("У дубовых ворот"), zone).head)
+  ).map(id => persister.loadLocation(id))
 
   val quester = "Крепкого вида дедок, внимательно смотрит на вас."
   val questerLocation = persister.locationByMob(quester).head
@@ -50,7 +48,7 @@ class RogueForestQuest(val mapper: ActorRef, val persister: LocationPersister, v
     case StartQuest =>
       person ! RequestPulses
       goAndDo(questerLocation, person, (l) => {
-        val future = system.scheduler.scheduleOnce(5 second, self, FiveSeconds)
+        val future = system.scheduler.scheduleOnce(10 second, self, FiveSeconds)
         person ! new SimpleCommand("г помогу")
         become(waitQuestPrompt(future))
       })
@@ -63,6 +61,7 @@ class RogueForestQuest(val mapper: ActorRef, val persister: LocationPersister, v
       become(quest)
     case RawRead(text) if text.matches("(?ms).*Глава поселения сказал : 'А инструменты ежели обнаружите - уж мне принесите, я кузнецу передам...'.*") =>
       future.cancel()
+      println(s"START ROAM ROGUES: ${roguesHabitation.size} rooms")
       person ! RoamArea(rogues, roguesHabitation)
       become(waitRoamFinish())
   }
@@ -73,14 +72,20 @@ class RogueForestQuest(val mapper: ActorRef, val persister: LocationPersister, v
       become(waitKill)
   }
 
-  import Mob._
 
   private def waitKill: Receive = {
     case KillEvent(shortName, _, _, _) if shortName === mainRogue.shortName.get =>
       goAndDo(questerLocation, person, (l) => {
         person ! new SimpleCommand("дать инструм глав")
-        finishQuest(person)
-        become(quest)
+        become(waitReward)
       })
+  }
+
+  private def waitReward: Receive = {
+    case RawRead(text) if text.matches("(?ms).*Глава поселения дал вам мешок денег..*") =>
+      person ! new SimpleCommand("брос меш")
+      person ! new SimpleCommand("взять меш")
+      finishQuest(person)
+      become(quest)
   }
 }
