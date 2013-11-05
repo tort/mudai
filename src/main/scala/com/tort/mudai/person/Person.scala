@@ -142,4 +142,5 @@ case class Roam(zoneName: String @@ ZoneName)
 
 case class RoamArea(targets: Set[Mob], area: Set[Location])
 
-case class Attack(target: String @@ Alias)
+case class Attack(target: Mob, number: Option[Int] = None)
+case class AttackByAlias(target: String @@ Alias)

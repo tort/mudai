@@ -75,7 +75,7 @@ class SimpleQuest(val mapper: ActorRef, val persister: LocationPersister, val pa
 
   def waitTargetFound(searcher: ActorRef, startLocation: Location): Receive = {
     case MobFound(targets, _) =>
-      person ! Attack(targets.head.alias.get)
+      person ! Attack(targets.head)
       become(waitKill(searcher, startLocation))
     case SearchFinished =>
       goAndDo(hunterLocation, person, (visited) => {

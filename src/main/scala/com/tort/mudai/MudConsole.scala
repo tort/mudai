@@ -75,7 +75,7 @@ class MudConsole {
         userInputLoop(person, Map())
       case "аттак" :: name =>
         val targetName: String = name.mkString(" ")
-        person ! Attack(alias(targetName))
+        person ! AttackByAlias(alias(targetName))
         userInputLoop(person, Map())
       case "квест" :: name =>
         val questName: String = name.mkString(" ")

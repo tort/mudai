@@ -5,7 +5,7 @@ import com.tort.mudai.command.{RenderableCommand, SimpleCommand}
 import com.tort.mudai.mapper._
 import scalaz._
 import Scalaz._
-import com.tort.mudai.mapper.Mob.ShortName
+import com.tort.mudai.mapper.Mob.{Alias, ShortName}
 import com.tort.mudai.command.RequestWalkCommand
 import com.tort.mudai.event.TargetFleeEvent
 import com.tort.mudai.event.KillEvent
@@ -33,7 +33,7 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
     case MemFinishedEvent() =>
       person ! new SimpleCommand("вст")
       person ! ReadyForFight
-    case e@Attack(target) =>
+    case e@Attack(target, number) =>
       person ! RequestPulses
       antiBasher ! e
       fleeker ! e
@@ -47,8 +47,8 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
     case e@GroupStatusEvent(name, health, _, status) =>
       healOnStatus(name, health)
       attacker ! e
-//    case TargetFleeEvent(target, direction) =>
-//      become(waitPulse(target, direction))
+    //    case TargetFleeEvent(target, direction) =>
+    //      become(waitPulse(target, direction))
     case DisarmAssistantEvent(_, _, _) =>
       person ! new SimpleCommand("взять клев")
       person ! new SimpleCommand("дать клев галиц")
@@ -121,11 +121,11 @@ class Curser extends Actor {
   import context._
 
   def receive = {
-    case Attack(target) =>
-      sender ! CurseCommand(target)
+    case Attack(target, number) =>
+      sender ! CurseCommand(target.alias.get)
       become {
         case CurseFailedEvent() =>
-          sender ! CurseCommand(target)
+          sender ! CurseCommand(target.alias.get)
         case CurseSucceededEvent(_) =>
           unbecome()
       }
@@ -133,18 +133,26 @@ class Curser extends Actor {
 }
 
 class Attacker extends Actor {
+
   import context._
 
   def receive = rec
 
   def rec: Receive = {
-    case Attack(target) =>
-      sender ! new SimpleCommand(s"прик все убить $target")
+    case Attack(target, number) =>
+      val alias = number match {
+        case None => s"${target.alias.get}"
+        case Some(x) => s"${x}.${target.alias.get}"
+      }
+      sender ! new SimpleCommand(s"прик все убить $alias")
+      if (target.canFlee) {
+        sender ! new SimpleCommand(s"кол !сеть! $alias")
+      }
       system.scheduler.scheduleOnce(1 second, sender, new SimpleCommand("группа"))
-      become(waitGroupEvent(target))
+      become(waitGroupEvent(target.alias.get))
   }
 
-  def waitGroupEvent(target: String): Receive = {
+  def waitGroupEvent(target: String @@ Alias): Receive = {
     case GroupStatusEvent(_, _, _, status) if status === "Стоит" =>
       sender ! new SimpleCommand(s"прик все убить $target")
       system.scheduler.scheduleOnce(1 second, sender, new SimpleCommand("группа"))

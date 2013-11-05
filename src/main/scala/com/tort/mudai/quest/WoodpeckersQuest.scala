@@ -37,7 +37,9 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
     "Черный муравей тщательно охраняет ворота.",
     "Черный муравей бредет по своим делам.",
     "Черный муравей навострил усики, почуяв опасность.",
-    "Груженый желудями кузнечик ползет в кладовую."
+    "Груженый желудями кузнечик ползет в кладовую.",
+    "Черная муравьиха пристально следит за ячейками.",
+    "Мохналапый муравей готовится съесть рыжее яйцо."
   ).map(fullName).map(persister.mobByFullName(_).get)
   val blackAnthillGates = persister.locationByTitleAndZone(title("Поваленный ствол сосны"), zone).head
   val blackAntQueenRoom = persister.locationByMob("Черная королева-матка восседает на троне.").head

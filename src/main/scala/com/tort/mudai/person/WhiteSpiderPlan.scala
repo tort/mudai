@@ -33,7 +33,7 @@ class WhiteSpiderPlan(val mapper: ActorRef, val pathHelper: PathHelper, val pers
       future onSuccess {
         case Some(current) =>
           goAndDo(targetLocation, person, (visited) => {
-            person ! Attack(alias("паук"))
+            person ! AttackByAlias(alias("паук"))
             become(onFinishFight(person, current))
           })
         case None =>

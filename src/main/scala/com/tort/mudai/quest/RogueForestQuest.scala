@@ -61,7 +61,6 @@ class RogueForestQuest(val mapper: ActorRef, val persister: LocationPersister, v
       become(quest)
     case RawRead(text) if text.matches("(?ms).*Глава поселения сказал : 'А инструменты ежели обнаружите - уж мне принесите, я кузнецу передам...'.*") =>
       future.cancel()
-      println(s"START ROAM ROGUES: ${roguesHabitation.size} rooms")
       person ! RoamArea(rogues, roguesHabitation)
       become(waitRoamFinish())
   }
