@@ -6,20 +6,15 @@ import com.tort.mudai.mapper._
 import scalaz._
 import Scalaz._
 import com.tort.mudai.mapper.Mob.{Alias, ShortName}
-import com.tort.mudai.command.RequestWalkCommand
 import com.tort.mudai.event._
-import scala.Some
-import com.tort.mudai.mapper.MoveEvent
 import scala.concurrent.duration._
 import com.tort.mudai.quest.TimeOut
-import com.tort.mudai.person.CurseCommand
 import com.tort.mudai.event.KillEvent
 import scala.Some
 import com.tort.mudai.event.GroupStatusEvent
 import com.tort.mudai.event.CurseSucceededEvent
 import com.tort.mudai.event.TargetAssistedEvent
 import com.tort.mudai.event.CurseFailedEvent
-import com.tort.mudai.person.Attack
 import com.tort.mudai.event.DisarmAssistantEvent
 
 class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) extends Actor {
@@ -38,23 +33,23 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
   def rec(peaceStatus: Boolean): Receive = {
     case e@Attack(target, number) =>
       person ! RequestPulses
-      system.scheduler.schedule(10 seconds, 20 seconds, person, new GroupStatusCommand)
       antiBasher ! e
       fleeker ! e
       attacker ! e
     case KillEvent(target, exp, _, _) =>
       person ! new GroupStatusCommand
-      become(recoverAfterFight)
+      become(recoverAfterFight(peaceStatus))
     case GroupStatusEvent(name, health, _, "Стоит") =>
       if (peaceStatus)
         person ! YieldPulses
     case e@FightRoundEvent(_, _, _) =>
-      become(rec(peaceStatus = false))
+      sender ! RequestPulses
       fleeker ! e
-    case PeaceStatusEvent() =>
+      become(rec(peaceStatus = false))
+    case e@PeaceStatusEvent() =>
       become(rec(peaceStatus = true))
+      fleeker ! e
     case Assist =>
-      person ! RequestPulses
       person ! new SimpleCommand("прик все пом")
     case e@GroupStatusEvent(name, health, _, status) =>
       healOnStatus(name, health)
@@ -63,11 +58,11 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
       person ! new SimpleCommand("взять клев")
       person ! new SimpleCommand("дать клев галиц")
       person ! new SimpleCommand("прик все воор клев")
-    case TargetAssistedEvent(assister, targetGenitive) =>
-      for {
-        mob <- persister.mobByShortName(assister)
-        alias <- mob.alias
-      } yield person ! CurseCommand(alias)
+//    case TargetAssistedEvent(assister, targetGenitive) =>
+//      for {
+//        mob <- persister.mobByShortName(assister)
+//        alias <- mob.alias
+//      } yield person ! CurseCommand(alias)
     case RequestPulses => person ! RequestPulses
     case YieldPulses => person ! YieldPulses
     case c: RenderableCommand if sender == antiBasher => person ! c
@@ -79,7 +74,7 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
       attacker ! e
   }
 
-  private def recoverAfterFight: Receive = {
+  private def recoverAfterFight(peaceStatus: Boolean): Receive = {
     case GroupStatusEvent(name, health, _, status) if status === "Стоит" || status === "Сидит" || status === "Сражается" =>
       healOnStatus(name, health)
 
@@ -89,7 +84,7 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
           system.scheduler.scheduleOnce(1 second, person, new GroupStatusCommand)
         case "Стоит" =>
           person ! YieldPulses
-          become(rec)
+          become(rec(peaceStatus))
         case _ =>
       }
     case KillEvent(target, exp, _, _) =>
@@ -130,6 +125,8 @@ class Attacker extends Actor {
   def receive = rec
 
   def rec: Receive = {
+    case AttackByAlias(target) =>
+      sender ! new SimpleCommand(s"прик все убить $target")
     case Attack(target, number) =>
       val alias = number match {
         case None => s"${target.alias.get}"
