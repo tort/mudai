@@ -21,12 +21,11 @@ class Fleeker(mapper: ActorRef) extends Actor {
 
   def rec: Receive = {
     case FightRoundEvent(_, target, _) =>
-      val s = sender
-      s ! Assist
+      sender ! Assist
       for {
         dirOpt <- (mapper ? LastDirection).mapTo[Option[String @@ Direction]]
       } yield {
-        flee(dirOpt.get, s)
+        flee(dirOpt.get, sender)
         become(waitFlee(dirOpt.get))
       }
   }
