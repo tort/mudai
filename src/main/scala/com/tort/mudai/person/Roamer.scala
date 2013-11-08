@@ -25,7 +25,7 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
   def receive = roam
 
   def roam: Receive = {
-    case Roam(zoneName) =>
+    case RoamZone(zoneName) =>
       loadZoneByName(zoneName) match {
         case None =>
           println(s"### ZONE $zoneName NOT FOUND")
@@ -36,7 +36,7 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
           search(persister.killableMobsBy(zone), area(zone))(waitTarget)
       }
 
-    case RoamArea(targets: Set[Mob], area: Set[Location]) =>
+    case RoamMobsInArea(targets: Set[Mob], area: Set[Location]) =>
       person ! RequestPulses
       search(targets, area)(waitTarget)
 
@@ -70,6 +70,13 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
             }
         }
       }
+    case e@GlanceEvent(roomSnapshot, _) =>
+      println("ROAMER GLANCE")
+      for {
+        mob <- roomSnapshot.mobs.map(fullName => persister.mobByFullName(fullName)).flatten.filter(_.isAgressive).headOption
+        if mob.alias.isDefined
+      } yield person ! Attack(mob)
+      searcher ! e
     case SearchFinished =>
       finishRoaming()
     case e => searcher ! e

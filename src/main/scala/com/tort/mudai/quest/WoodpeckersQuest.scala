@@ -8,7 +8,7 @@ import scala.concurrent.duration._
 import com.tort.mudai.command.SimpleCommand
 import com.tort.mudai.person.RawRead
 import com.tort.mudai.person.StartQuest
-import com.tort.mudai.person.RoamArea
+import com.tort.mudai.person.RoamMobsInArea
 import com.tort.mudai.event.KillEvent
 import scalaz._
 import Scalaz._
@@ -141,7 +141,7 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
 
   private def waitAntExplanation: Receive = {
     case RawRead(text) if text.matches("(?ms).*Рыжий муравьишка сказал : 'Возможно, эти тайные слова помогут тебе спасти мою сестренку.'.*") =>
-      person ! RoamArea(blackAnts, pillagedAnthill)
+      person ! RoamMobsInArea(blackAnts, pillagedAnthill)
       become(waitRoamFinish)
   }
 
@@ -161,7 +161,7 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
 
   private def waitGatesOpened: Receive = {
     case RawRead(text) if text.matches("(?ms).*Створки ворот со скрипом разошлись в стороны..*") =>
-      person ! RoamArea(blackAnts, blackAnthillArea)
+      person ! RoamMobsInArea(blackAnts, blackAnthillArea)
       become(waitFinishRoamBlackAnthill)
   }
 
@@ -199,13 +199,13 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
 
   private def waitForesterPrompt: Receive = {
     case RawRead(text) if text.matches("(?ms).*Пучеглазый Леший сказал : 'И я так и быть отпущу с тобой белок. А теперь ступай...'.*") =>
-      person ! RoamArea(woodpeckers, greatOak)
+      person ! RoamMobsInArea(woodpeckers, greatOak)
       become(waitFinishRoamOak)
   }
 
   private def waitFinishRoamOak: Receive = {
     case RoamingFinished =>
-      person ! RoamArea(woodpeckers, greatBirch)
+      person ! RoamMobsInArea(woodpeckers, greatBirch)
       become(waitFinishRoamBirch)
   }
 
@@ -216,6 +216,8 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
   }
 
   private def waitKillWoodpeckersKing: Receive = {
+    case KillEvent(shortName, _, _, _) if shortName === woodpeckersKing.shortName.get =>
+      person ! new SimpleCommand("вз все все.труп")
     case RoamingFinished =>
       goAndDo(foresterLair, person, (l) => {
         person ! new SimpleCommand("дать череп леший")

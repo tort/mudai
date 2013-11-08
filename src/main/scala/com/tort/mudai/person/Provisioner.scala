@@ -21,7 +21,7 @@ class Provisioner extends Actor {
       val feedPulseEmitter = system.scheduler.schedule(0 millis, 10 minutes, feeder, Feed)
 
       become(onRoam(person, feedPulseEmitter, Nil))
-    case Roam(_) =>
+    case RoamZone(_) =>
       val person = sender
       sender ! new SimpleCommand("держ свеч")
       val feedPulseEmitter = system.scheduler.schedule(0 millis, 10 minutes, feeder, Feed)

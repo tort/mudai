@@ -65,7 +65,7 @@ class RogueCampQuest(val mapper: ActorRef, val persister: LocationPersister, val
   }
 
   private def killAssisters {
-    person ! Roam(Zone.name("Притон"))
+    person ! RoamZone(Zone.name("Притон"))
     become(waitRoamingFInish)
   }
 

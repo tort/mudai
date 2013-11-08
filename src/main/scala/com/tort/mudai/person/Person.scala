@@ -37,6 +37,7 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
   val rogueForestQuest = actorOf(Props(classOf[RogueForestQuest], mapper, persister, pathHelper, self))
   val woodpeckersQuest = actorOf(Props(classOf[WoodpeckersQuest], mapper, persister, pathHelper, self))
   val awfulTaleQuest = actorOf(Props(classOf[AwfulTaleQuest], mapper, persister, pathHelper, self))
+  val polovtsianCampQuest = actorOf(Props(classOf[PolovtsianCampQuest], mapper, persister, pathHelper, self))
   val quests = Map[String, ActorRef](
     "белый паук" -> whiteSpiderQuest,
     "колодец" -> villageWellQuest,
@@ -47,7 +48,8 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
     "лагерь разбойников" -> rogueCampQuest,
     "инструмент кузнеца" -> rogueForestQuest,
     "дятлы" -> woodpeckersQuest,
-    "страшная сказка" -> awfulTaleQuest)
+    "страшная сказка" -> awfulTaleQuest,
+    "половцы" -> polovtsianCampQuest)
   val passages = actorOf(Props(classOf[Passages], persister, self))
   val coreTasks = Seq(mapper, fighter, statusTranslator, provisioner, roamer, passages) ++ quests.values
 
@@ -138,9 +140,9 @@ case object RequestPulses
 
 case object YieldPulses
 
-case class Roam(zoneName: String @@ ZoneName)
+case class RoamZone(zoneName: String @@ ZoneName)
 
-case class RoamArea(targets: Set[Mob], area: Set[Location])
+case class RoamMobsInArea(targets: Set[Mob], area: Set[Location])
 
 case class Attack(target: Mob, number: Option[Int] = None)
 case class AttackByAlias(target: String @@ Alias)

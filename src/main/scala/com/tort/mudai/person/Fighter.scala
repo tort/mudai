@@ -56,7 +56,7 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
       attacker ! e
     case DisarmAssistantEvent(_, _, _) =>
       person ! new SimpleCommand("взять лук.хран")
-      person ! new SimpleCommand("дать лук.хран рост.гри")
+      person ! new SimpleCommand("дать лук.хран гри.рост")
       person ! new SimpleCommand("прик все воор лук")
     case RequestPulses => person ! RequestPulses
     case YieldPulses => person ! YieldPulses

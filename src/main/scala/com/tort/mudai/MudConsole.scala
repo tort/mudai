@@ -17,7 +17,7 @@ import com.tort.mudai.person.Snoop
 import com.tort.mudai.mapper.PathTo
 import com.tort.mudai.person.GoTo
 import com.tort.mudai.person.RawWrite
-import com.tort.mudai.person.Roam
+import com.tort.mudai.person.RoamZone
 import com.tort.mudai.mapper.NameZone
 import com.tort.mudai.person.Attack
 import Mob._
@@ -29,7 +29,18 @@ class MudConsole {
 
   implicit val timeout = Timeout(5 seconds)
 
-  val quests = Set("бобры", "белый паук", "рысь", "глава", "угодья", "хозяин леса", "лагерь разбойников", "инструмент кузнеца", "дятлы", "страшная сказка")
+  val quests = Set(
+    "бобры",
+    "белый паук",
+    "рысь",
+    "глава",
+    "угодья",
+    "хозяин леса",
+    "лагерь разбойников",
+    "инструмент кузнеца",
+    "дятлы",
+    "страшная сказка",
+    "половцы")
 
   @tailrec
   final def userInputLoop(person: ActorRef, menuMap: Map[Int, Location]) {
@@ -65,7 +76,7 @@ class MudConsole {
         targetAndMenu._1.foreach(person ! GoTo(_))
         userInputLoop(person, targetAndMenu._2)
       case "зонинг" :: zoneName =>
-        person ! Roam(Zone.name(zoneName.mkString(" ")))
+        person ! RoamZone(Zone.name(zoneName.mkString(" ")))
         userInputLoop(person, Map())
       case "стопзонинг" :: Nil =>
         person ! InterruptRoaming

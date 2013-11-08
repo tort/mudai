@@ -12,7 +12,7 @@ import com.tort.mudai.person.RawRead
 import com.tort.mudai.person.StartQuest
 import com.tort.mudai.person.KillMobRequest
 import com.tort.mudai.event.KillEvent
-import com.tort.mudai.person.RoamArea
+import com.tort.mudai.person.RoamMobsInArea
 import Mob._
 import Location._
 
@@ -61,7 +61,7 @@ class RogueForestQuest(val mapper: ActorRef, val persister: LocationPersister, v
       become(quest)
     case RawRead(text) if text.matches("(?ms).*Глава поселения сказал : 'А инструменты ежели обнаружите - уж мне принесите, я кузнецу передам...'.*") =>
       future.cancel()
-      person ! RoamArea(rogues, roguesHabitation)
+      person ! RoamMobsInArea(rogues, roguesHabitation)
       become(waitRoamFinish())
   }
 

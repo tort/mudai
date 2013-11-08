@@ -1,7 +1,7 @@
 package com.tort.mudai.mapper
 
 import com.tort.mudai.person._
-import akka.actor.Actor
+import akka.actor.{Cancellable, Actor}
 import com.google.inject.Inject
 import com.tort.mudai.RoomSnapshot
 import com.tort.mudai.mapper.Direction._
@@ -19,7 +19,8 @@ import com.tort.mudai.event.KillEvent
 import com.tort.mudai.person.RawRead
 import com.tort.mudai.event.TargetAssistedEvent
 import com.tort.mudai.event.FleeEvent
-
+import com.tort.mudai.quest.TimeOut
+import scala.concurrent.duration._
 
 class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPersister, transitionPersister: TransitionPersister)
   extends Actor with ReachabilityHelper {
@@ -54,8 +55,11 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
       become(rec(from, dir.some, to.some))
   }
 
-  private def waitFleeHint(from: Option[Location], direction: String @@ Direction, to: Option[Location]): Receive = {
+  private def waitFleeHint(future: Cancellable, from: Option[Location], direction: String @@ Direction, to: Option[Location]): Receive = {
     case FleeEvent() =>
+      become(rec(from, direction.some, to))
+      future.cancel()
+    case TimeOut =>
       become(rec(from, direction.some, to))
   }
 
@@ -64,7 +68,8 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
       sender ! previousDirection
     case FleeCommand(direction) =>
       val fleeTo = locationPersister.loadLocation(currentLocation.get, direction)
-      become(waitFleeHint(currentLocation, direction, fleeTo))
+      val future = system.scheduler.scheduleOnce(2 seconds, self, FleeFailed(previousLocation, previousDirection, currentLocation))
+      become(waitFleeHint(future, currentLocation, direction, fleeTo))
     case RequestWalkCommand(direction) =>
       currentLocation.foreach {
         case current =>
@@ -212,3 +217,5 @@ case class NameZone(zoneName: String @@ ZoneName, initLocation: Option[Location]
 case class MoveEvent(from: Option[Location], direction: String @@ Direction, to: Location)
 
 case object CheckUnreachable
+
+case class FleeFailed(from: Option[Location], direction: Option[String @@ Direction], to: Option[Location])

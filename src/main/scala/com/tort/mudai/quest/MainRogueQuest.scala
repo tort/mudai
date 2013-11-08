@@ -45,7 +45,7 @@ class MainRogueQuest(val mapper: ActorRef, val persister: LocationPersister, val
       finishQuest(person)
       become(quest)
     case RawRead(text) if text.matches(QuestTakenPattern) =>
-      person ! RoamArea(Set(assists), persister.locationByMob(assists.fullName).toSet)
+      person ! RoamMobsInArea(Set(assists), persister.locationByMob(assists.fullName).toSet)
       future.cancel()
       become(waitRoamFinish)
   }
