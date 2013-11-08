@@ -58,11 +58,16 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
       person ! new SimpleCommand("взять клев")
       person ! new SimpleCommand("дать клев галиц")
       person ! new SimpleCommand("прик все воор клев")
-//    case TargetAssistedEvent(assister, targetGenitive) =>
-//      for {
-//        mob <- persister.mobByShortName(assister)
-//        alias <- mob.alias
-//      } yield person ! CurseCommand(alias)
+    case TargetFleeEvent(target, direction) =>
+      for {
+        mob <- persister.mobByShortName(target)
+        if !mob.canFlee
+      } yield persister.markAsFleeker(mob)
+    case TargetAssistedEvent(assister, targetGenitive) =>
+      for {
+        mob <- persister.mobByShortName(assister)
+        alias <- mob.alias
+      } yield person ! CurseCommand(alias)
     case RequestPulses => person ! RequestPulses
     case YieldPulses => person ! YieldPulses
     case c: RenderableCommand if sender == antiBasher => person ! c

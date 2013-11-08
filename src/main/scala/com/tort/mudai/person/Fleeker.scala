@@ -33,7 +33,6 @@ class Fleeker(mapper: ActorRef) extends Actor {
   }
 
   def flee(direction: String @@ Direction, s: ActorRef) {
-    println("FLEE COMMAND FLEEKER")
     s ! FleeCommand(oppositeDirection(direction))
   }
 

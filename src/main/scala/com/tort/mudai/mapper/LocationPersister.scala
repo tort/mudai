@@ -70,6 +70,8 @@ trait LocationPersister {
   def entrance(zone: Zone): Location
 
   def locationsOfSummoners(zone: Zone): Set[Location]
+
+  def markAsFleeker(mob: Mob): Unit
 }
 
 trait TransitionPersister {
@@ -324,6 +326,10 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
 
   def locationsOfSummoners(zone: Zone): Set[Location] = DB.db withSession {
     sql"select l.* from location l join habitation h on h.location = l.id join mob m on h.mob = m.id where l.zone = ${zone.id} and m.summoner = 1".as[Location].list.toSet
+  }
+
+  def markAsFleeker(mob: Mob) = DB.db withSession {
+    sqlu"update mob set canflee = 1 where id = ${mob.id}".first
   }
 }
 
