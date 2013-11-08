@@ -55,9 +55,9 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
       healOnStatus(name, health)
       attacker ! e
     case DisarmAssistantEvent(_, _, _) =>
-      person ! new SimpleCommand("взять клев")
-      person ! new SimpleCommand("дать клев галиц")
-      person ! new SimpleCommand("прик все воор клев")
+      person ! new SimpleCommand("взять лук.хран")
+      person ! new SimpleCommand("дать лук.хран рост.гри")
+      person ! new SimpleCommand("прик все воор лук")
     case TargetFleeEvent(target, direction) =>
       for {
         mob <- persister.mobByShortName(target)
