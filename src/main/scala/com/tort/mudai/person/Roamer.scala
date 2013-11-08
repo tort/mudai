@@ -70,13 +70,6 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
             }
         }
       }
-    case e@GlanceEvent(roomSnapshot, _) =>
-      println("ROAMER GLANCE")
-      for {
-        mob <- roomSnapshot.mobs.map(fullName => persister.mobByFullName(fullName)).flatten.filter(_.isAgressive).headOption
-        if mob.alias.isDefined
-      } yield person ! Attack(mob)
-      searcher ! e
     case SearchFinished =>
       finishRoaming()
     case e => searcher ! e
