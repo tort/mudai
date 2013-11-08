@@ -8,12 +8,17 @@ import com.tort.mudai.mapper.Direction._
 import scalaz._
 import Scalaz._
 import com.tort.mudai.mapper.Zone.ZoneName
+import com.tort.mudai.event._
 import com.tort.mudai.person.TriggeredMoveRequest
+import com.tort.mudai.person.FleeCommand
 import scala.Some
-import com.tort.mudai.event.{FleeEvent, GlanceEvent, KillEvent, TargetAssistedEvent}
+import com.tort.mudai.event.GlanceEvent
 import com.tort.mudai.command.RequestWalkCommand
 import com.tort.mudai.command.WalkCommand
+import com.tort.mudai.event.KillEvent
 import com.tort.mudai.person.RawRead
+import com.tort.mudai.event.TargetAssistedEvent
+import com.tort.mudai.event.FleeEvent
 
 
 class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPersister, transitionPersister: TransitionPersister)
@@ -126,6 +131,16 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
         mob <- locationPersister.mobByShortName(assist)
         if !mob.isAssisting
       } yield locationPersister.markAsAssisting(mob)
+    case TargetFleeEvent(target, direction) =>
+      for {
+        mob <- mobByShortName(target)
+        if !mob.canFlee
+      } yield markAsFleeker(mob)
+    case FightRoundEvent(_, target, _) =>
+      for {
+        m <- mobByShortName(target)
+        if !m.isAgressive
+      } yield markAsAgressive(m)
     case NameZone(zoneName, initLocation) =>
       val zone = zoneByName(zoneName)
       initLocation.orElse(currentLocation).foreach(l => updateZone(l, zone))

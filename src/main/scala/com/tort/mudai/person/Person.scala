@@ -69,7 +69,6 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
     case e: LoginPromptEvent => adapter ! new SimpleCommand(login)
     case e: PasswordPromptEvent => adapter ! new SimpleCommand(password)
     case c@FleeCommand(_) =>
-      println("FLEE PERSON")
       mapper ! c
       adapter ! c
     case c: RenderableCommand =>

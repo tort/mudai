@@ -5,10 +5,9 @@ import com.tort.mudai.mapper._
 import com.tort.mudai.command.SimpleCommand
 import akka.util.Timeout
 import scala.concurrent.duration._
-import com.tort.mudai.event.KillEvent
+import com.tort.mudai.event.{GlanceEvent, KillEvent, StatusLineEvent}
 import scala.Some
 import akka.actor.Terminated
-import com.tort.mudai.event.StatusLineEvent
 import Mob._
 import scalaz._
 import Scalaz._
@@ -53,16 +52,22 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
   def waitTarget(searcher: ActorRef): Receive = {
     case MobFound(targets, visibles) =>
       if (!moreThanTwoSameAssistsPresent(visibles)) {
-        val group = visibles.filter(_.isAssisting).groupBy(x => x).toSeq.sortBy(x => x._2.size).reverse.filter(m => targets.contains(m._1))
-        group.headOption match {
-          case Some((m, xs)) if m.alias.isDefined =>
-            person ! Attack(m, xs.size.some)
+        visibles.filter(_.isAgressive).headOption match {
+          case Some(m) =>
+            person ! Attack(m)
             become(waitKill(searcher, 0, isSitting = false, isFinished = false))
           case None =>
-            targets.headOption.foreach {
-              case m => person ! Attack(m)
+            val assisters = visibles.filter(_.isAssisting).groupBy(x => x).toSeq.sortBy(x => x._2.size).reverse.filter(m => targets.contains(m._1))
+            assisters.headOption match {
+              case Some((m, xs)) if m.alias.isDefined =>
+                person ! Attack(m, xs.size.some)
+                become(waitKill(searcher, 0, isSitting = false, isFinished = false))
+              case None =>
+                targets.headOption.foreach {
+                  case m => person ! Attack(m)
+                }
+                become(waitKill(searcher, 0, isSitting = false, isFinished = false))
             }
-            become(waitKill(searcher, 0, isSitting = false, isFinished = false))
         }
       }
     case SearchFinished =>

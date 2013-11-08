@@ -1,5 +1,9 @@
 package com.tort.mudai.event
 
+import scalaz.@@
+import com.tort.mudai.mapper.Mob
+import Mob._
+
 class FightRoundTrigger extends EventTrigger[FightRoundEvent] {
   //TODO extract name
   val Pattern = ("""(?ms).*\[Веретень:([^\]]*)\][^\]]*\[([^\]]*):((?:Невредим|Слегка|Легко|Ранен|Тяжело|О.тяжело)[^\]]{0,})][^\]]*>.*""").r
@@ -9,8 +13,9 @@ class FightRoundTrigger extends EventTrigger[FightRoundEvent] {
   def fireEvent(text: String) = {
     val Pattern(state, target, targetState) = text
 
-    FightRoundEvent(state, target, targetState)
+    val firstLetter = target.take(1).toUpperCase
+    FightRoundEvent(state, shortName(firstLetter + target.drop(1)), targetState)
   }
 }
 
-case class FightRoundEvent(state: String, target: String, targetState: String) extends Event
+case class FightRoundEvent(state: String, target: String @@ ShortName, targetState: String) extends Event

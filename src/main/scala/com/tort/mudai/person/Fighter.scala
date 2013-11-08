@@ -58,16 +58,6 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
       person ! new SimpleCommand("взять лук.хран")
       person ! new SimpleCommand("дать лук.хран рост.гри")
       person ! new SimpleCommand("прик все воор лук")
-    case TargetFleeEvent(target, direction) =>
-      for {
-        mob <- persister.mobByShortName(target)
-        if !mob.canFlee
-      } yield persister.markAsFleeker(mob)
-    case TargetAssistedEvent(assister, targetGenitive) =>
-      for {
-        mob <- persister.mobByShortName(assister)
-        alias <- mob.alias
-      } yield person ! CurseCommand(alias)
     case RequestPulses => person ! RequestPulses
     case YieldPulses => person ! YieldPulses
     case c: RenderableCommand if sender == antiBasher => person ! c
@@ -141,13 +131,14 @@ class Attacker extends Actor {
       if (target.canFlee) {
         sender ! new SimpleCommand(s"кол !сеть! $alias")
       }
-      val future = system.scheduler.scheduleOnce(3 second, sender, TimeOut)
-      become(waitGroupEvent(target.alias.get, future))
+//      val future = system.scheduler.scheduleOnce(3 second, sender, TimeOut)
+//      become(waitGroupEvent(target.alias.get, future))
   }
 
   def waitGroupEvent(target: String @@ Alias, future: Cancellable): Receive = {
     case GroupStatusEvent(_, _, _, status) =>
       become(rec)
+      future.cancel()
     case KillEvent(target, _, _, _) =>
       become(rec)
       future.cancel()

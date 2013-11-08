@@ -71,7 +71,9 @@ trait LocationPersister {
 
   def locationsOfSummoners(zone: Zone): Set[Location]
 
-  def markAsFleeker(mob: Mob): Unit
+  def markAsFleeker(mob: Mob)
+
+  def markAsAgressive(mob: Mob)
 }
 
 trait TransitionPersister {
@@ -86,7 +88,17 @@ trait TransitionPersister {
 
 class SQLLocationPersister extends LocationPersister with TransitionPersister {
   implicit val getLocationResult = GetResult(l => new Location(Location.locationId(l.<<), title(l.<<), l.<<, zone = loadZone(l.<<)))
-  implicit val getMobResult = GetResult(l => new Mob(l.<<, l.<<, Option(Mob.shortName(l.<<)), Option(alias(l.<<)), l.<<, Option(l.<<), l.<<, l.<<))
+  implicit val getMobResult = GetResult(l => new Mob(
+    l.<<,
+    l.<<,
+    Option(Mob.shortName(l.<<)),
+    Option(alias(l.<<)),
+    l.<<,
+    Option(l.<<),
+    isAssisting = l.<<,
+    canFlee = l.<<,
+    isAgressive = l.<<
+  ))
   implicit val getItemResult = GetResult(l => new Item(l.<<, l.<<, Option(l.<<), Option(l.<<), Option(l.<<)))
   implicit val getZoneResult = GetResult(z => new Zone(z.<<, Zone.name(z.<<)))
 
@@ -189,17 +201,17 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def mobByShortName(shortName: String @@ ShortName) = DB.db withSession {
-    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee from mob m where m.shortName = $shortName".as[Mob].firstOption
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive from mob m where m.shortName = $shortName".as[Mob].firstOption
   }
 
   def mobByFullName(name: String @@ FullName): Option[Mob] = DB.db withSession {
-    val mob = sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee from mob m where m.fullName = $name".as[Mob].firstOption
+    val mob = sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive from mob m where m.fullName = $name".as[Mob].firstOption
     mob match {
       case None =>
         val id = generateId()
         val fullName = name
         sqlu"insert into mob(id, fullName) values($id, $fullName)".first
-        Some(new Mob(id, fullName, shortName = None, alias = None, killable = false, genitive = None, isAssisting = false, canFlee = false))
+        Some(new Mob(id, fullName, shortName = None, alias = None, killable = false, genitive = None, isAssisting = false, canFlee = false, isAgressive = false))
       case m: Option[Mob] => m
     }
   }
@@ -305,7 +317,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def killableMobsBy(zone: Zone): Set[Mob] = DB.db withSession {
-    sql"select distinct m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee from mob m join habitation h on h.mob = m.id join location l on h.location = l.id join zone z on l.zone = z.id where z.id = ${zone.id} and m.iskillable = 1".as[Mob].list.toSet
+    sql"select distinct m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive from mob m join habitation h on h.mob = m.id join location l on h.location = l.id join zone z on l.zone = z.id where z.id = ${zone.id} and m.iskillable = 1".as[Mob].list.toSet
   }
 
   def updateGenitive(mob: Mob, genitive: String @@ Genitive) = DB.db withSession {
@@ -313,7 +325,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def mobByGenitive(genitive: String @@ Genitive) = DB.db withSession {
-    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.canflee from mob m where m.genitive = $genitive".as[Mob].firstOption
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.canflee, m.isagressive from mob m where m.genitive = $genitive".as[Mob].firstOption
   }
 
   def markAsAssisting(mob: Mob) = DB.db withSession {
@@ -330,6 +342,10 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
 
   def markAsFleeker(mob: Mob) = DB.db withSession {
     sqlu"update mob set canflee = 1 where id = ${mob.id}".first
+  }
+
+  def markAsAgressive(mob: Mob) = DB.db withSession {
+    sqlu"update mob set isagressive = 1 where id = ${mob.id}".first
   }
 }
 
