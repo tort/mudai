@@ -1,6 +1,6 @@
 package com.tort.mudai.quest
 
-import akka.actor.ActorRef
+import akka.actor.{Cancellable, ActorRef}
 import com.tort.mudai.mapper._
 import com.tort.mudai.person._
 import akka.util.Timeout
@@ -63,15 +63,21 @@ class PolovtsianCampQuest(val mapper: ActorRef, val persister: LocationPersister
         person ! new SimpleCommand("откр решетка")
         goAndDo(oldManLocation, person, (l) => {
           person ! new SimpleCommand("помочь старик")
-          become(waitKey)
+          val future = system.scheduler.scheduleOnce(5 seconds, self, TimeOut)
+          become(waitKey(future))
         })
       })
   }
 
-  def waitKey: Receive = {
+  def waitKey(future: Cancellable): Receive = {
     case RawRead(text) if text.matches("(?ms).*Старик дал вам медный ключ..*") =>
       person ! KillMobRequest(shaman)
       become(waitKillShaman)
+      future.cancel()
+    case TimeOut =>
+      println("### QUEST NOT RESPONDING")
+      finishQuest(person)
+      become(quest)
   }
 
   def waitKillShaman: Receive = {
