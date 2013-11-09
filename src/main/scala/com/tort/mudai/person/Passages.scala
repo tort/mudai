@@ -78,9 +78,9 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
       context.become {
         case RawRead(text) if text.matches("(?ms).*Вы приплыли на Переяславльский берег и вылезли из лодки..*") =>
           person ! MoveEvent(
-            persister.locationByTitle(r.from).headOption,
+            persister.loadLocation(locationId("a7e6abc6-96bd-4959-9211-aac696203ec9")).some,
             direction,
-            persister.locationByTitle(r.to).head)
+            persister.loadLocation(locationId("8a665a55-2e2e-4988-92de-060bcfc62cfc")))
           context.unbecome()
       }
     case r@TriggeredMoveRequest("Пристань", direction, "У реки") if direction == "trigger_pereyaslavl_fortress" =>
@@ -88,9 +88,9 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
       context.become {
         case RawRead(text) if text.matches("(?ms).*Вы приплыли к южному берегу реки..*") =>
           person ! MoveEvent(
-            persister.locationByTitle(r.from).headOption,
+            persister.loadLocation(locationId("8a665a55-2e2e-4988-92de-060bcfc62cfc")).some,
             direction,
-            persister.locationByTitle(r.to).head)
+            persister.loadLocation(locationId("a7e6abc6-96bd-4959-9211-aac696203ec9")))
           context.unbecome()
       }
     case r@TriggeredMoveRequest("Пристань", direction, "Крутой берег") if direction == "trigger_pereyaslavl_fisherman_village" =>
@@ -98,7 +98,7 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
       context.become {
         case RawRead(text) if text.matches("(?ms).*Вы приплыли к рыбацкой деревне..*") =>
           person ! MoveEvent(
-            persister.locationByTitle(r.from).headOption,
+            persister.loadLocation(locationId("8a665a55-2e2e-4988-92de-060bcfc62cfc")).some,
             direction,
             persister.locationByTitle(r.to).head)
           context.unbecome()
@@ -110,7 +110,7 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
           person ! MoveEvent(
             persister.locationByTitle(r.from).headOption,
             direction,
-            persister.locationByTitle(r.to).head)
+            persister.loadLocation(locationId("8a665a55-2e2e-4988-92de-060bcfc62cfc")))
           context.unbecome()
       }
     case r@TriggeredMoveRequest(_, direction, _) if direction == "trigger_cursed_village_nk_trees" =>

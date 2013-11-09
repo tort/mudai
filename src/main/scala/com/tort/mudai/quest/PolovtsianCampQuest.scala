@@ -59,8 +59,12 @@ class PolovtsianCampQuest(val mapper: ActorRef, val persister: LocationPersister
   def waitKillBatir: Receive = {
     case RoamingFinished =>
       goAndDo(pit, person, (l) => {
-        person ! new SimpleCommand("помочь старик")
-        become(waitKey)
+        person ! new SimpleCommand("отпер решетка")
+        person ! new SimpleCommand("откр решетка")
+        goAndDo(oldManLocation, person, (l) => {
+          person ! new SimpleCommand("помочь старик")
+          become(waitKey)
+        })
       })
   }
 
