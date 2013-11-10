@@ -41,7 +41,7 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
               println(s"ITERATE: $p")
               ms.foreach(m => println(m.shortName))
           }
-          iterateZone(grouped, zoneArea(zone))
+          iterateZone(grouped, zone)
       }
 
     case RoamMobsInArea(targets: Set[Mob], area: Set[Location]) =>
@@ -59,25 +59,33 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
 
   private def singleSearchWaitTarget(searcher: ActorRef): Receive = finishRoamOnFinishSearch orElse waitTarget(searcher)
 
-  private def iteratedSearchWaitTarget(mbs: SortedMap[Int, Set[Mob]], area: Set[Location])(searcher: ActorRef): Receive = roamNextOnFinishSearch(mbs, area) orElse waitTarget(searcher)
+  private def iteratedSearchWaitTarget(mbs: SortedMap[Int, Set[Mob]], zone: Zone)(searcher: ActorRef): Receive = roamNextOnFinishSearch(mbs, zone) orElse waitTarget(searcher)
 
-  private def iterateZone(mbs: SortedMap[Int, Set[Mob]], area: Set[Location]) {
+  private def iterateZone(mbs: SortedMap[Int, Set[Mob]], zone: Zone) {
     mbs.headOption match {
       case None => finishRoaming()
       case Some((priority, mobs)) =>
         println(s" ### ITERATE: $priority")
         mobs.foreach(m => println(m.shortName))
-        search(mobs, area)(iteratedSearchWaitTarget(mbs.tail, area))
+        val area = mobs.forall(m => persister.locationByMob(m.fullName).size == 1) match {
+          case true =>
+            mobs.flatMap(m => persister.locationByMob(m.fullName))
+          case false =>
+            zoneArea(zone)
+        }
+        search(mobs, area)(iteratedSearchWaitTarget(mbs.tail, zone))
     }
   }
 
-  private def roamNextOnFinishSearch(mobs: SortedMap[Int, Set[Mob]], area: Set[Location]): Receive = {
+  private def roamNextOnFinishSearch(mobs: SortedMap[Int, Set[Mob]], zone: Zone): Receive = {
     case SearchFinished =>
-      iterateZone(mobs, area)
+      println("SEARCH FINISHED ROAMER")
+      iterateZone(mobs, zone)
   }
 
   private def finishRoamOnFinishSearch: Receive = {
     case SearchFinished =>
+      println("UNEXPECTED SEARCH FINISHED ROAMER")
       finishRoaming()
   }
 
@@ -152,6 +160,7 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
     case StatusLineEvent(_, _, _, m, _, _) =>
       become(waitKill(searcher, m, isSitting, isFinished, attackTime))
     case SearchFinished =>
+      println("IN_FIGHT SEARCH FINISHED ROAMER")
       become(waitKill(searcher, mem, isSitting, isFinished = true, attackTime))
     case e => searcher ! e
   }
