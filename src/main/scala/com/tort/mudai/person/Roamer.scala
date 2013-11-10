@@ -11,6 +11,7 @@ import akka.actor.Terminated
 import Mob._
 import scalaz._
 import Scalaz._
+import java.util
 
 class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister, val person: ActorRef)
   extends QuestHelper
@@ -54,19 +55,17 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
       if (!moreThanTwoSameAssistsPresent(visibles)) {
         visibles.filter(_.isAgressive).headOption match {
           case Some(m) =>
-            person ! Attack(m)
-            become(waitKill(searcher, 0, isSitting = false, isFinished = false))
+            attack(m, searcher)
           case None =>
             val assisters = visibles.filter(_.isAssisting).groupBy(x => x).toSeq.sortBy(x => x._2.size).reverse.filter(m => targets.contains(m._1))
             assisters.headOption match {
               case Some((m, xs)) if m.alias.isDefined =>
-                person ! Attack(m, xs.size.some)
-                become(waitKill(searcher, 0, isSitting = false, isFinished = false))
+                attack(m, searcher, xs.size.some)
               case None =>
                 targets.headOption.foreach {
-                  case m => person ! Attack(m)
+                  case m =>
+                    attack(m, searcher)
                 }
-                become(waitKill(searcher, 0, isSitting = false, isFinished = false))
             }
         }
       }
@@ -75,6 +74,10 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
     case e => searcher ! e
   }
 
+  private def attack(m: Mob, searcher: ActorRef, number: Option[Int] = None) {
+    person ! Attack(m, number)
+    become(waitKill(searcher, 0, isSitting = false, isFinished = false, new util.Date))
+  }
 
   protected def moreThanTwoSameAssistsPresent(visibles: Seq[Mob]): Boolean =
     visibles.filter(_.isAssisting).groupBy(_.id).map(x => x._1 -> x._2.size).exists(x => x._2 > 2)
@@ -85,7 +88,7 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
     become(roam)
   }
 
-  private def waitKill(searcher: ActorRef, mem: Int, isSitting: Boolean, isFinished: Boolean): Receive = {
+  private def waitKill(searcher: ActorRef, mem: Int, isSitting: Boolean, isFinished: Boolean, attackTime: util.Date): Receive = {
     case KillEvent(_, _, _, magic) =>
       if (magic) {
         person ! new SimpleCommand("взять все")
@@ -103,19 +106,23 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
       if (mem > 0) {
         if (!isSitting) {
           person ! new SimpleCommand("отд")
-          become(waitKill(searcher, mem, isSitting = true, isFinished))
+          become(waitKill(searcher, mem, isSitting = true, isFinished, attackTime))
         }
       } else {
-        person ! new SimpleCommand("вст")
-        become(waitTarget(searcher))
-        person ! new SimpleCommand("смотр")
-        if (isFinished)
-          finishRoaming()
+        if (isSitting)
+          person ! new SimpleCommand("вст")
+
+        if ((new util.Date().getTime.longValue - attackTime.getTime.longValue) > 3000) {
+          become(waitTarget(searcher))
+          person ! new SimpleCommand("смотр")
+          if (isFinished)
+            finishRoaming()
+        }
       }
     case StatusLineEvent(_, _, _, m, _, _) =>
-      become(waitKill(searcher, m, isSitting, isFinished))
+      become(waitKill(searcher, m, isSitting, isFinished, attackTime))
     case SearchFinished =>
-      become(waitKill(searcher, mem, isSitting, isFinished = true))
+      become(waitKill(searcher, mem, isSitting, isFinished = true, attackTime))
     case e => searcher ! e
   }
 }

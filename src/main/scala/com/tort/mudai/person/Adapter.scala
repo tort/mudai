@@ -16,7 +16,8 @@ class Adapter extends Actor {
   val Encoding = "5"
   val adapterTriggers = Seq(
     new SimpleTrigger(".*^\\* В связи с проблемами перевода фразы ANYKEY нажмите ENTER.*", Array[String]("", "смотр")),
-    new SimpleTrigger(".*^Select one : $", Array[String](Encoding))
+    new SimpleTrigger(".*^Select one : $", Array[String](Encoding)),
+    new SimpleTrigger(".*Вы пропали в пустоте этого мира..*", Array[String]("зев"))
   )
   val triggers: Seq[EventTrigger[Event]] = Seq(
     new PeaceTrigger,
@@ -38,7 +39,8 @@ class Adapter extends Actor {
     new KillMagicMobTrigger,
     new GroupStatusTrigger,
     new StatusLineTrigger,
-    new FleeTrigger
+    new FleeTrigger,
+    new OrderFailedTrigger
   )
 
   private def parse(text: String) =

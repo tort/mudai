@@ -33,4 +33,6 @@ assemblySettings
 
 test in assembly := {}
 
+retrieveManaged := true
+
 resolvers += "typesafe" at "http://repo.typesafe.com/typesafe/releases"

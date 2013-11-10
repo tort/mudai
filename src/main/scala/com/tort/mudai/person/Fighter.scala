@@ -131,20 +131,13 @@ class Attacker extends Actor {
       if (target.canFlee) {
         sender ! new SimpleCommand(s"кол !сеть! $alias")
       }
-//      val future = system.scheduler.scheduleOnce(3 second, sender, TimeOut)
-//      become(waitGroupEvent(target.alias.get, future))
   }
 
   def waitGroupEvent(target: String @@ Alias, future: Cancellable): Receive = {
-    case GroupStatusEvent(_, _, _, status) =>
-      become(rec)
+    case OrderFailedEvent() =>
       future.cancel()
-    case KillEvent(target, _, _, _) =>
       become(rec)
-      future.cancel()
-    case TimeOut =>
-      become(rec)
-      sender ! new GroupStatusCommand
+      sender ! new SimpleCommand("группа")
   }
 }
 

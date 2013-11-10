@@ -59,8 +59,8 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
     case FleeEvent() =>
       become(rec(from, direction.some, to))
       future.cancel()
-    case TimeOut =>
-      become(rec(from, direction.some, to))
+    case FleeFailed(prev, dir, curr) =>
+      become(rec(prev, dir, curr))
   }
 
   def rec(previousLocation: Option[Location], previousDirection: Option[String @@ Direction], currentLocation: Option[Location]): Receive = {
