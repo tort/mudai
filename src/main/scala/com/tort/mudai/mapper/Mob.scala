@@ -12,7 +12,8 @@ class Mob(val id: String,
                val genitive: Option[String],
                val isAssisting: Boolean,
                val canFlee: Boolean,
-               val isAgressive: Boolean) {
+               val isAgressive: Boolean,
+               val priority: Int) {
 
   override def equals(obj: scala.Any) = obj match {
     case mob: Mob => this.id === mob.id

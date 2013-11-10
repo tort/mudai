@@ -5,13 +5,13 @@ import com.tort.mudai.mapper._
 import com.tort.mudai.command.SimpleCommand
 import akka.util.Timeout
 import scala.concurrent.duration._
-import com.tort.mudai.event.{GlanceEvent, KillEvent, StatusLineEvent}
+import com.tort.mudai.event.{KillEvent, StatusLineEvent}
 import scala.Some
 import akka.actor.Terminated
-import Mob._
 import scalaz._
 import Scalaz._
 import java.util
+import scala.collection.immutable.SortedMap
 
 class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: LocationPersister, val person: ActorRef)
   extends QuestHelper
@@ -25,7 +25,7 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
 
   def receive = roam
 
-  def roam: Receive = {
+  private def roam: Receive = {
     case RoamZone(zoneName) =>
       loadZoneByName(zoneName) match {
         case None =>
@@ -34,26 +34,50 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
           person ! RequestPulses
           println("### ROAMING STARTED")
 
-          search(persister.killableMobsBy(zone), area(zone))(waitTarget)
+          val mobsOfZone: Set[Mob] = persister.killableMobsBy(zone)
+          val grouped = SortedMap[Int, Set[Mob]]() ++ mobsOfZone.groupBy(_.priority)
+          iterateZone(grouped, zoneArea(zone))
       }
 
     case RoamMobsInArea(targets: Set[Mob], area: Set[Location]) =>
       person ! RequestPulses
-      search(targets, area)(waitTarget)
+      search(targets, area)(singleSearchWaitTarget)
 
     case KillMobRequest(mob) =>
       person ! RequestPulses
-      search(Set(mob), persister.locationByMob(mob.fullName))(waitTarget)
+      search(Set(mob), persister.locationByMob(mob.fullName))(singleSearchWaitTarget)
   }
 
-  private def area(zone: Zone): Set[Location] = {
+  private def zoneArea(zone: Zone): Set[Location] = {
     reachableFrom(entrance(zone), nonBorderNonLockableNeighbors, locationsOfSummoners(zone)).map(x => persister.loadLocation(x))
   }
 
-  def waitTarget(searcher: ActorRef): Receive = {
+  private def singleSearchWaitTarget(searcher: ActorRef): Receive = finishRoamOnFinishSearch andThen waitTarget(searcher)
+
+  private def iteratedSearchWaitTarget(mbs: SortedMap[Int, Set[Mob]], area: Set[Location])(searcher: ActorRef): Receive = roamNextOnFinishSearch(mbs, area) andThen waitTarget(searcher)
+
+  private def iterateZone(mbs: SortedMap[Int, Set[Mob]], area: Set[Location]) {
+    mbs.headOption match {
+      case None => finishRoaming()
+      case Some((priority, mobs)) =>
+        search(mobs, area)(iteratedSearchWaitTarget(mbs.tail, area))
+    }
+  }
+
+  private def roamNextOnFinishSearch(mobs: SortedMap[Int, Set[Mob]], area: Set[Location]): Receive = {
+    case SearchFinished =>
+    iterateZone(mobs, area)
+  }
+
+  private def finishRoamOnFinishSearch: Receive = {
+    case SearchFinished =>
+      finishRoaming()
+  }
+
+  private def waitTarget(searcher: ActorRef): Receive = {
     case MobFound(targets, visibles) =>
       if (!moreThanTwoSameAssistsPresent(visibles)) {
-        visibles.filter(_.isAgressive).headOption match {
+        visibles.find(_.isAgressive) match {
           case Some(m) =>
             attack(m, searcher)
           case None =>
@@ -113,7 +137,7 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
           person ! new SimpleCommand("вст")
 
         if ((new util.Date().getTime.longValue - attackTime.getTime.longValue) > 5000) {
-          become(waitTarget(searcher))
+          become(singleSearchWaitTarget(searcher))
           person ! new SimpleCommand("смотр")
           if (isFinished)
             finishRoaming()
