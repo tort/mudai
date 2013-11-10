@@ -112,7 +112,7 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
         if (isSitting)
           person ! new SimpleCommand("вст")
 
-        if ((new util.Date().getTime.longValue - attackTime.getTime.longValue) > 3000) {
+        if ((new util.Date().getTime.longValue - attackTime.getTime.longValue) > 5000) {
           become(waitTarget(searcher))
           person ! new SimpleCommand("смотр")
           if (isFinished)
