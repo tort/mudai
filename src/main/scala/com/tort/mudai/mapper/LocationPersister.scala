@@ -338,7 +338,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def locationsOfSummoners(zone: Zone): Set[Location] = DB.db withSession {
-    sql"select l.* from location l join habitation h on h.location = l.id join mob m on h.mob = m.id where l.zone = ${zone.id} and m.summoner = 1".as[Location].list.toSet
+    sql"select l.* from location l join habitation h on h.location = l.id join mob m on h.mob = m.id where l.zone = ${zone.id} and m.summoner = 1 and priority = 0".as[Location].list.toSet
   }
 
   def markAsFleeker(mob: Mob) = DB.db withSession {

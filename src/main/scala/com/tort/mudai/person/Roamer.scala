@@ -36,6 +36,11 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
 
           val mobsOfZone: Set[Mob] = persister.killableMobsBy(zone)
           val grouped = SortedMap[Int, Set[Mob]]() ++ mobsOfZone.groupBy(_.priority)
+          grouped.foreach {
+            case (p, ms) =>
+              println(s"ITERATE: $p")
+              ms.foreach(m => println(m.shortName))
+          }
           iterateZone(grouped, zoneArea(zone))
       }
 
@@ -52,21 +57,23 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
     reachableFrom(entrance(zone), nonBorderNonLockableNeighbors, locationsOfSummoners(zone)).map(x => persister.loadLocation(x))
   }
 
-  private def singleSearchWaitTarget(searcher: ActorRef): Receive = finishRoamOnFinishSearch andThen waitTarget(searcher)
+  private def singleSearchWaitTarget(searcher: ActorRef): Receive = finishRoamOnFinishSearch orElse waitTarget(searcher)
 
-  private def iteratedSearchWaitTarget(mbs: SortedMap[Int, Set[Mob]], area: Set[Location])(searcher: ActorRef): Receive = roamNextOnFinishSearch(mbs, area) andThen waitTarget(searcher)
+  private def iteratedSearchWaitTarget(mbs: SortedMap[Int, Set[Mob]], area: Set[Location])(searcher: ActorRef): Receive = roamNextOnFinishSearch(mbs, area) orElse waitTarget(searcher)
 
   private def iterateZone(mbs: SortedMap[Int, Set[Mob]], area: Set[Location]) {
     mbs.headOption match {
       case None => finishRoaming()
       case Some((priority, mobs)) =>
+        println(s" ### ITERATE: $priority")
+        mobs.foreach(m => println(m.shortName))
         search(mobs, area)(iteratedSearchWaitTarget(mbs.tail, area))
     }
   }
 
   private def roamNextOnFinishSearch(mobs: SortedMap[Int, Set[Mob]], area: Set[Location]): Receive = {
     case SearchFinished =>
-    iterateZone(mobs, area)
+      iterateZone(mobs, area)
   }
 
   private def finishRoamOnFinishSearch: Receive = {
@@ -93,8 +100,6 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
             }
         }
       }
-    case SearchFinished =>
-      finishRoaming()
     case e => searcher ! e
   }
 
@@ -107,6 +112,7 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
     visibles.filter(_.isAssisting).groupBy(_.id).map(x => x._1 -> x._2.size).exists(x => x._2 > 2)
 
   private def finishRoaming() {
+    println("### ROAMING FINISHED")
     person ! YieldPulses
     person ! RoamingFinished
     become(roam)
