@@ -149,6 +149,26 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
         persister.locationByTitle(r.from).headOption,
         direction,
         persister.locationByTitle(r.to).head)
+    case r@TriggeredMoveRequest("Деревянный мост", direction, "Высокий берег") if direction == "trigger_fisherman_bridge_north" =>
+      new SimpleCommand("перепрыгнуть разлом")
+      person ! MoveEvent(
+        persister.loadLocation(locationId("f9bf439c-b219-4ef4-9f70-6f0f73b2bb73")).some,
+        direction,
+        persister.locationByTitle(r.to).head)
+    case r@TriggeredMoveRequest(from, direction, to) if direction == "trigger_under_water" =>
+      context.become {
+        case RawRead(text) if text.matches("(?ms).*Вы очнулись на дне моря..*") =>
+          person ! MoveEvent(
+            persister.loadLocation(locationId("2b9f8482-934c-4e6a-82fd-8b2744d267c1")).some,
+            direction,
+            persister.loadLocation(locationId("d2a4c583-0e05-42bb-8fbf-c9b8465cab38")))
+          context.unbecome()
+      }
+    case r@TriggeredMoveRequest("В дворцовой библиотеке", direction, "Илистый берег") if direction == "trigger_island_fisherman_village" =>
+      person ! MoveEvent(
+        persister.locationByTitle(r.from).headOption,
+        direction,
+        persister.loadLocation(locationId("6cec72a3-3e2d-4abb-825a-0253a215e490")))
   }
 
   private def enterPentagram {
