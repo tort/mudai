@@ -136,7 +136,7 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
       person ! MoveEvent(
         persister.locationByTitle(r.from).headOption,
         direction,
-        persister.locationByTitle(r.to).head)
+        persister.loadLocation(locationId("3a7dc282-f5f9-47fa-a291-b84d03d84d01")))
     case r@TriggeredMoveRequest("Медвежья берлога", direction, "Лесная поляна") if direction == "trigger_bearLair_deepForest" =>
       enterPentagram
       person ! MoveEvent(
@@ -150,11 +150,14 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
         direction,
         persister.locationByTitle(r.to).head)
     case r@TriggeredMoveRequest("Деревянный мост", direction, "Высокий берег") if direction == "trigger_fisherman_bridge_north" =>
-      new SimpleCommand("перепрыгнуть разлом")
-      person ! MoveEvent(
-        persister.loadLocation(locationId("f9bf439c-b219-4ef4-9f70-6f0f73b2bb73")).some,
-        direction,
-        persister.locationByTitle(r.to).head)
+      person ! new SimpleCommand("перепрыгнуть разлом")
+      context.become {
+        case RawRead(text) if text.matches("(?ms).*Вы по ту сторону разлома..*") =>
+          person ! MoveEvent(
+            persister.loadLocation(locationId("f9bf439c-b219-4ef4-9f70-6f0f73b2bb73")).some,
+            direction,
+            persister.locationByTitle(r.to).head)
+      }
     case r@TriggeredMoveRequest(from, direction, to) if direction == "trigger_under_water" =>
       context.become {
         case RawRead(text) if text.matches("(?ms).*Вы очнулись на дне моря..*") =>
@@ -165,6 +168,7 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
           context.unbecome()
       }
     case r@TriggeredMoveRequest("В дворцовой библиотеке", direction, "Илистый берег") if direction == "trigger_island_fisherman_village" =>
+      person ! new SimpleCommand("дать 100 кун библиотекарь")
       person ! MoveEvent(
         persister.locationByTitle(r.from).headOption,
         direction,
