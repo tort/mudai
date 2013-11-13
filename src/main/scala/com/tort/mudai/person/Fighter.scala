@@ -10,9 +10,8 @@ import com.tort.mudai.event._
 import scala.concurrent.duration._
 import com.tort.mudai.event.KillEvent
 import com.tort.mudai.event.GroupStatusEvent
-import com.tort.mudai.event.CurseSucceededEvent
-import com.tort.mudai.event.SpellFailedEvent
 import com.tort.mudai.event.DisarmAssistantEvent
+import Spell._
 
 class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) extends Actor {
 
@@ -86,36 +85,28 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
 
   private def healOnStatus(name: String @@ ShortName, health: String) {
     if ((health.trim === "Ранен") || (health.trim === "Лег.ранен") || (health.trim === "Тяж.ранен") || (health.trim === "Оч.тяж.ран") || (health.trim === "При смерти")) {
-      val mob: Option[Mob] = persister.mobByShortName(name)
+      val mob: Option[Mob] = persister.mobByShortNameSubstring(name)
       mob.flatMap(_.alias) foreach {
-        case alias => person ! new SimpleCommand(s"кол !к и! $alias")
+        case alias => person ! new SpellCommand(alias, CritHeal)
       }
     }
   }
 }
 
-class Curser extends Actor {
-
-  import context._
-
-  def receive = {
-    case Attack(target, number) =>
-      sender ! CurseCommand(target.alias.get)
-      become {
-        case SpellFailedEvent() =>
-          sender ! CurseCommand(target.alias.get)
-        case CurseSucceededEvent(_) =>
-          unbecome()
-      }
-  }
-}
-
-
-
-case class CurseCommand(target: String) extends RenderableCommand {
-  def render = s"кол !прок! $target"
+case class SpellCommand(target: String, spell: String @@ Spell) extends RenderableCommand {
+  def render = s"кол !$spell! $target"
 }
 
 class GroupStatusCommand extends RenderableCommand {
   def render = "группа"
+}
+
+object Spell {
+  trait Spell
+
+  val Curse = spell("проклятье")
+  val CritHeal = spell("критическое исцеление")
+  val LongHold = spell("длительное оцепенение")
+
+  def spell(s: String): String @@ Spell = Tag(s)
 }

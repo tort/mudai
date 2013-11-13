@@ -45,6 +45,8 @@ trait LocationPersister {
 
   def mobByShortName(shortName: String @@ ShortName): Option[Mob]
 
+  def mobByShortNameSubstring(shortName: String @@ ShortName): Option[Mob]
+
   def mobByGenitive(genitive: String @@ Genitive): Option[Mob]
 
   def killableMobsBy(zone: Zone): Set[Mob]
@@ -200,6 +202,10 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
       case Nil => None
       case l :: Nil => l.some
     }
+  }
+
+  def mobByShortNameSubstring(shortName: String @@ ShortName) = DB.db withSession {
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging from mob m where substring(m.shortName, 0, 20) = $shortName".as[Mob].firstOption
   }
 
   def mobByShortName(shortName: String @@ ShortName) = DB.db withSession {
