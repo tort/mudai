@@ -18,7 +18,7 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
   import context._
 
   val antiBasher = actorOf(Props(classOf[AntiBasher]))
-  val fleeker = actorOf(Props(classOf[Fleeker], mapper))
+  val fleeker = actorOf(Props(classOf[Fleeker], mapper, persister))
   val attacker = actorOf(Props(classOf[Attacker], person))
 
   def receive = rec(false)
@@ -30,7 +30,7 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
     case e@Attack(target, number) =>
       person ! RequestPulses
       antiBasher ! e
-      fleeker ! e
+      if (sender != fleeker) fleeker ! e
       attacker ! e
     case KillEvent(target, exp, _, _) =>
       person ! new GroupStatusCommand

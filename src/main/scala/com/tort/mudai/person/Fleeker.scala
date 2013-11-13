@@ -4,13 +4,14 @@ import akka.pattern.ask
 import akka.actor._
 import scala.concurrent.duration._
 import akka.util.Timeout
-import com.tort.mudai.mapper.Direction
+import com.tort.mudai.mapper.{LocationPersister, MoveEvent, Direction}
 import scalaz._
 import com.tort.mudai.event.{PeaceStatusEvent, FleeEvent, FightRoundEvent}
 import com.tort.mudai.command.{RenderableCommand, SimpleCommand}
 import com.tort.mudai.quest.TimeOut
+import com.tort.mudai.mapper.Mob.ShortName
 
-class Fleeker(mapper: ActorRef) extends Actor {
+class Fleeker(mapper: ActorRef, persister: LocationPersister) extends Actor {
 
   import context._
 
@@ -28,7 +29,7 @@ class Fleeker(mapper: ActorRef) extends Actor {
         dirOpt <- (mapper ? LastDirection).mapTo[Option[String @@ Direction]]
       } yield {
         flee(dirOpt.get, s)
-        become(waitFlee(dirOpt.get))
+        become(waitFlee(dirOpt.get, target))
       }
   }
 
@@ -36,14 +37,22 @@ class Fleeker(mapper: ActorRef) extends Actor {
     s ! FleeCommand(oppositeDirection(direction))
   }
 
-  def waitFlee(direction: String @@ Direction): Receive = {
+  def waitFlee(direction: String @@ Direction, target: String @@ ShortName): Receive = {
     case FleeEvent() =>
-      become(rec)
+      become(waitMoveEvent(target))
       sender ! new SimpleCommand(s"$direction")
     case PeaceStatusEvent() =>
       system.scheduler.scheduleOnce(2 seconds, self, TimeOut)
     case TimeOut =>
       become(rec)
+  }
+
+  private def waitMoveEvent(target: String @@ ShortName): Receive = {
+    case MoveEvent(_, _, _) =>
+      become(rec)
+      for {
+        mob <- persister.mobByShortName(target)
+      } yield sender ! Attack(mob, None)
   }
 }
 
