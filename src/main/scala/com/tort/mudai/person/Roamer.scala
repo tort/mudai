@@ -25,6 +25,8 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
 
   def receive = roam
 
+  private val ThreeSeconds: Int = 3000
+
   private def roam: Receive = {
     case RoamZone(zoneName) =>
       loadZoneByName(zoneName) match {
@@ -36,11 +38,6 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
 
           val mobsOfZone: Set[Mob] = persister.killableMobsBy(zone)
           val grouped = SortedMap[Int, Set[Mob]]() ++ mobsOfZone.groupBy(_.priority)
-          grouped.foreach {
-            case (p, ms) =>
-              println(s"ITERATE: $p")
-              ms.foreach(m => println(m.shortName))
-          }
           iterateZone(grouped, zone)
       }
 
@@ -79,13 +76,11 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
 
   private def roamNextOnFinishSearch(mobs: SortedMap[Int, Set[Mob]], zone: Zone): Receive = {
     case SearchFinished =>
-      println("SEARCH FINISHED ROAMER")
       iterateZone(mobs, zone)
   }
 
   private def finishRoamOnFinishSearch: Receive = {
     case SearchFinished =>
-      println("UNEXPECTED SEARCH FINISHED ROAMER")
       finishRoaming()
   }
 
@@ -150,7 +145,7 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
         if (isSitting)
           person ! new SimpleCommand("вст")
 
-        if ((new util.Date().getTime.longValue - attackTime.getTime.longValue) > 5000) {
+        if ((new util.Date().getTime.longValue - attackTime.getTime.longValue) > ThreeSeconds) {
           become(specificWaitTarget(searcher))
           person ! new SimpleCommand("смотр")
           if (isFinished)

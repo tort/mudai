@@ -32,7 +32,7 @@ class Adapter extends Actor {
     new TargetFleeTrigger,
     new DisarmTrigger,
     new DisarmAssistantTrigger,
-    new CurseFailedTrigger,
+    new SpellFailedTrigger,
     new BashTrigger,
     new CurseSucceededTrigger,
     new KillTrigger,

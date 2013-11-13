@@ -11,7 +11,7 @@ import scala.concurrent.duration._
 import com.tort.mudai.event.KillEvent
 import com.tort.mudai.event.GroupStatusEvent
 import com.tort.mudai.event.CurseSucceededEvent
-import com.tort.mudai.event.CurseFailedEvent
+import com.tort.mudai.event.SpellFailedEvent
 import com.tort.mudai.event.DisarmAssistantEvent
 
 class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) extends Actor {
@@ -102,7 +102,7 @@ class Curser extends Actor {
     case Attack(target, number) =>
       sender ! CurseCommand(target.alias.get)
       become {
-        case CurseFailedEvent() =>
+        case SpellFailedEvent() =>
           sender ! CurseCommand(target.alias.get)
         case CurseSucceededEvent(_) =>
           unbecome()
