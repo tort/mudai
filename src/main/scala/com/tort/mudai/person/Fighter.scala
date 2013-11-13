@@ -19,7 +19,7 @@ class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) 
 
   val antiBasher = actorOf(Props(classOf[AntiBasher]))
   val fleeker = actorOf(Props(classOf[Fleeker], mapper))
-  val attacker = actorOf(Props(classOf[Attacker]))
+  val attacker = actorOf(Props(classOf[Attacker], person))
 
   def receive = rec(false)
 
