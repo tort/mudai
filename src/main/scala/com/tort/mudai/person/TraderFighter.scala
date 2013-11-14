@@ -13,13 +13,13 @@ import com.tort.mudai.event.GroupStatusEvent
 import com.tort.mudai.event.DisarmAssistantEvent
 import Spell._
 
-class Fighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) extends Actor {
+class TraderFighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) extends Actor {
 
   import context._
 
   val antiBasher = actorOf(Props(classOf[AntiBasher]))
   val fleeker = actorOf(Props(classOf[Fleeker], mapper, persister))
-  val attacker = actorOf(Props(classOf[Attacker], person))
+  val attacker = actorOf(Props(classOf[TraderAttacker], person))
 
   def receive = rec(false)
 

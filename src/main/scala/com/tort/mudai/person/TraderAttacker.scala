@@ -9,7 +9,7 @@ import com.tort.mudai.event.{LongHoldSucceededEvent, SpellFailedEvent, CurseSucc
 import Spell._
 import com.tort.mudai.mapper.Mob
 
-class Attacker(person: ActorRef) extends Actor {
+class TraderAttacker(person: ActorRef) extends Actor {
 
   import context._
 
@@ -80,4 +80,3 @@ class Curser extends Actor {
       }
   }
 }
-
