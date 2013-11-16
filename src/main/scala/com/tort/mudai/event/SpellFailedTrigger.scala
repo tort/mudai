@@ -16,22 +16,20 @@ class SpellFailedTrigger extends EventTrigger[SpellFailedEvent]{
   }
 }
 
-case class SpellFailedEvent(spell: String @@ Spell) extends Event
+case class SpellFailedEvent(spell: String @@ SpellName) extends Event
 
-class CurseSucceededTrigger extends EventTrigger[CurseSucceededEvent] {
+class CurseSucceededTrigger extends EventTrigger[SpellSucceededEvent] {
   val Pattern = """(?ms).*Красное сияние вспыхнуло над (.*) и тут же погасло!.*""".r
 
   def matches(text: String) = text.matches(Pattern.toString())
 
   def fireEvent(text: String) = {
     val Pattern(target) = text
-    CurseSucceededEvent(target)
+    SpellSucceededEvent(target, Curse)
   }
 }
 
-case class CurseSucceededEvent(target: String) extends Event
-
-class LongHoldSucceededTrigger extends EventTrigger[LongHoldSucceededEvent] {
+class LongHoldSucceededTrigger extends EventTrigger[SpellSucceededEvent] {
   val Pattern = """(?ms).*Вы произнесли заклинание "длительное оцепенение".
                   |Вы занесли заклинание "длительное оцепенение" в свои резы.
                   |([^\n]*) замер на месте!.*""".r
@@ -41,8 +39,8 @@ class LongHoldSucceededTrigger extends EventTrigger[LongHoldSucceededEvent] {
   def fireEvent(text: String) = {
     val Pattern(target) = text
 
-    LongHoldSucceededEvent(target)
+    SpellSucceededEvent(target, LongHold)
   }
 }
 
-case class LongHoldSucceededEvent(target: String) extends Event
+case class SpellSucceededEvent(target: String, spell: String @@ SpellName) extends Event

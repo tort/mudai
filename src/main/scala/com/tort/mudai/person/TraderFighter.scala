@@ -93,7 +93,7 @@ class TraderFighter(person: ActorRef, persister: LocationPersister, mapper: Acto
   }
 }
 
-case class SpellCommand(target: String, spell: String @@ Spell) extends RenderableCommand {
+case class SpellCommand(target: String, spell: String @@ SpellName) extends RenderableCommand {
   def render = s"кол !$spell! $target"
 }
 
@@ -102,11 +102,14 @@ class GroupStatusCommand extends RenderableCommand {
 }
 
 object Spell {
-  trait Spell
+  trait SpellName
 
   val Curse = spell("проклятье")
   val CritHeal = spell("критическое исцеление")
   val LongHold = spell("длительное оцепенение")
+  val Net = spell("сеть")
 
-  def spell(s: String): String @@ Spell = Tag(s)
+  def spell(s: String): String @@ SpellName = Tag(s)
+
+  implicit val spellEqual: Equal[String @@ SpellName] = Equal.equal(_ == _)
 }

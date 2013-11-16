@@ -4,16 +4,20 @@ import scalaz._
 import Scalaz._
 import scala.concurrent.duration._
 import akka.actor.{ActorRef, Props, Actor}
-import com.tort.mudai.command.{RenderableCommand, SimpleCommand}
-import com.tort.mudai.event.{LongHoldSucceededEvent, SpellFailedEvent, CurseSucceededEvent, OrderFailedEvent}
+import com.tort.mudai.command.SimpleCommand
+import com.tort.mudai.event._
 import Spell._
 import com.tort.mudai.mapper.Mob
+import com.tort.mudai.event.OrderFailedEvent
+import com.tort.mudai.event.SpellFailedEvent
+import scala.Some
 
 class TraderAttacker(person: ActorRef) extends Actor {
 
   import context._
 
-  private val holder = context.actorOf(Props(classOf[Holder], person))
+  private val holder = context.actorOf(Props(classOf[Caster], LongHold, person))
+  private val netter = context.actorOf(Props(classOf[Caster], Net, person))
 
   def receive = rec
 
@@ -29,9 +33,14 @@ class TraderAttacker(person: ActorRef) extends Actor {
       if (target.isFragging) {
         holder ! Attack(target, number)
       }
+      if (target.canFlee) {
+        netter ! Attack(target, number)
+      }
 
       become(waitGroupEvent orElse rec)
-    case e => holder ! e
+    case e =>
+      holder ! e
+      netter ! e
   }
 
   def waitGroupEvent: Receive = {
@@ -41,7 +50,8 @@ class TraderAttacker(person: ActorRef) extends Actor {
   }
 }
 
-class Holder(person: ActorRef) extends Actor {
+class Caster(spell: String @@ SpellName, person: ActorRef) extends Actor {
+
   def receive = rec
 
   def rec: Receive = {
@@ -51,32 +61,16 @@ class Holder(person: ActorRef) extends Actor {
   }
 
   def failureTracker(target: Mob): Receive = {
-    case SpellFailedEvent(LongHold) =>
+    case SpellFailedEvent(spell) =>
       castLongHold(target)
   }
 
   private def castLongHold(target: Mob) {
-    person ! SpellCommand(target.alias.get, LongHold)
+    person ! SpellCommand(target.alias.get, spell)
   }
 
   private def successTracker: Receive = {
-    case LongHoldSucceededEvent(_) =>
+    case SpellSucceededEvent(_, s) if s === spell =>
       context.become(rec)
-  }
-}
-
-class Curser extends Actor {
-
-  import context._
-
-  def receive = {
-    case Attack(target, number) =>
-      sender ! SpellCommand(target.alias.get, Curse)
-      become {
-        case SpellFailedEvent(Curse) =>
-          sender ! SpellCommand(target.alias.get, Curse)
-        case CurseSucceededEvent(_) =>
-          unbecome()
-      }
   }
 }
