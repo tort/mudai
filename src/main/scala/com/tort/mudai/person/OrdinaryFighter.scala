@@ -2,8 +2,8 @@ package com.tort.mudai.person
 
 import akka.actor.{Props, Actor, ActorRef}
 import com.tort.mudai.mapper.LocationPersister
-import com.tort.mudai.event.{PeaceStatusEvent, FightRoundEvent}
-import com.tort.mudai.command.RenderableCommand
+import com.tort.mudai.event.{DisarmEvent, PeaceStatusEvent, FightRoundEvent}
+import com.tort.mudai.command.{SimpleCommand, RenderableCommand}
 
 class OrdinaryFighter(person: ActorRef, persister: LocationPersister, mapper: ActorRef) extends Actor {
   import context._
@@ -27,6 +27,9 @@ class OrdinaryFighter(person: ActorRef, persister: LocationPersister, mapper: Ac
     case e@PeaceStatusEvent() =>
       sender ! YieldPulses
       become(rec(peaceStatus = true))
+    case DisarmEvent(_, _) =>
+      person ! new SimpleCommand("вз шалыг")
+      person ! new SimpleCommand("воор шалыг")
     case RequestPulses => person ! RequestPulses
     case YieldPulses => person ! YieldPulses
     case c: RenderableCommand if sender == antiBasher => person ! c

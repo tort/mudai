@@ -15,10 +15,16 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
     case StatusLineEvent(_, _, _, _, lvl, _) =>
       if (level != lvl)
         context.become(rec(lvl))
+    case r@TriggeredMoveRequest("У покосившегося сруба.", direction, "Дно колодца") =>
+      sender ! new SimpleCommand("прыгнуть колодец")
+      person ! MoveEvent(
+        persister.locationByTitle(r.from).headOption,
+        direction,
+        persister.locationByTitle(r.to).head)
     case r@TriggeredMoveRequest("У шалаша", direction, "Тихий угол") =>
       sender ! new SimpleCommand(s"дать $level кун следопыт")
       person ! MoveEvent(
-        persister.locationByTitle(r.from).headOption,
+        persister.loadLocation(locationId("af718945-4fdd-4f65-a944-ff541b94c6d3")).some,
         direction,
         persister.locationByTitle(r.to).head)
     case r@TriggeredMoveRequest("Тихий угол", direction, "У шалаша") =>
@@ -26,7 +32,7 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
       person ! MoveEvent(
         persister.locationByTitle(r.from).headOption,
         direction,
-        persister.locationByTitle(r.to).head)
+        persister.loadLocation(locationId("af718945-4fdd-4f65-a944-ff541b94c6d3")))
     case TriggeredMoveRequest("На лугу", direction, "На лугу") if direction == "v1_v2_trigger" =>
       sender ! new SimpleCommand(s"дать $level кун цыган")
       person ! MoveEvent(
@@ -40,7 +46,7 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
         direction,
         persister.loadLocation(locationId("a2487caf-444f-4736-978f-0f1fbbd6083d")))
     case TriggeredMoveRequest("Дорога", direction, "Дорога") if direction == "trigger_swamp_south" =>
-      sender ! new SimpleCommand(s"дать ${level * 2} кун болотник")
+      sender ! new SimpleCommand(s"дать ${level * 2 + 10} кун болотник")
       context.become {
         case RawRead(text) if text.matches("(?ms).*Но наконец путь кончился, и Вы уже за болотами..*") =>
           person ! MoveEvent(
@@ -50,7 +56,7 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
           context.unbecome()
       }
     case TriggeredMoveRequest("Дорога", direction, "Дорога") if direction == "trigger_swamp_north" =>
-      sender ! new SimpleCommand(s"дать ${level} кун болотник")
+      sender ! new SimpleCommand(s"дать ${level * 2} кун болотник")
       person ! MoveEvent(
         persister.loadLocation(locationId("2b7f6585-69eb-4e9f-8d46-bb649b42ca36")).some,
         direction,
@@ -126,7 +132,7 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
         direction,
         persister.loadLocation(locationId("2c9b5a58-c87a-4443-846c-fa3847d6d953")))
     case r@TriggeredMoveRequest("На полянке", direction, "Опушка в лесу") if direction == "trigger_cursed_village_nk_forester" =>
-      sender ! new SimpleCommand(s"дать ${level} кун стар")
+      sender ! new SimpleCommand(s"дать ${level * 2} кун стар")
       person ! MoveEvent(
         persister.locationByTitle(r.from).headOption,
         direction,

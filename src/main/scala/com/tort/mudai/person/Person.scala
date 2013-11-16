@@ -23,12 +23,11 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
 
   val adapter = actorOf(Props[Adapter])
   val snoopable = actorOf(Props[Snoopable])
-  val fighter = actorOf(Props(classOf[OrdinaryFighter], self, persister, mapper))
+  val fighter = actorOf(Props(classOf[TraderFighter], self, persister, mapper))
   val roamer = actorOf(Props(classOf[Roamer], mapper, pathHelper, persister, self))
   val provisioner = actorOf(Props(classOf[Provisioner]))
   val statusTranslator = actorOf(Props(classOf[StatusTranslator]))
   val whiteSpiderQuest = actorOf(Props(classOf[WhiteSpiderQuest], mapper, pathHelper, persister, self))
-  val villageWellQuest = actorOf(Props(classOf[VillageWellQuest]))
   val simpleQuest = actorOf(Props(classOf[SimpleQuest], mapper, persister, pathHelper, self))
   val mainRoqueQuest = actorOf(Props(classOf[MainRogueQuest], mapper, persister, pathHelper, self))
   val oldHunterQuest = actorOf(Props(classOf[OldHunterQuest], mapper, persister, pathHelper, self))
@@ -40,7 +39,6 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
   val polovtsianCampQuest = actorOf(Props(classOf[PolovtsianCampQuest], mapper, persister, pathHelper, self))
   val quests = Map[String, ActorRef](
     "белый паук" -> whiteSpiderQuest,
-    "колодец" -> villageWellQuest,
     "рысь" -> simpleQuest,
     "глава" -> mainRoqueQuest,
     "угодья" -> oldHunterQuest,
