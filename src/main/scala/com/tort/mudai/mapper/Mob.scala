@@ -2,10 +2,10 @@ package com.tort.mudai.mapper
 
 import scalaz._
 import Scalaz._
-import com.tort.mudai.mapper.Mob.{Alias, ShortName}
+import com.tort.mudai.mapper.Mob.{FullName, Alias, ShortName}
 
 class Mob(val id: String,
-               val fullName: String,
+               val fullName: String @@ FullName,
                val shortName: Option[String @@ ShortName],
                val alias: Option[String @@ Alias],
                val killable: Boolean,
