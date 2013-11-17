@@ -54,7 +54,7 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
     reachableFrom(entrance(zone), nonBorderNonLockableNeighbors, locationsOfSummoners(zone)).map(x => persister.loadLocation(x))
   }
 
-  private def singleSearchWaitTarget(searcher: ActorRef): Receive = finishRoamOnFinishSearch orElse waitTarget(searcher, singleSearchWaitTarget)
+  private def singleSearchWaitTarget(searcher: ActorRef): Receive = finishRoamOnFinishSearch(searcher) orElse waitTarget(searcher, singleSearchWaitTarget)
 
   private def iteratedSearchWaitTarget(mbs: SortedMap[Int, Set[Mob]], zone: Zone)(searcher: ActorRef): Receive = roamNextOnFinishSearch(mbs, zone) orElse waitTarget(searcher, iteratedSearchWaitTarget(mbs, zone))
 
@@ -79,9 +79,9 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
       iterateZone(mobs, zone)
   }
 
-  private def finishRoamOnFinishSearch: Receive = {
+  private def finishRoamOnFinishSearch(searcher: ActorRef): Receive = {
     case SearchFinished =>
-      finishRoaming()
+      become(waitKill(searcher, 0, false, false, new util.Date(), singleSearchWaitTarget))
   }
 
   private def waitTarget(searcher: ActorRef, specificWaitTarget: (ActorRef) => Receive): Receive = {
