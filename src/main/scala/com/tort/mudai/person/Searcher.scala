@@ -28,22 +28,29 @@ class Searcher(val mapper: ActorRef, val persister: LocationPersister, val pathH
 
   private def lookForMob(targets: Set[Mob], caller: ActorRef)(travel: ActorRef): Receive = {
     case e@GlanceEvent(roomSnapshot, _) =>
-      if (toFullNames(roomSnapshot).intersect(targets.map(_.fullName)).size > 0) {
-        val visibles = roomSnapshot.mobs.map(fullName => persister.mobByFullName(fullName)).flatten
-          caller ! MobFound(visibles.toSet.intersect(targets), visibles)
-      }
+      val visibles = roomSnapshot.mobs.map(mobString => {
+        tryRecognizeByFullName(mobString).orElse(tryRecognizeByShortname(mobString))
+      }).flatten
+
+      caller ! MobFound(visibles.toSet.intersect(targets), visibles)
+
       travel ! e
   }
 
-  private def toFullNames(roomSnapshot: RoomSnapshot): Set[String @@ FullName] = {
-    roomSnapshot.mobs.toSet.collect {
-      case fn if fn.endsWith(" стоит здесь.") || fn.endsWith(" сидит здесь.") =>
-        val mob = persister.mobByShortName(shortName(fn.dropRight(13)))
-        mob match {
-          case None => fn
-          case Some(m) => m.fullName
-        }
-    }
+
+  private def tryRecognizeByFullName(mobString: String): Option[Mob] = {
+    persister.mobByFullName(fullName(mobString))
+  }
+
+  private def tryRecognizeByShortname(mobString: String): Option[Mob] = {
+    if (mobString.endsWith(" стоит здесь.") || mobString.endsWith(" сидит здесь.")) {
+      val sn = shortName(mobString.dropRight(13))
+      persister.allMobsByShortName(sn) match {
+        case Nil => None
+        case x :: Nil => Some(x)
+        case x :: xs => None
+      }
+    } else None
   }
 
   def visit(pfProcess: (ActorRef) => Receive, onFinish: () => Unit)(toVisit: Set[Location]) {

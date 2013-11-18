@@ -45,6 +45,10 @@ trait LocationPersister {
 
   def mobByShortName(shortName: String @@ ShortName): Option[Mob]
 
+  def allMobsByShortName(shortName: String @@ ShortName): Seq[Mob]
+
+  def allMobsByShortName(shortName: String @@ ShortName, zone: Zone): Seq[Mob]
+
   def mobByShortNameSubstring(shortName: String @@ ShortName): Option[Mob]
 
   def mobByGenitive(genitive: String @@ Genitive): Option[Mob]
@@ -92,7 +96,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   implicit val getLocationResult = GetResult(l => new Location(Location.locationId(l.<<), title(l.<<), l.<<, zone = loadZone(l.<<)))
   implicit val getMobResult = GetResult(l => new Mob(
     l.<<,
-    l.<<,
+    fullName(l.<<),
     Option(Mob.shortName(l.<<)),
     Option(alias(l.<<)),
     l.<<,
@@ -210,6 +214,14 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
 
   def mobByShortName(shortName: String @@ ShortName) = DB.db withSession {
     sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging from mob m where m.shortName = $shortName".as[Mob].firstOption
+  }
+
+  def allMobsByShortName(shortName: String @@ ShortName, zone: Zone) = DB.db withSession {
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging from mob m join habitation h on h.mob = m where h.zone = ${zone.id} and m.shortName = $shortName".as[Mob].list
+  }
+
+  def allMobsByShortName(shortName: String @@ ShortName) = DB.db withSession {
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging from mob m where m.shortName = $shortName".as[Mob].list
   }
 
   def mobByFullName(name: String @@ FullName): Option[Mob] = DB.db withSession {

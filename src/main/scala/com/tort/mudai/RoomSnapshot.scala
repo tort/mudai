@@ -10,7 +10,7 @@ case class RoomSnapshot(
                          desc: String,
                          exits: Set[Exit],
                          objectsPresent: Seq[String] = Seq(),
-                         mobs: Seq[String @@ FullName] = Seq()
+                         mobs: Seq[String] = Seq()
                          ) extends RoomKey
 
 object RoomSnapshot {

@@ -142,6 +142,10 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
     matches should be(true)
   }
 
+  test("mobs extraction when fight") {
+    new GlanceTrigger().fireEvent(input).roomSnapshot.mobs should equal(Set("Комар", "Таракан"))
+  }
+
   test("move with agro") {
     val trigger = new GlanceTrigger()
     assert(trigger.matches(input))

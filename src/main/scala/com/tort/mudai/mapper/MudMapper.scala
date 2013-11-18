@@ -182,7 +182,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
       mob <- room.mobs
       loc <- current
       if !mob.contains("сражается")
-    } yield persistMobAndArea(mob, loc)
+    } yield persistMobAndArea(Mob.fullName(mob), loc)
   }
 
   private def updateItemAndArea(room: RoomSnapshot, current: Option[Location]) {
