@@ -5,7 +5,6 @@ import akka.actor.ActorRef
 import com.tort.mudai.event.GlanceEvent
 import scalaz._
 import Scalaz._
-import com.tort.mudai.RoomSnapshot
 import Mob._
 
 class Searcher(val mapper: ActorRef, val persister: LocationPersister, val pathHelper: PathHelper, val person: ActorRef) extends QuestHelper {
@@ -26,13 +25,17 @@ class Searcher(val mapper: ActorRef, val persister: LocationPersister, val pathH
     visit(lookForMob(mobs, caller), onAllVisited)(toVisit)
   }
 
+  //TODO remove param
   private def lookForMob(targets: Set[Mob], caller: ActorRef)(travel: ActorRef): Receive = {
     case e@GlanceEvent(roomSnapshot, _) =>
       val visibles = roomSnapshot.mobs.map(mobString => {
         tryRecognizeByFullName(mobString).orElse(tryRecognizeByShortname(mobString))
       }).flatten
 
-      caller ! MobFound(visibles.toSet.intersect(targets), visibles)
+      visibles.toSet.intersect(targets) match {
+        case visibleTargets if visibleTargets.isEmpty => person ! NoTargetsFound
+        case visibleTargets => person ! MobFound(visibleTargets, visibles)
+      }
 
       travel ! e
   }
@@ -70,3 +73,5 @@ case class FindMobs(mobs: Set[Mob], area: Set[Location])
 case object SearchFinished
 
 case class MobFound(targets: Set[Mob], visibles: Seq[Mob])
+
+case object NoTargetsFound

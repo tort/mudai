@@ -143,7 +143,7 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
   }
 
   test("mobs extraction when fight") {
-    new GlanceTrigger().fireEvent(input).roomSnapshot.mobs should equal(Set("Комар", "Таракан"))
+    new GlanceTrigger().fireEvent(input).roomSnapshot.mobs should equal(Set("(летит) Комар жужжит здесь.", "Таракан быстро пробежал здесь."))
   }
 
   test("move with agro") {

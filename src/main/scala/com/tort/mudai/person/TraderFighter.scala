@@ -51,9 +51,9 @@ class TraderFighter(person: ActorRef, persister: LocationPersister, mapper: Acto
       healOnStatus(name, health)
       attacker ! e
     case DisarmAssistantEvent(_, _, _) =>
-      person ! new SimpleCommand("взять лук.хран")
-      person ! new SimpleCommand("дать лук.хран гри.рост")
-      person ! new SimpleCommand("прик все воор лук")
+      person ! new SimpleCommand("взять чудс")
+      person ! new SimpleCommand("дать чудс галиц")
+      person ! new SimpleCommand("прик все вооруж чудс")
     case RequestPulses => person ! RequestPulses
     case YieldPulses => person ! YieldPulses
     case c: RenderableCommand if sender == antiBasher => person ! c

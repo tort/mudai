@@ -54,9 +54,11 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
     reachableFrom(entrance(zone), nonBorderNonLockableNeighbors, locationsOfSummoners(zone)).map(x => persister.loadLocation(x))
   }
 
-  private def singleSearchWaitTarget(searcher: ActorRef): Receive = finishRoamOnFinishSearch(searcher) orElse waitTarget(searcher, singleSearchWaitTarget)
+  private def singleSearchWaitTarget(searcher: ActorRef, isFinished: Boolean): Receive =
+    finishRoamOnFinishSearch(searcher) orElse waitTarget(searcher, singleSearchWaitTarget, isFinished)
 
-  private def iteratedSearchWaitTarget(mbs: SortedMap[Int, Set[Mob]], zone: Zone)(searcher: ActorRef): Receive = roamNextOnFinishSearch(mbs, zone) orElse waitTarget(searcher, iteratedSearchWaitTarget(mbs, zone))
+  private def iteratedSearchWaitTarget(mbs: SortedMap[Int, Set[Mob]], zone: Zone)(searcher: ActorRef, isFinished: Boolean): Receive =
+    roamNextOnFinishSearch(mbs, zone) orElse waitTarget(searcher, iteratedSearchWaitTarget(mbs, zone), isFinished)
 
   private def iterateZone(mbs: SortedMap[Int, Set[Mob]], zone: Zone) {
     mbs.headOption match {
@@ -81,10 +83,13 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
 
   private def finishRoamOnFinishSearch(searcher: ActorRef): Receive = {
     case SearchFinished =>
-      become(waitKill(searcher, 0, false, false, new util.Date(), singleSearchWaitTarget))
+      become(waitKill(searcher, 0, false, isFinished = true, new util.Date(), singleSearchWaitTarget))
   }
 
-  private def waitTarget(searcher: ActorRef, specificWaitTarget: (ActorRef) => Receive): Receive = {
+  private def waitTarget(searcher: ActorRef, specificWaitTarget: (ActorRef, Boolean) => Receive, isFinished: Boolean): Receive = {
+    case NoTargetsFound =>
+      if(isFinished)
+        finishRoaming()
     case MobFound(targets, visibles) =>
       if (!moreThanTwoSameAssistsPresent(visibles)) {
         visibles.find(_.isAgressive) match {
@@ -96,17 +101,14 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
               case Some((m, xs)) if m.alias.isDefined =>
                 attack(m, searcher, specificWaitTarget, xs.size.some)
               case None =>
-                targets.headOption.foreach {
-                  case m =>
-                    attack(m, searcher, specificWaitTarget)
-                }
+                targets.headOption.foreach(attack(_, searcher, specificWaitTarget))
             }
         }
       }
     case e => searcher ! e
   }
 
-  private def attack(m: Mob, searcher: ActorRef, specificWaitTarget: (ActorRef) => Receive, number: Option[Int] = None) {
+  private def attack(m: Mob, searcher: ActorRef, specificWaitTarget: (ActorRef, Boolean) => Receive, number: Option[Int] = None) {
     person ! Attack(m, number)
     become(waitKill(searcher, 0, isSitting = false, isFinished = false, new util.Date, specificWaitTarget))
   }
@@ -121,7 +123,7 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
     become(roam)
   }
 
-  private def waitKill(searcher: ActorRef, mem: Int, isSitting: Boolean, isFinished: Boolean, attackTime: util.Date, specificWaitTarget: (ActorRef) => Receive): Receive = {
+  private def waitKill(searcher: ActorRef, mem: Int, isSitting: Boolean, isFinished: Boolean, attackTime: util.Date, specificWaitTarget: (ActorRef, Boolean) => Receive): Receive = {
     case KillEvent(_, _, _, magic) =>
       if (magic) {
         person ! new SimpleCommand("взять все")
@@ -146,16 +148,13 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
           person ! new SimpleCommand("вст")
 
         if ((new util.Date().getTime.longValue - attackTime.getTime.longValue) > ThreeSeconds) {
-          become(specificWaitTarget(searcher))
+          become(specificWaitTarget(searcher, isFinished))
           person ! new SimpleCommand("смотр")
-          if (isFinished)
-            finishRoaming()
         }
       }
     case StatusLineEvent(_, _, _, m, _, _) =>
       become(waitKill(searcher, m, isSitting, isFinished, attackTime, specificWaitTarget))
     case SearchFinished =>
-      println("IN_FIGHT SEARCH FINISHED ROAMER")
       become(waitKill(searcher, mem, isSitting, isFinished = true, attackTime, specificWaitTarget))
     case e => searcher ! e
   }
