@@ -106,6 +106,18 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
     "\n\u001B[1;33m\u001B[1;31m\u001B[0;0m" +
     "\n\u001B[0;32m90H\u001B[0;37m \u001B[0;32m108M\u001B[0;37m 4315о Зауч:0 5L 83G Вых:СЮ> "
 
+  val descWithTab = "\u001B[1;36mДорога через болото\u001B[0;37m\n" +
+    "   Закончившийся на западе ельник помахивает Вам вслед тяжелыми лапами елей.\n" +
+    "А на востоке простирается самое настоящее болото, с зыбунами и топями.\n" +
+    "Поэтому следует двигаться очень осторожно, ни в коем случае не сворачивать\n" +
+    "с протоптанной людьми тропинки.\n" +
+    "\n" +
+    "\u001B[0;36m[ Exits: n e s w ]\u001B[0;37m\n" +
+    "\u001B[1;30mВы просто увязаете в грязи.\u001B[0;37m\n" +
+    "\u001B[1;33m\u001B[1;31mБлагородный олень с удивительными золотыми рогами кормится здесь.\n" +
+    "\u001B[0;0m\n" +
+    "\u001B[0;32m483H\u001B[0;37m \u001B[0;32m244M\u001B[0;37m 10416398о Зауч:0 27L 197G Вых:СВЮЗ> "
+
   ignore("direction, objects, mobs extraction") {
     val trigger = new GlanceTrigger
     val event = trigger.fireEvent(onWalk)
@@ -171,6 +183,10 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
 
   test("room with ice") {
     new GlanceTrigger().matches(icyRoomSample) should be(true)
+  }
+
+  test("buggy desc") {
+    new GlanceTrigger().matches(descWithTab) should be(true)
   }
 }
 
