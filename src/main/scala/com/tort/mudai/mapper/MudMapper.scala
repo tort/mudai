@@ -187,10 +187,10 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
 
   private def updateItemAndArea(room: RoomSnapshot, current: Option[Location]) {
     for {
-      item <- room.objectsPresent
+      itemAndNumber <- room.objectsPresent
       loc <- current
-      if !(item.startsWith("Труп ") && item.endsWith(" лежит здесь."))
-    } yield persistItemAndArea(item, loc)
+      if !(itemAndNumber.item.startsWith("Труп ") && itemAndNumber.item.endsWith(" лежит здесь."))
+    } yield persistItemAndArea(itemAndNumber.item, loc)
   }
 
   private def location(room: RoomSnapshot) = loadLocation(room) match {

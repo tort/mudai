@@ -13,7 +13,6 @@ import com.tort.mudai.mapper.Mob._
 import com.tort.mudai.mapper.Location._
 import com.tort.mudai.mapper.Zone.ZoneName
 import com.tort.mudai.mapper.Location.{Title, LocationId}
-import com.tort.mudai.mapper.Item
 
 trait LocationPersister {
   def locationByTitle(title: String): Seq[Location]
@@ -36,7 +35,7 @@ trait LocationPersister {
 
   def persistMobAndArea(mob: String @@ FullName, location: Location)
 
-  def persistItemAndArea(mob: String, location: Location)
+  def persistItemAndArea(mob: String @@ Item.FullName, location: Location)
 
   def makeKillable(shortName: String @@ ShortName)
 
@@ -82,7 +81,7 @@ trait LocationPersister {
 
   def markAsAgressive(mob: Mob)
 
-  def itemByFullName(fullName: String @@ Item.FullName)
+  def itemByFullName(fullName: String @@ Item.FullName): Item
 }
 
 trait TransitionPersister {
@@ -239,7 +238,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     }
   }
 
-  def findOrCreateItem(name: String): Option[Item] = DB.db withSession {
+  def itemByFullName(name: String @@ Item.FullName): Item = DB.db withSession {
     val item = sql"select m.id, m.fullname, m.shortname, m.alias, m.objectType from item m where m.fullName = $name".as[Item].firstOption
     item match {
       case None =>
@@ -248,8 +247,8 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
         val shortName: String = null
         val fullName = name
         sqlu"insert into item(id, alias, shortName, fullName) values($id, $alias, $shortName, $fullName)".first
-        Some(new Item(id, fullName, Option(shortName), Option(alias), objectType = None))
-      case i => i
+        new Item(id, fullName, Option(shortName), Option(alias), objectType = None)
+      case Some(i) => i
     }
   }
 
@@ -262,16 +261,13 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     }
   }
 
-  def persistItemAndArea(fullName: String, location: Location) = DB.db withSession {
-    findOrCreateItem(fullName) match {
-      case Some(item) =>
-        val count = sql"select count(*) from disposition d join item m on m.id = d.item where m.id = ${item.id} and d.location = ${location.id}".as[Int].first
-        count match {
-          case 0 =>
-            sqlu"insert into disposition(id, item, location) values(${generateId()}, ${item.id}, ${location.id})".first
-          case x if x > 0 =>
-        }
-      case None =>
+  def persistItemAndArea(fullName: String @@ Item.FullName, location: Location) = DB.db withSession {
+    val item = itemByFullName(fullName)
+    val count = sql"select count(*) from disposition d join item m on m.id = d.item where m.id = ${item.id} and d.location = ${location.id}".as[Int].first
+    count match {
+      case 0 =>
+        sqlu"insert into disposition(id, item, location) values(${generateId()}, ${item.id}, ${location.id})".first
+      case x if x > 0 =>
     }
   }
 
@@ -369,10 +365,6 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
 
   def markAsAgressive(mob: Mob) = DB.db withSession {
     sqlu"update mob set isagressive = 1 where id = ${mob.id}".first
-  }
-
-  def itemByFullName(fullName: String @@ Item.FullName) = DB.db withSession {
-    sqlu"select i.id, i.fullName, i.shortName, i.alias, i.objectType from item i where fullName = $fullName".as[Item].first
   }
 }
 

@@ -1,6 +1,6 @@
 package com.tort.mudai
 
-import mapper.Exit
+import com.tort.mudai.mapper.{Item, Exit}
 import scalaz.@@
 import com.tort.mudai.mapper.Mob.FullName
 
@@ -9,13 +9,15 @@ case class RoomSnapshot(
                          title: String,
                          desc: String,
                          exits: Set[Exit],
-                         objectsPresent: Seq[String] = Seq(),
+                         objectsPresent: Seq[ItemAndNumber] = Seq(),
                          mobs: Seq[String] = Seq()
                          ) extends RoomKey
 
 object RoomSnapshot {
   def apply(key: RoomKey): RoomSnapshot = RoomSnapshot(key.title, key.desc, key.exits)
 }
+
+case class ItemAndNumber(item: String @@ Item.FullName, number: Int)
 
 trait RoomKey {
   def title: String

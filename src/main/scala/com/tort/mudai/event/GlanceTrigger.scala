@@ -1,7 +1,7 @@
 package com.tort.mudai.event
 
-import com.tort.mudai.RoomSnapshot
-import com.tort.mudai.mapper.{Mob, Exit, Direction}
+import com.tort.mudai.{ItemAndNumber, RoomSnapshot}
+import com.tort.mudai.mapper.{Item, Mob, Exit, Direction}
 import Mob._
 import com.tort.mudai.mapper.Direction._
 import scalaz._
@@ -30,6 +30,7 @@ class GlanceTrigger extends EventTrigger[GlanceEvent] {
     }
   }
 
+  val MultiplePattern = """(.*) \[(\d+)\]""".r
   override def fireEvent(text: String) = {
     val direction = extractDirection(text)
     val GlancePattern(locationTitle, locationDesc, availableExits, objectsGroup, mobsGroup) = text
@@ -41,7 +42,10 @@ class GlanceTrigger extends EventTrigger[GlanceEvent] {
       case alias =>
         Exit(aliasToDirection(alias.toString), isBorder = alias.head.isUpper)
     }.toSet
-    val objects = Option(objectsGroup).map(x => x.filterNot(c => c == '\r')).map(_.split('\n')).getOrElse(Array[String]())
+    val objects = Option(objectsGroup).map(x => x.filterNot(c => c == '\r')).map(_.split('\n')).getOrElse(Array[String]()).map(x => x match {
+      case MultiplePattern(obj, number) => ItemAndNumber(Item.fullName(obj), number.toInt)
+      case s => ItemAndNumber(Item.fullName(s), 1)
+    })
     val mobs = Option(mobsGroup.filterNot(c => c == '\r')).map(_.split("\n")).getOrElse(Array[String]()).dropRight(1)
 
     val roomSnapshot = new RoomSnapshot(
