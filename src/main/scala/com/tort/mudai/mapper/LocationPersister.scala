@@ -13,6 +13,7 @@ import com.tort.mudai.mapper.Mob._
 import com.tort.mudai.mapper.Location._
 import com.tort.mudai.mapper.Zone.ZoneName
 import com.tort.mudai.mapper.Location.{Title, LocationId}
+import com.tort.mudai.mapper.Item
 
 trait LocationPersister {
   def locationByTitle(title: String): Seq[Location]
@@ -80,6 +81,8 @@ trait LocationPersister {
   def markAsFleeker(mob: Mob)
 
   def markAsAgressive(mob: Mob)
+
+  def itemByFullName(fullName: String @@ Item.FullName)
 }
 
 trait TransitionPersister {
@@ -236,7 +239,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     }
   }
 
-  def itemByFullName(name: String): Option[Item] = DB.db withSession {
+  def findOrCreateItem(name: String): Option[Item] = DB.db withSession {
     val item = sql"select m.id, m.fullname, m.shortname, m.alias, m.objectType from item m where m.fullName = $name".as[Item].firstOption
     item match {
       case None =>
@@ -260,7 +263,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def persistItemAndArea(fullName: String, location: Location) = DB.db withSession {
-    itemByFullName(fullName) match {
+    findOrCreateItem(fullName) match {
       case Some(item) =>
         val count = sql"select count(*) from disposition d join item m on m.id = d.item where m.id = ${item.id} and d.location = ${location.id}".as[Int].first
         count match {
@@ -366,6 +369,10 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
 
   def markAsAgressive(mob: Mob) = DB.db withSession {
     sqlu"update mob set isagressive = 1 where id = ${mob.id}".first
+  }
+
+  def itemByFullName(fullName: String @@ Item.FullName) = DB.db withSession {
+    sqlu"select i.id, i.fullName, i.shortName, i.alias, i.objectType from item i where fullName = $fullName".as[Item].first
   }
 }
 

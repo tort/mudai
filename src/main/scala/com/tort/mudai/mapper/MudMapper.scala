@@ -189,6 +189,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
     for {
       item <- room.objectsPresent
       loc <- current
+      if !(item.startsWith("Труп ") && item.endsWith(" лежит здесь."))
     } yield persistItemAndArea(item, loc)
   }
 

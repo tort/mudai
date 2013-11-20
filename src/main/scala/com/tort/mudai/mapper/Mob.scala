@@ -41,9 +41,3 @@ object Mob {
 
   def alias(a: String): String @@ Alias = Tag(a)
 }
-
-class Item( val id: String,
-            val fullName: String,
-            val shortName: Option[String],
-            val alias: Option[String],
-            val objectType: Option[String])
