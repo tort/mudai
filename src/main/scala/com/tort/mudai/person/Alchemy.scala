@@ -13,7 +13,11 @@ class Alchemy(person: ActorRef, persister: LocationPersister) extends Actor {
     case GlanceEvent(room, _) =>
       val visibleIngridients = room.objectsPresent.toSet.map(toItem).filter(_.objectType === "ingridient".some)
 
-      visibleIngridients.foreach(i => person ! new SimpleCommand(s"взять все.${i.alias}"))
+      visibleIngridients.flatMap(_.alias).foreach {
+        case alias =>
+          person ! new SimpleCommand(s"взять все.${alias}")
+          person ! new SimpleCommand(s"полож все.${alias} сума")
+      }
   }
 
   private def toItem(ian: ItemAndNumber): Item = persister.itemByFullName(ian.item)
