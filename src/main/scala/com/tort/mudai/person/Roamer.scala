@@ -50,8 +50,10 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
       search(Set(mob), persister.locationByMob(mob.fullName))(singleSearchWaitTarget)
   }
 
-  private def zoneArea(zone: Zone): Set[Location] = {
-    reachableFrom(entrance(zone), nonBorderNonLockableNeighbors, locationsOfSummoners(zone)).map(x => persister.loadLocation(x))
+  private def zoneArea(zone: Zone, targets: Set[Mob]): Set[Location] = {
+    val nonTargetedSummoners = persister.killableMobsBy(zone).filter(_.summoner) -- targets
+    val locations = nonTargetedSummoners.flatMap(m => persister.locationByMob(m.fullName))
+    reachableFrom(entrance(zone), nonBorderNonLockableNeighbors, locations).map(x => persister.loadLocation(x))
   }
 
   private def singleSearchWaitTarget(searcher: ActorRef, isFinished: Boolean): Receive =
@@ -70,7 +72,7 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
           case true =>
             mobs.flatMap(m => persister.locationByMob(m.fullName))
           case false =>
-            zoneArea(zone)
+            zoneArea(zone, mobs)
         }
         search(mobs, area)(iteratedSearchWaitTarget(mbs.tail, zone))
     }
