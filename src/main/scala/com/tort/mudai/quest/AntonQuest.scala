@@ -25,6 +25,7 @@ class AntonQuest(val mapper: ActorRef, val persister: LocationPersister, val pat
   val magicFlowerLocation = persister.locationByItem(Item.fullName("Красивый цветок растет у ручья.")).head
   val forestHut = persister.locationByMob(fullName("Старый горбатый дед, варит какое-то зелье, шепча что-то себе под нос.")).head
   val forgery = persister.locationByMob("Сельский кузнец стоит тут, вздыхая.").head
+  val lynxMaidLocation = persister.locationByMob(fullName("Странная девушка смотрит на вас, не мигая, зелеными, как у кошки, глазами.")).head
 
   def receive = quest
 
@@ -76,15 +77,22 @@ class AntonQuest(val mapper: ActorRef, val persister: LocationPersister, val pat
 
   private def waitReward: Receive = {
     case RawRead(text) if text.matches("(?ms).*Сельский староста дал вам мешок мелких монет..*") =>
-      person ! new SimpleCommand("брос мешок")
-      person ! new SimpleCommand("взять монет")
+      extractCoins
       giveIronToForger()
   }
 
 
+  private def extractCoins {
+    person ! new SimpleCommand("брос мешок")
+    person ! new SimpleCommand("взять монет")
+  }
+
   private def giveIronToForger(time: Int = 0) {
     if (time > 2)
-      finishQuest(person)
+      goAndDo(lynxMaidLocation, person, (l) => {
+        person ! new SimpleCommand("дать чеснок девуш")
+        become(waitLynxMaidReward)
+      })
     else {
       goAndDo(forgery, person, (l) => {
         person ! new SimpleCommand("дать желез кузн")
@@ -92,6 +100,12 @@ class AntonQuest(val mapper: ActorRef, val persister: LocationPersister, val pat
         giveIronToForger(time + 1)
       })
     }
+  }
+
+  private def waitLynxMaidReward: Receive = {
+    case RawRead(text) if text.matches("(?ms).*Странная девушка сказала : 'А теперь прощайте! Мне надо идти..'.*") =>
+      extractCoins
+      finishQuest(person)
   }
 
   private def waitForgerResponse: Receive = {
