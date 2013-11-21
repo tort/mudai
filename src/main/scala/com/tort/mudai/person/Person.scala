@@ -37,6 +37,7 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
   val woodpeckersQuest = actorOf(Props(classOf[WoodpeckersQuest], mapper, persister, pathHelper, self))
   val awfulTaleQuest = actorOf(Props(classOf[AwfulTaleQuest], mapper, persister, pathHelper, self))
   val polovtsianCampQuest = actorOf(Props(classOf[PolovtsianCampQuest], mapper, persister, pathHelper, self))
+  val antonQuest = actorOf(Props(classOf[AntonQuest], mapper, persister, pathHelper, self))
   val alchemy = actorOf(Props(classOf[Alchemy], self, persister))
   val quests = Map[String, ActorRef](
     "белый паук" -> whiteSpiderQuest,
@@ -48,7 +49,8 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
     "инструмент кузнеца" -> rogueForestQuest,
     "дятлы" -> woodpeckersQuest,
     "страшная сказка" -> awfulTaleQuest,
-    "половцы" -> polovtsianCampQuest)
+    "половцы" -> polovtsianCampQuest,
+    "антон" -> antonQuest)
   val passages = actorOf(Props(classOf[Passages], persister, self))
   val coreTasks = Seq(mapper, fighter, statusTranslator, provisioner, roamer, passages, alchemy) ++ quests.values
 
