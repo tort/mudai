@@ -119,8 +119,6 @@ case object Feed
 
 case class NotHungryEvent() extends Event
 
-case object NeedMem
-
 case object ReadyForFight
 
 case class Snoop(onRawRead: (String) => Unit)

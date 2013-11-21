@@ -46,7 +46,7 @@ class Searcher(val mapper: ActorRef, val persister: LocationPersister, val pathH
   }
 
   private def tryRecognizeByShortname(mobString: String): Option[Mob] = {
-    if (mobString.endsWith(" стоит здесь.") || mobString.endsWith(" сидит здесь.")) {
+    if (mobString.endsWith(" стоит здесь.") || mobString.endsWith(" сидит здесь.") || mobString.endsWith(" отдыхает здесь.")) {
       val sn = shortName(mobString.dropRight(13))
       persister.allMobsByShortName(sn) match {
         case Nil => None

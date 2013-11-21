@@ -43,4 +43,19 @@ class LongHoldSucceededTrigger extends EventTrigger[SpellSucceededEvent] {
   }
 }
 
+class NetSucceededTrigger extends EventTrigger[SpellSucceededEvent] {
+  val Pattern =
+    """(?ms).*Вы произнесли заклинание "сеть".
+      |Вы занесли заклинание "сеть" в свои резы.
+      |([^\n]*) покрыла невидимая паутина, сковывая (?:его|ее) движения!.*""".r
+
+  def matches(text: String) = text.matches(Pattern.toString())
+
+  def fireEvent(text: String) = {
+    val Pattern(target) = text
+
+    SpellSucceededEvent(target, Net)
+  }
+}
+
 case class SpellSucceededEvent(target: String, spell: String @@ SpellName) extends Event

@@ -12,6 +12,7 @@ class StatusLineTrigger extends EventTrigger[StatusLineEvent] {
   }
 
   private def seconds(mem: String) = mem match {
+    case "-" => Int.MaxValue
     case "0" => 0
     case m =>
       val secondsAndMinutes = mem.split(":")
