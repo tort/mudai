@@ -32,7 +32,7 @@ class CurseSucceededTrigger extends EventTrigger[SpellSucceededEvent] {
 class LongHoldSucceededTrigger extends EventTrigger[SpellSucceededEvent] {
   val Pattern = """(?ms).*Вы произнесли заклинание "длительное оцепенение".
                   |Вы занесли заклинание "длительное оцепенение" в свои резы.
-                  |([^\n]*) замер на месте!.*""".r
+                  |([^\n]*) замерл?[аио]? на месте!.*""".r
 
   def matches(text: String) = text.matches(Pattern.toString())
 
