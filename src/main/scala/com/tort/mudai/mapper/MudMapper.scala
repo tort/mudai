@@ -92,7 +92,10 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
           updateHabitation(mobs, newCurrentLocation.some)
           updateItemAndArea(room, newCurrentLocation.some)
           become(rec(currentLocation, None, newCurrentLocation.some))
+          sender ! MobViewEvent(mobs)
         case _ =>
+          val mobs = extractMobs(room, currentLocation.flatMap(_.zone))
+          sender ! MobViewEvent(mobs)
       }
     case GlanceEvent(room, Some(direction)) =>
       locationFromMap(currentLocation, direction) match {
@@ -126,6 +129,7 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
           updateItemAndArea(room, loc.some)
           become(rec(currentLocation, direction.some, loc.some))
           sender ! MoveEvent(currentLocation, direction, loc)
+          sender ! MobViewEvent(mobs)
       }
     case PathTo(target) =>
       val path = pathTo(currentLocation, target)
