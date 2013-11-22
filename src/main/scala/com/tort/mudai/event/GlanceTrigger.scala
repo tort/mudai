@@ -5,6 +5,7 @@ import com.tort.mudai.mapper.{Item, Mob, Exit, Direction}
 import Mob._
 import com.tort.mudai.mapper.Direction._
 import scalaz._
+import Scalaz._
 
 class GlanceTrigger extends EventTrigger[GlanceEvent] {
   val lister = new DirectionLister()
@@ -30,7 +31,8 @@ class GlanceTrigger extends EventTrigger[GlanceEvent] {
     }
   }
 
-  val MultiplePattern = """(.*) \[(\d+)\]""".r
+  private val MultiplePattern = """(.*) \[(\d+)\]""".r
+
   override def fireEvent(text: String) = {
     val direction = extractDirection(text)
     val GlancePattern(locationTitle, locationDesc, availableExits, objectsGroup, mobsGroup) = text
@@ -46,7 +48,7 @@ class GlanceTrigger extends EventTrigger[GlanceEvent] {
       case MultiplePattern(obj, number) => ItemAndNumber(Item.fullName(obj), number.toInt)
       case s => ItemAndNumber(Item.fullName(s), 1)
     })
-    val mobs = Option(mobsGroup.filterNot(c => c == '\r')).map(_.split("\n")).getOrElse(Array[String]()).dropRight(1)
+    val mobs = filterMobGroup(mobsGroup).getOrElse(Nil).dropRight(1)
 
     val roomSnapshot = new RoomSnapshot(
       locationTitle,
@@ -58,4 +60,16 @@ class GlanceTrigger extends EventTrigger[GlanceEvent] {
 
     GlanceEvent(roomSnapshot, direction)
   }
+
+  private def filterMobGroup(mobsGroup: String): Option[Seq[String]] = {
+    Option(mobsGroup.filterNot(c => c == '\r')).map(_.split("""\u001B\[0;31m""")(0).split("\n").toSeq |> filterFakes)
+  }
+
+  val StandupPattern = "(.*) вскочил[аои]? на ноги.".r
+  val FightPattern = "(.*) (?:сокрушил|резанул|ударил|подстрелил|ободрал|оцарапал|рубанул|укусил)[аои]? вас.".r
+  val PetMovePattern = "(.*) приш(?:ел|ла|ло|ли) (?:c )?(?:востока|запада|севера|юга|сверху|снизу).".r
+  private def filterFakes(mobStrings: Seq[String]): Seq[String] = mobStrings
+      .filterNot(StandupPattern.findFirstIn(_).isDefined)
+      .filterNot(FightPattern.findFirstIn(_).isDefined)
+      .filterNot(PetMovePattern.findFirstIn(_).isDefined)
 }

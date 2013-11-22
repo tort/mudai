@@ -33,7 +33,7 @@ trait LocationPersister {
 
   def allLocations: Seq[Location]
 
-  def persistMobAndArea(mob: String @@ FullName, location: Location)
+  def persistHabitation(mob: Mob, location: Location)
 
   def persistItemAndArea(mob: String @@ Item.FullName, location: Location)
 
@@ -43,11 +43,13 @@ trait LocationPersister {
 
   def mobByFullName(name: String @@ FullName): Option[Mob]
 
+  def persistMob(fullName: String @@ FullName): Mob
+
   def mobByShortName(shortName: String @@ ShortName): Option[Mob]
 
   def allMobsByShortName(shortName: String @@ ShortName): Seq[Mob]
 
-  def allMobsByShortName(shortName: String @@ ShortName, zone: Zone): Seq[Mob]
+  def allMobsByShortName(shortName: String @@ ShortName, zone: Zone): Option[Mob]
 
   def mobByShortNameSubstring(shortName: String @@ ShortName): Option[Mob]
 
@@ -221,7 +223,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def allMobsByShortName(shortName: String @@ ShortName, zone: Zone) = DB.db withSession {
-    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner from mob m join habitation h on h.mob = m where h.zone = ${zone.id} and m.shortName = $shortName".as[Mob].list
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner from mob m join habitation h on h.mob = m where h.zone = ${zone.id} and m.shortName = $shortName".as[Mob].firstOption
   }
 
   def allMobsByShortName(shortName: String @@ ShortName) = DB.db withSession {
@@ -229,15 +231,13 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def mobByFullName(name: String @@ FullName): Option[Mob] = DB.db withSession {
-    val mob = sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner from mob m where m.fullName = $name".as[Mob].firstOption
-    mob match {
-      case None =>
-        val id = generateId()
-        val fullName = name
-        sqlu"insert into mob(id, fullName) values($id, $fullName)".first
-        Some(new Mob(id, fullName, shortName = None, alias = None, killable = false, genitive = None, isAssisting = false, canFlee = false, isAgressive = false, priority = 0, isFragging = false, summoner = false))
-      case m: Option[Mob] => m
-    }
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner from mob m where m.fullName = $name".as[Mob].firstOption
+  }
+
+  def persistMob(fullName: String @@ FullName) = DB.db withSession {
+    val id = generateId()
+    sqlu"insert into mob(id, fullName) values($id, $fullName)".first
+    new Mob(id, fullName, shortName = None, alias = None, killable = false, genitive = None, isAssisting = false, canFlee = false, isAgressive = false, priority = 0, isFragging = false, summoner = false)
   }
 
   def itemByFullName(name: String @@ Item.FullName): Item = DB.db withSession {
@@ -273,18 +273,12 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     }
   }
 
-  def persistMobAndArea(mobName: String @@ FullName, location: Location) = DB.db withSession {
-    mobByFullName(mobName) match {
-      case Some(mob) =>
-        val locId = location.id
-        val mobId = mob.id
-        val count = sql"select count(*) from habitation h join mob m on m.id = h.mob where m.id = $mobId and h.location = $locId".as[Int].first
-        count match {
-          case 0 =>
-            sqlu"insert into habitation(id, mob, location) values(${generateId()}, $mobId, $locId)".first
-          case x if x > 0 =>
-        }
-      case None =>
+  def persistHabitation(mob: Mob, location: Location) = DB.db withSession {
+    val count = sql"select count(*) from habitation h join mob m on m.id = h.mob where m.id = ${mob.id} and h.location = ${location.id}".as[Int].first
+    count match {
+      case 0 =>
+        sqlu"insert into habitation(id, mob, location) values(${generateId()}, ${mob.id}, ${location.id})".first
+      case x if x > 0 =>
     }
   }
 
@@ -338,11 +332,15 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def killableMobsBy(zone: Zone): Set[Mob] = DB.db withSession {
-    sql"select distinct m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner from mob m join habitation h on h.mob = m.id join location l on h.location = l.id join zone z on l.zone = z.id where z.id = ${zone.id} and m.iskillable = 1".as[Mob].list.toSet
+    sql"select distinct m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner from mob m join habitation h on h.mob = m.id join location l on h.location = l.id join zone z on l.zone = z.id where z.id = ${
+zone.id
+} and m.iskillable = 1".as[Mob].list.toSet
   }
 
   def updateGenitive(mob: Mob, genitive: String @@ Genitive) = DB.db withSession {
-    sqlu"update mob set genitive = $genitive where id = ${mob.id}".first
+    sqlu"update mob set genitive = $genitive where id = ${
+mob.id
+}".first
   }
 
   def mobByGenitive(genitive: String @@ Genitive) = DB.db withSession {
@@ -350,23 +348,33 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def markAsAssisting(mob: Mob) = DB.db withSession {
-    sqlu"update mob set isassisting = 1 where id = ${mob.id}".first
+    sqlu"update mob set isassisting = 1 where id = ${
+mob.id
+}".first
   }
 
   def entrance(zone: Zone): Location = DB.db withSession {
-    sql"select l.* from location l join transition t on t.locto = l.id where l.zone = ${zone.id} and t.isborder = 1".as[Location].first
+    sql"select l.* from location l join transition t on t.locto = l.id where l.zone = ${
+zone.id
+} and t.isborder = 1".as[Location].first
   }
 
   def locationsOfSummoners(zone: Zone): Set[Location] = DB.db withSession {
-    sql"select l.* from location l join habitation h on h.location = l.id join mob m on h.mob = m.id where l.zone = ${zone.id} and m.summoner = 1".as[Location].list.toSet
+    sql"select l.* from location l join habitation h on h.location = l.id join mob m on h.mob = m.id where l.zone = ${
+zone.id
+} and m.summoner = 1".as[Location].list.toSet
   }
 
   def markAsFleeker(mob: Mob) = DB.db withSession {
-    sqlu"update mob set canflee = 1 where id = ${mob.id}".first
+    sqlu"update mob set canflee = 1 where id = ${
+mob.id
+}".first
   }
 
   def markAsAgressive(mob: Mob) = DB.db withSession {
-    sqlu"update mob set isagressive = 1 where id = ${mob.id}".first
+    sqlu"update mob set isagressive = 1 where id = ${
+mob.id
+}".first
   }
 }
 

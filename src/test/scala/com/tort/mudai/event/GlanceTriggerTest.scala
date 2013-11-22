@@ -142,7 +142,7 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
     matches should be(true)
   }
 
-  test("match") {
+  test("match on walk") {
     val matches = new GlanceTrigger().matches(onWalk)
 
     matches should be(true)
@@ -155,7 +155,7 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
   }
 
   test("mobs extraction when fight") {
-    new GlanceTrigger().fireEvent(input).roomSnapshot.mobs should equal(Set("(летит) Комар жужжит здесь.", "Таракан быстро пробежал здесь."))
+    new GlanceTrigger().fireEvent(input).roomSnapshot.mobs.toSet should equal(Set("(летит) Комар жужжит здесь.", "Таракан быстро пробежал здесь."))
   }
 
   test("move with agro") {

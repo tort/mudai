@@ -19,8 +19,8 @@ import com.tort.mudai.event.KillEvent
 import com.tort.mudai.person.RawRead
 import com.tort.mudai.event.TargetAssistedEvent
 import com.tort.mudai.event.FleeEvent
-import com.tort.mudai.quest.TimeOut
 import scala.concurrent.duration._
+import Mob._
 
 class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPersister, transitionPersister: TransitionPersister)
   extends Actor with ReachabilityHelper {
@@ -88,7 +88,8 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
       //TODO fix case when recall to non-unique room.
       location(room).foreach {
         case newCurrentLocation if newCurrentLocation.some /== currentLocation =>
-          updateMobAndArea(room, newCurrentLocation.some)
+          val mobs = extractMobs(room, newCurrentLocation.zone)
+          updateHabitation(mobs, newCurrentLocation.some)
           updateItemAndArea(room, newCurrentLocation.some)
           become(rec(currentLocation, None, newCurrentLocation.some))
         case _ =>
@@ -113,12 +114,15 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
               }
           }
 
-          updateMobAndArea(room, loc.some)
+          val mobs = extractMobs(room, loc.zone)
+          updateHabitation(mobs, loc.some)
           updateItemAndArea(room, loc.some)
           become(rec(currentLocation, direction.some, loc.some))
           sender ! MoveEvent(currentLocation, direction, loc)
+          sender ! MobViewEvent(mobs)
         case Some(loc) =>
-          updateMobAndArea(room, loc.some)
+          val mobs = extractMobs(room, loc.zone)
+          updateHabitation(mobs, loc.some)
           updateItemAndArea(room, loc.some)
           become(rec(currentLocation, direction.some, loc.some))
           sender ! MoveEvent(currentLocation, direction, loc)
@@ -153,6 +157,31 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
       checkUnreachable.foreach(x => println(s"${x.id}"))
   }
 
+  def extractMobs(room: RoomSnapshot, zone: Option[Zone]): Seq[Mob] = {
+    room.mobs.map(mobString => {
+      tryRecognizeByFullName(mobString).orElse(tryRecognizeByShortname(mobString, zone)).getOrElse(persistMob(fullName(mobString)))
+    })
+  }
+
+  private def tryRecognizeByFullName(mobString: String): Option[Mob] = {
+    locationPersister.mobByFullName(fullName(mobString))
+  }
+
+  private val postfixes = Set(
+    " стоит здесь.",
+    " сидит здесь.",
+    " отдыхает здесь.",
+    " лежит здесь, без сознания."
+  )
+
+  private def tryRecognizeByShortname(mobString: String, zone: Option[Zone]): Option[Mob] = {
+    for {
+      postfix <- postfixes.find(p => mobString.endsWith(p))
+      z <- zone
+      mob <- locationPersister.allMobsByShortName(shortName(mobString.dropRight(postfix.length)), z)
+    } yield mob
+  }
+
   def checkUnreachable: Set[Location] = {
     val unique = locationPersister.locationByTitle("Изба деда и бабки").headOption
     locationPersister.allLocations.map {
@@ -177,12 +206,11 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
     reachableFrom(location, nonBorderNeighbors).foreach(updateLocation(zone.id))
   }
 
-  private def updateMobAndArea(room: RoomSnapshot, current: Option[Location]) {
+  private def updateHabitation(mobs: Seq[Mob], current: Option[Location]) {
     for {
-      mob <- room.mobs
+      mob <- mobs
       loc <- current
-      if !mob.contains("сражается")
-    } yield persistMobAndArea(Mob.fullName(mob), loc)
+    } yield persistHabitation(mob, loc)
   }
 
   private def updateItemAndArea(room: RoomSnapshot, current: Option[Location]) {
@@ -220,3 +248,5 @@ case class MoveEvent(from: Option[Location], direction: String @@ Direction, to:
 case object CheckUnreachable
 
 case class FleeFailed(from: Option[Location], direction: Option[String @@ Direction], to: Option[Location])
+
+case class MobViewEvent(mobs: Seq[Mob])

@@ -2,7 +2,6 @@ package com.tort.mudai.person
 
 import com.tort.mudai.mapper._
 import akka.actor.ActorRef
-import com.tort.mudai.event.GlanceEvent
 import scalaz._
 import Scalaz._
 import Mob._
@@ -27,34 +26,13 @@ class Searcher(val mapper: ActorRef, val persister: LocationPersister, val pathH
 
   //TODO remove param
   private def lookForMob(targets: Set[Mob], caller: ActorRef)(travel: ActorRef): Receive = {
-    case e@GlanceEvent(roomSnapshot, _) =>
-      val visibles = roomSnapshot.mobs.map(mobString => {
-        tryRecognizeByFullName(mobString).orElse(tryRecognizeByShortname(mobString))
-      }).flatten
-
-      visibles.toSet.intersect(targets) match {
+    case MobViewEvent(mobs) =>
+      mobs.toSet.intersect(targets) match {
         case visibleTargets if visibleTargets.isEmpty => person ! NoTargetsFound
-        case visibleTargets => person ! MobFound(visibleTargets, visibles)
+        case visibleTargets => person ! MobFound(visibleTargets, mobs)
       }
-
-      travel ! e
   }
 
-
-  private def tryRecognizeByFullName(mobString: String): Option[Mob] = {
-    persister.mobByFullName(fullName(mobString))
-  }
-
-  private def tryRecognizeByShortname(mobString: String): Option[Mob] = {
-    if (mobString.endsWith(" стоит здесь.") || mobString.endsWith(" сидит здесь.") || mobString.endsWith(" отдыхает здесь.")) {
-      val sn = shortName(mobString.dropRight(13))
-      persister.allMobsByShortName(sn) match {
-        case Nil => None
-        case x :: Nil => Some(x)
-        case x :: xs => None
-      }
-    } else None
-  }
 
   def visit(pfProcess: (ActorRef) => Receive, onFinish: () => Unit)(toVisit: Set[Location]) {
     toVisit.toList match {
