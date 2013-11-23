@@ -35,7 +35,7 @@ class ClientHandler(onRawRead: (String) => Unit, onCloseRemote: () => Unit) exte
   }
 
   val decoderGA = new DelimiterBasedFrameDecoder(
-    8192,
+    16384,
     ChannelBuffers.wrappedBuffer(Array(255, 249).map(_.toByte))
   )
 }

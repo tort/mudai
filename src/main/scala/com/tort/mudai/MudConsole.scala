@@ -118,7 +118,7 @@ class MudConsole {
   }
 
   private def menu(target: String): (Option[Location], Map[Int, Location]) = {
-    persister.locationByTitle(target) match {
+    persister.locationLike(target) match {
       case Nil =>
         writer("### Location not found")
         (none, Map())

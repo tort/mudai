@@ -17,6 +17,8 @@ import com.tort.mudai.mapper.Location.{Title, LocationId}
 trait LocationPersister {
   def locationByTitle(title: String): Seq[Location]
 
+  def locationLike(title: String): Seq[Location]
+
   def locationByTitleAndZone(title: String @@ Title, zone: Zone): Seq[Location]
 
   def locationByMob(fullName: String): Set[Location]
@@ -116,6 +118,10 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   implicit val getZoneResult = GetResult(z => new Zone(z.<<, Zone.name(z.<<)))
 
   def locationByTitle(title: String): Seq[Location] = DB.db withSession {
+    sql"select * from location where title = $title".as[Location].list
+  }
+
+  def locationLike(title: String): Seq[Location] = DB.db withSession {
     sql"select * from location where title like '%#$title%'".as[Location].list
   }
 
@@ -223,7 +229,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def allMobsByShortName(shortName: String @@ ShortName, zone: Zone) = DB.db withSession {
-    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner from mob m join habitation h on h.mob = m where h.zone = ${zone.id} and m.shortName = $shortName".as[Mob].firstOption
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner from mob m join habitation h on h.mob = m.id join location l on h.location = l.id where l.zone = ${zone.id} and m.shortName = $shortName".as[Mob].firstOption
   }
 
   def allMobsByShortName(shortName: String @@ ShortName) = DB.db withSession {
@@ -332,9 +338,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def killableMobsBy(zone: Zone): Set[Mob] = DB.db withSession {
-    sql"select distinct m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner from mob m join habitation h on h.mob = m.id join location l on h.location = l.id join zone z on l.zone = z.id where z.id = ${
-zone.id
-} and m.iskillable = 1".as[Mob].list.toSet
+    sql"select distinct m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner from mob m join habitation h on h.mob = m.id join location l on h.location = l.id join zone z on l.zone = z.id where z.id = ${zone.id} and m.iskillable = 1".as[Mob].list.toSet
   }
 
   def updateGenitive(mob: Mob, genitive: String @@ Genitive) = DB.db withSession {

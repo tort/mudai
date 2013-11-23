@@ -17,10 +17,13 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
         context.become(rec(lvl))
     case r@TriggeredMoveRequest("У покосившегося сруба.", direction, "Дно колодца") =>
       sender ! new SimpleCommand("прыгнуть колодец")
-      person ! MoveEvent(
-        persister.locationByTitle(r.from).headOption,
-        direction,
-        persister.locationByTitle(r.to).head)
+      context.become {
+        case RawRead(text) if text.matches("(?ms).*Вы прыгнули в колодец..*") =>
+          person ! MoveEvent(
+            persister.locationByTitle(r.from).headOption,
+            direction,
+            persister.locationByTitle(r.to).head)
+      }
     case r@TriggeredMoveRequest("У шалаша", direction, "Тихий угол") =>
       sender ! new SimpleCommand(s"дать $level кун следопыт")
       person ! MoveEvent(
