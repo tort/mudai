@@ -124,6 +124,10 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
           sender ! MoveEvent(currentLocation, direction, loc)
           sender ! MobViewEvent(mobs)
         case Some(loc) =>
+          println(s"INTERSECTION ${worstIntersection(loc, room.desc)}")
+          if (loc.title == room.title && isAlternativeDescription(loc, room.desc)){
+            locationPersister.addDescription(loc, room.desc)
+          }
           val mobs = extractMobs(room, loc.zone)
           updateHabitation(mobs, loc.some)
           updateItemAndArea(room, loc.some)
@@ -160,6 +164,24 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
     case CheckUnreachable =>
       checkUnreachable.foreach(x => println(s"${x.id}"))
   }
+
+  private def isAlternativeDescription(location: Location, visibleDesc: String): Boolean =
+    unknownDescription(location, visibleDesc) && worstIntersection(location, visibleDesc) > 0.8
+
+
+  private def unknownDescription(loc: Location, visibleDesc: String): Boolean = {
+    !locationPersister.descriptions(loc.id).contains(visibleDesc)
+  }
+
+  private def worstIntersection(location: Location, desc: String): Float = {
+    locationPersister.descriptions(location.id).map(intersection(_, desc)).min
+  }
+
+  private def intersection(left: String, right: String): Float = {
+    right.toCharArray.intersect(left.toCharArray).length.toFloat / largest(left, right).length.toFloat
+  }
+
+  private def largest(left: String, right: String): String = Seq(left, right).maxBy(_.length)
 
   def extractMobs(room: RoomSnapshot, zone: Option[Zone]): Seq[Mob] = {
     room.mobs.map(_.trim).map(mobString =>

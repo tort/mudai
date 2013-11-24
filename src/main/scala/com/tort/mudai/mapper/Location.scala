@@ -8,7 +8,6 @@ import com.tort.mudai.mapper.Location.{Title, LocationId}
 class Location(
                 val id: String @@ LocationId,
                 val title: String @@ Title,
-                val desc: String,
                 var zone: Option[Zone] = None,
                 var waterSource: Option[String] = None,
                 var isShop: Boolean = false,
@@ -36,9 +35,13 @@ object Location {
 
   trait Title
 
+  trait Desc
+
   def locationId(id: String): String @@ LocationId = Tag(id)
 
   def title(t: String): String @@ Title = Tag(t)
+
+  def desc(d: String): String @@ Desc = Tag(d)
 
   def apply(room: RoomSnapshot) = new Location(locationId("0"), title(room.title), room.desc)
 

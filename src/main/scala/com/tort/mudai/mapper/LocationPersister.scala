@@ -15,6 +15,8 @@ import com.tort.mudai.mapper.Zone.ZoneName
 import com.tort.mudai.mapper.Location.{Title, LocationId}
 
 trait LocationPersister {
+  def addDescription(location: Location, desc: String): Unit
+
   def locationByTitle(title: String): Seq[Location]
 
   def locationLike(title: String): Seq[Location]
@@ -86,6 +88,8 @@ trait LocationPersister {
   def markAsAgressive(mob: Mob)
 
   def itemByFullName(fullName: String @@ Item.FullName): Item
+
+  def descriptions(locationId: String @@ LocationId): Seq[String @@ Desc]
 }
 
 trait TransitionPersister {
@@ -342,9 +346,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def updateGenitive(mob: Mob, genitive: String @@ Genitive) = DB.db withSession {
-    sqlu"update mob set genitive = $genitive where id = ${
-mob.id
-}".first
+    sqlu"update mob set genitive = $genitive where id = ${ mob.id }".first
   }
 
   def mobByGenitive(genitive: String @@ Genitive) = DB.db withSession {
@@ -352,33 +354,27 @@ mob.id
   }
 
   def markAsAssisting(mob: Mob) = DB.db withSession {
-    sqlu"update mob set isassisting = 1 where id = ${
-mob.id
-}".first
+    sqlu"update mob set isassisting = 1 where id = ${ mob.id }".first
   }
 
   def entrance(zone: Zone): Location = DB.db withSession {
-    sql"select l.* from location l join transition t on t.locto = l.id where l.zone = ${
-zone.id
-} and t.isborder = 1".as[Location].first
+    sql"select l.* from location l join transition t on t.locto = l.id where l.zone = ${ zone.id } and t.isborder = 1".as[Location].first
   }
 
   def locationsOfSummoners(zone: Zone): Set[Location] = DB.db withSession {
-    sql"select l.* from location l join habitation h on h.location = l.id join mob m on h.mob = m.id where l.zone = ${
-zone.id
-} and m.summoner = 1".as[Location].list.toSet
+    sql"select l.* from location l join habitation h on h.location = l.id join mob m on h.mob = m.id where l.zone = ${ zone.id } and m.summoner = 1".as[Location].list.toSet
   }
 
   def markAsFleeker(mob: Mob) = DB.db withSession {
-    sqlu"update mob set canflee = 1 where id = ${
-mob.id
-}".first
+    sqlu"update mob set canflee = 1 where id = ${ mob.id }".first
   }
 
   def markAsAgressive(mob: Mob) = DB.db withSession {
-    sqlu"update mob set isagressive = 1 where id = ${
-mob.id
-}".first
+    sqlu"update mob set isagressive = 1 where id = ${ mob.id }".first
+  }
+
+  def addDescription(location: Location, desc: String) = DB.db withSession {
+    sqlu""
   }
 }
 
