@@ -162,9 +162,9 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
   }
 
   def extractMobs(room: RoomSnapshot, zone: Option[Zone]): Seq[Mob] = {
-    room.mobs.map(mobString => {
+    room.mobs.map(_.trim).map(mobString =>
       tryRecognizeByFullName(mobString).orElse(tryRecognizeByShortname(mobString, zone)).getOrElse(persistMob(fullName(mobString)))
-    })
+    )
   }
 
   private def tryRecognizeByFullName(mobString: String): Option[Mob] = {
@@ -172,10 +172,10 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
   }
 
   private val postfixes = Set(
-    " стоит здесь\\.",
-    " сидит здесь\\.",
-    " отдыхает здесь\\.",
-    " лежит здесь, без сознания\\."
+    " стоит здесь.",
+    " сидит здесь.",
+    " отдыхает здесь.",
+    " лежит здесь, без сознания."
   )
 
   private def tryRecognizeByShortname(mobString: String, zone: Option[Zone]): Option[Mob] = {
