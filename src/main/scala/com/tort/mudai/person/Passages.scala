@@ -23,6 +23,7 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
             persister.locationByTitle(r.from).headOption,
             direction,
             persister.locationByTitle(r.to).head)
+          context.unbecome()
       }
     case r@TriggeredMoveRequest("У шалаша", direction, "Тихий угол") =>
       sender ! new SimpleCommand(s"дать $level кун следопыт")
@@ -166,6 +167,7 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
             persister.loadLocation(locationId("f9bf439c-b219-4ef4-9f70-6f0f73b2bb73")).some,
             direction,
             persister.locationByTitle(r.to).head)
+        context.unbecome()
       }
     case r@TriggeredMoveRequest(from, direction, to) if direction == "trigger_under_water" =>
       context.become {

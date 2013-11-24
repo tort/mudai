@@ -17,6 +17,19 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
     "\u001B[0;37m\n" +
     "\u001B[0;32m40H\u001B[0;37m \u001B[0;32m90M\u001B[0;37m 193о Зауч:0 \u001B[0;32m[Веретень:Невредим]\u001B[0;37m \u001B[0;32m[комар:Невредим]\u001B[0;37m > ЪЫ"
 
+  val buggedDesc = "\u001B[1;36mБольшой туннель\u001B[0;37m\n" +
+    "  Господи, ну и сквозняк! Спереди дует, сзади поддувает, снизу что-то потрескивает,\n\n" +
+    "сверху капает и сыпется за шиворот... На боках уже живого места не осталось от этих \n\n" +
+    "выступов, а они тоже не из лебяжьего пуха. А если в бой? А тут и мечом не размахнешься,\n\n" +
+    "и посохом за потолок зацепишься. Безобразие...\n\n" +
+    "\n" +
+    "\u001B[0;36m[ Exits: n s ]\u001B[0;37m\n" +
+    "\u001B[1;33mТруп лягушки лежит здесь.\n" +
+    "Труп большого москита лежит здесь.\n" +
+    "\u001B[1;31m(летит) Большой москит летает тут.\n" +
+    "\u001B[0;0m\n" +
+    "\u001B[0;32m185H\u001B[0;37m \u001B[0;32m142M\u001B[0;37m 57051о Зауч:0 10L 1805G Вых:СЮ> "
+
   val onWalk = "Вы поплелись на восток.\n" +
     "\u001B[1;36mЗаводь\u001B[0;37m\n" +
     "   Низинка у реки, которая при половодье разливается на многие версты.\n" +
@@ -187,6 +200,10 @@ class GlanceTriggerTest extends FunSuite with ShouldMatchers {
 
   test("buggy desc") {
     new GlanceTrigger().matches(descWithTab) should be(true)
+  }
+
+  test("desc with only 2 leading spaces") {
+    new GlanceTrigger().fireEvent(buggedDesc).roomSnapshot.desc should startWith("Господи")
   }
 }
 
