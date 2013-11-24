@@ -103,7 +103,7 @@ trait TransitionPersister {
 }
 
 class SQLLocationPersister extends LocationPersister with TransitionPersister {
-  implicit val getLocationResult = GetResult(l => new Location(Location.locationId(l.<<), title(l.<<), l.<<, zone = loadZone(l.<<)))
+  implicit val getLocationResult = GetResult(l => new Location(Location.locationId(l.<<), title(l.<<), zone = loadZone(l.<<)))
   implicit val getMobResult = GetResult(l => new Mob(
     l.<<,
     fullName(l.<<),
@@ -146,7 +146,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   def loadLocation(room: RoomKey) = DB.db withSession {
     val title = room.title
     val desc = room.desc
-    sql"select * from location l where l.title = $title and l.desc = $desc".as[Location].list
+    sql"select * from location l join description d on d.location = l.id where l.title = $title and d.desc = $desc".as[Location].list
   }
 
   val loadLocation: (String @@ LocationId) => Location = Memo.immutableHashMapMemo {
@@ -167,9 +167,10 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   def saveLocation(room: RoomKey) = DB.db withSession {
     val title = room.title
     val desc = room.desc
-    val newId = generateId()
-    sqlu"insert into location(id, title, desc) values($newId, $title, $desc)".first
-    Location(newId, title, desc)
+    val newLocationId = generateId()
+    sqlu"insert into location(id, title) values($newLocationId, $title, $desc)".first
+    sqlu"insert into description(id, locationId, desc) values($generateId, $newLocationId, $desc)".first
+    Location(newLocationId, title, desc)
   }
 
   def loadTransition(prev: Location, direction: String @@ Direction, newLocation: Location) = DB.db withSession {
@@ -374,7 +375,11 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def addDescription(location: Location, desc: String) = DB.db withSession {
-    sqlu""
+    sqlu"insert into description(id, location, desc) values($generateId, ${location.id}, $desc)".first
+  }
+
+  def descriptions(locationId: String @@ LocationId): Seq[String @@ Desc] = DB.db withSession {
+    sql"select desc from description where location = ${locationId}".as[String].list.map(desc)
   }
 }
 

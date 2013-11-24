@@ -43,9 +43,7 @@ object Location {
 
   def desc(d: String): String @@ Desc = Tag(d)
 
-  def apply(room: RoomSnapshot) = new Location(locationId("0"), title(room.title), room.desc)
-
-  def apply(id: String, t: String, desc: String) = new Location(locationId(id), title(t), desc)
+  def apply(id: String, t: String, desc: String) = new Location(locationId(id), title(t))
 
   implicit val locationsEqual: Equal[Location] = Equal.equal(_.id === _.id)
   implicit val locationIdEqual: Equal[String @@ LocationId] = Equal.equal(_ == _)

@@ -124,8 +124,8 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
           sender ! MoveEvent(currentLocation, direction, loc)
           sender ! MobViewEvent(mobs)
         case Some(loc) =>
-          println(s"INTERSECTION ${worstIntersection(loc, room.desc)}")
           if (loc.title == room.title && isAlternativeDescription(loc, room.desc)){
+            println(s"### INTERSECTION ${worstIntersection(loc, room.desc)}")
             locationPersister.addDescription(loc, room.desc)
           }
           val mobs = extractMobs(room, loc.zone)
