@@ -3,7 +3,7 @@ package com.tort.mudai.event
 class DisarmTrigger extends EventTrigger[DisarmEvent] {
   val Pattern = ("""(?ms).* ловко выбил[ао]? (.*) из ваших рук\..*""").r
 
-  def matches(text: String) = text.matches(Pattern.toString())
+  def matches(text: String) = Pattern.findFirstIn(text).isDefined
 
   def fireEvent(text: String) = {
     val Pattern(what) = text

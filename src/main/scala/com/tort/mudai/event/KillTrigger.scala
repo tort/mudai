@@ -8,7 +8,7 @@ class KillTrigger extends EventTrigger[KillEvent] {
             """Ваш опыт повысился на ([1234567890]*) (?:очк[оа]в?)\..*Кровушка стынет в жилах от предсмертного крика ([^\n]*)\..*"""
     ).r
 
-  def matches(text: String) = text.matches(Pattern.toString())
+  def matches(text: String) = Pattern.findFirstIn(text).isDefined
 
   def fireEvent(text: String) = {
     val Pattern(target, exp, gen) = text
@@ -22,7 +22,7 @@ class KillMagicMobTrigger extends EventTrigger[KillEvent] {
             """Ваш опыт повысился на ([1234567890]*) (?:очк[оа]в?)\..*Кровушка стынет в жилах от предсмертного крика ([^\n]*)\..*"""
     ).r
 
-  def matches(text: String) = text.matches(Pattern.toString())
+  def matches(text: String) = Pattern.findFirstIn(text).isDefined
 
   def fireEvent(text: String) = {
     val Pattern(target, exp, gen) = text

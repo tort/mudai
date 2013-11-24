@@ -7,7 +7,7 @@ import com.tort.mudai.mapper.Mob._
 class TargetFleeTrigger extends EventTrigger[TargetFleeEvent] {
   val Pattern = """(?ms).*\n(.*) сбежал[ао]? (?:на )?(.*)\..*""".r
 
-  def matches(text: String) = text.matches(Pattern.toString())
+  def matches(text: String) = Pattern.findFirstIn(text).isDefined
 
   def fireEvent(text: String) = {
     val Pattern(mobShortName, direction) = text

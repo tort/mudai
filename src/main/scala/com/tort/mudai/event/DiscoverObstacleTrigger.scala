@@ -5,7 +5,7 @@ class DiscoverObstacleTrigger extends EventTrigger[DiscoverObstacleEvent] {
   val NamedObstaclePattern = ("(?ms).*Закрыто \\(([^\n]*)\\)\\..*").r
 
   override def matches(text: String) = {
-    text.matches(Pattern.toString())
+    Pattern.findFirstIn(text).isDefined
   }
 
   def fireEvent(text: String) = {

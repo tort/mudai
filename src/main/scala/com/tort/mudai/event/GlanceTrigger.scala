@@ -21,7 +21,7 @@ class GlanceTrigger extends EventTrigger[GlanceEvent] {
     "[^\n]*>.*").r
 
   override def matches(text: String) = {
-    text.matches(GlancePattern.toString())
+    GlancePattern.findFirstIn(text).isDefined
   }
 
   private def extractDirection(text: String): Option[String @@ Direction] = {
