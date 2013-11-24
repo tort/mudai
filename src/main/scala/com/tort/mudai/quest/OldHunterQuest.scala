@@ -31,7 +31,7 @@ class OldHunterQuest(val mapper: ActorRef, val persister: LocationPersister, val
 
   def quest: Receive = {
     case StartQuest =>
-      println("QUEST STARTED")
+      println("### QUEST STARTED")
       person ! RequestPulses
 
       goAndDo(quester, person, (l) => {

@@ -8,7 +8,6 @@ class BashTrigger extends EventTrigger[BashEvent]{
   def matches(text: String) = text.matches(Pattern.toString()) || text.matches(Pattern2.toString())
 
   def fireEvent(text: String) = {
-    println("BASH EVENT FIRED")
     text match {
       case Pattern(basher) => BashEvent(basher, None)
       case Pattern2(basher) => BashEvent(basher, None)

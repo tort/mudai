@@ -21,7 +21,7 @@ class SimpleQuest(val mapper: ActorRef, val persister: LocationPersister, val pa
 
   def quest: Receive = {
     case StartQuest =>
-      println("QUEST STARTED")
+      println("### QUEST STARTED")
       person ! RequestPulses
 
       val future = for {

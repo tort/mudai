@@ -36,7 +36,7 @@ class PolovtsianCampQuest(val mapper: ActorRef, val persister: LocationPersister
 
   def quest: Receive = {
     case StartQuest =>
-      println("QUEST STARTED")
+      println("### QUEST STARTED")
       person ! RequestPulses
 
       person ! RoamMobsInArea(mobs, area)

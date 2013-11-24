@@ -8,8 +8,6 @@ class DisarmAssistantTrigger extends EventTrigger[DisarmAssistantEvent] {
   def fireEvent(text: String) = {
     val Pattern(target, weapon, assistant) = text
 
-    println("FIRE DISARM ASSISTANT")
-
     DisarmAssistantEvent(target, weapon, assistant)
   }
 }

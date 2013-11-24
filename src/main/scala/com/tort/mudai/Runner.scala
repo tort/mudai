@@ -48,7 +48,6 @@ class QuestScheduler(person: ActorRef, console: MudConsole) extends Actor {
     case TimeForQuest =>
       become {
         case GlanceEvent(room, direction) =>
-          println("GLANCE")
           person ! StartQuest("бобры")
           become {
             case QuestFinished =>

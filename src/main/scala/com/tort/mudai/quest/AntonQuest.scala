@@ -31,7 +31,7 @@ class AntonQuest(val mapper: ActorRef, val persister: LocationPersister, val pat
 
   def quest: Receive = {
     case StartQuest =>
-      println("QUEST STARTED")
+      println("### QUEST STARTED")
       person ! RequestPulses
 
       goAndDo(questerLocation, person, (l) => {

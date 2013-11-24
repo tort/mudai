@@ -61,7 +61,7 @@ class MudConsole {
         person ! com.tort.mudai.person.Zap
         userInputLoop(person, Map())
       case "quit" :: Nil =>
-        println("exited")
+        println("### exited")
       case "путь" :: menuIndex :: Nil if (!menuMap.isEmpty && menuIndex.forall(_.isDigit)) =>
         menuIndex.toInt |> menuMap |> showPath(person)
         userInputLoop(person, Map())

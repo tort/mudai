@@ -27,7 +27,7 @@ class AwfulTaleQuest(val mapper: ActorRef, val persister: LocationPersister, val
 
   def quest: Receive = {
     case StartQuest =>
-      println("QUEST STARTED")
+      println("### QUEST STARTED")
       person ! RequestPulses
 
       goAndDo(questerLocation, person, (l) => {

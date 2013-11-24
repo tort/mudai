@@ -82,7 +82,7 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
 
   def quest: Receive = {
     case StartQuest =>
-      println("QUEST STARTED")
+      println("### QUEST STARTED")
       person ! RequestPulses
 
       goAndDo(zoneEntrance, person, (l) => {
@@ -217,7 +217,6 @@ class WoodpeckersQuest(val mapper: ActorRef, val persister: LocationPersister, v
 
   private def waitKillWoodpeckersKing: Receive = {
     case KillEvent(shortName, _, _, _) if shortName === woodpeckersKing.shortName.get =>
-      println("KILLED " + shortName + " EXPECTED " + woodpeckersKing.shortName.get)
       person ! new SimpleCommand("вз все все.труп")
     case RoamingFinished =>
       goAndDo(foresterLair, person, (l) => {
