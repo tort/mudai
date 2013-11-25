@@ -186,7 +186,7 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
         persister.locationByTitle(r.from).headOption,
         direction,
         persister.loadLocation(locationId("6cec72a3-3e2d-4abb-825a-0253a215e490")))
-    case r@TriggeredMoveRequest("Ладья", direction, "Побережье") =>
+    case r@TriggeredMoveRequest("Ладья", direction, "Побережье") if direction == "trigger_fairytale_island" =>
       person ! new SimpleCommand("плыть остров")
       context.become {
         case RawRead(text) if text.matches("(?ms).*Вы очутились на чудо острове!.*") =>
@@ -194,6 +194,16 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
             persister.locationByTitle(r.from).headOption,
             direction,
             persister.locationByTitle(r.to).head)
+          context.unbecome()
+      }
+    case r@TriggeredMoveRequest("Ладья", direction, "На пристани") if direction == "trigger_island_fairytale" =>
+      person ! new SimpleCommand("плыть берег")
+      context.become {
+        case RawRead(text) if text.matches("(?ms).*Впереди вы видите сказочный берег..*") =>
+          person ! MoveEvent(
+            persister.loadLocation(locationId("e5c73768-a583-4b48-8820-d92c50ac8675")).some,
+            direction,
+            persister.loadLocation(locationId("b4ff7362-8411-4139-949b-54793f0f8870")))
           context.unbecome()
       }
   }
