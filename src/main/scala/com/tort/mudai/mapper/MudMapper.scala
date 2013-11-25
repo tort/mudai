@@ -86,15 +86,18 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
     case CurrentLocation => sender ! currentLocation
     case GlanceEvent(room, None) =>
       //TODO fix case when recall to non-unique room.
-      location(room).foreach {
-        case newCurrentLocation if newCurrentLocation.some /== currentLocation =>
+      location(room) match {
+        case Some(newCurrentLocation) if newCurrentLocation.some /== currentLocation =>
           val mobs = extractMobs(room, newCurrentLocation.zone)
           updateHabitation(mobs, newCurrentLocation.some)
           updateItemAndArea(room, newCurrentLocation.some)
           become(rec(currentLocation, None, newCurrentLocation.some))
           sender ! MobViewEvent(mobs)
-        case _ =>
+        case Some(newCurrentLocation) =>
           val mobs = extractMobs(room, currentLocation.flatMap(_.zone))
+          sender ! MobViewEvent(mobs)
+        case None =>
+          val mobs = extractMobs(room, None)
           sender ! MobViewEvent(mobs)
       }
     case GlanceEvent(room, Some(direction)) =>
