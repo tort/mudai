@@ -168,7 +168,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     val title = room.title
     val desc = room.desc
     val newLocationId = generateId()
-    sqlu"insert into location(id, title) values($newLocationId, $title, $desc)".first
+    sqlu"insert into location(id, title) values($newLocationId, $title)".first
     sqlu"insert into description(id, locationId, desc) values($generateId, $newLocationId, $desc)".first
     Location(newLocationId, title, desc)
   }

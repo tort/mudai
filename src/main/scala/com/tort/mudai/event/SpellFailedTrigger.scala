@@ -30,9 +30,9 @@ class CurseSucceededTrigger extends EventTrigger[SpellSucceededEvent] {
 }
 
 class LongHoldSucceededTrigger extends EventTrigger[SpellSucceededEvent] {
-  val Pattern = """(?ms).*Вы произнесли заклинание "длительное оцепенение".
-                  |Вы занесли заклинание "длительное оцепенение" в свои резы.
-                  |([^\n]*) замерл?[аио]? на месте!.*""".r
+  val Pattern = ("""(?ms).*Вы произнесли заклинание \"длительное оцепенение\"..*""" +
+                  """Вы занесли заклинание \"длительное оцепенение\" в свои резы..*""" +
+                  """([^\n]*) замерл?[аио]? на месте!.*""").r
 
   def matches(text: String) = Pattern.findFirstIn(text).isDefined
 
@@ -45,9 +45,9 @@ class LongHoldSucceededTrigger extends EventTrigger[SpellSucceededEvent] {
 
 class NetSucceededTrigger extends EventTrigger[SpellSucceededEvent] {
   val Pattern =
-    """(?ms).*Вы произнесли заклинание "сеть".
-      |Вы занесли заклинание "сеть" в свои резы.
-      |([^\n]*) покрыла невидимая паутина, сковывая (?:его|ее) движения!.*""".r
+    ("""(?ms).*Вы произнесли заклинание "сеть"..*""" +
+      """Вы занесли заклинание "сеть" в свои резы..*""" +
+      """([^\n]*) покрыла невидимая паутина, сковывая (?:его|ее) движения!.*""").r
 
   def matches(text: String) = Pattern.findFirstIn(text).isDefined
 

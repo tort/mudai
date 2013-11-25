@@ -9,6 +9,8 @@ import com.tort.mudai.event.StatusLineEvent
 import Location._
 
 class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
+  val remorts = 2
+
   def receive = rec(0)
 
   def rec(level: Int): Receive = {
@@ -50,7 +52,7 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
         direction,
         persister.loadLocation(locationId("a2487caf-444f-4736-978f-0f1fbbd6083d")))
     case TriggeredMoveRequest("Дорога", direction, "Дорога") if direction == "trigger_swamp_south" =>
-      sender ! new SimpleCommand(s"дать ${level * 2 + 10} кун болотник")
+      sender ! new SimpleCommand(s"дать ${level * (remorts + 1) + 10} кун болотник")
       context.become {
         case RawRead(text) if text.matches("(?ms).*Но наконец путь кончился, и Вы уже за болотами..*") =>
           person ! MoveEvent(
@@ -60,7 +62,7 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
           context.unbecome()
       }
     case TriggeredMoveRequest("Дорога", direction, "Дорога") if direction == "trigger_swamp_north" =>
-      sender ! new SimpleCommand(s"дать ${level * 2} кун болотник")
+      sender ! new SimpleCommand(s"дать ${level * (remorts + 1)} кун болотник")
       person ! MoveEvent(
         persister.loadLocation(locationId("2b7f6585-69eb-4e9f-8d46-bb649b42ca36")).some,
         direction,
