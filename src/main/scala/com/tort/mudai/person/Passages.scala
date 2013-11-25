@@ -169,7 +169,7 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
             persister.loadLocation(locationId("f9bf439c-b219-4ef4-9f70-6f0f73b2bb73")).some,
             direction,
             persister.locationByTitle(r.to).head)
-        context.unbecome()
+          context.unbecome()
       }
     case r@TriggeredMoveRequest(from, direction, to) if direction == "trigger_under_water" =>
       context.become {
@@ -186,6 +186,16 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
         persister.locationByTitle(r.from).headOption,
         direction,
         persister.loadLocation(locationId("6cec72a3-3e2d-4abb-825a-0253a215e490")))
+    case r@TriggeredMoveRequest("Ладья", direction, "Побережье") =>
+      person ! new SimpleCommand("плыть остров")
+      context.become {
+        case RawRead(text) if text.matches("(?ms).*Вы очутились на чудо острове!.*") =>
+          person ! MoveEvent(
+            persister.locationByTitle(r.from).headOption,
+            direction,
+            persister.locationByTitle(r.to).head)
+          context.unbecome()
+      }
   }
 
   private def enterPentagram {
