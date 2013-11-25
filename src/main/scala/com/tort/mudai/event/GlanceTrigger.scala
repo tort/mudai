@@ -72,4 +72,5 @@ class GlanceTrigger extends EventTrigger[GlanceEvent] {
       .filterNot(StandupPattern.findFirstIn(_).isDefined)
       .filterNot(FightPattern.findFirstIn(_).isDefined)
       .filterNot(PetMovePattern.findFirstIn(_).isDefined)
+      .filterNot(_.startsWith("*"))
 }
