@@ -51,6 +51,7 @@ class TraderFighter(person: ActorRef, persister: LocationPersister, mapper: Acto
       healOnStatus(name, health)
       attacker ! e
     case TargetFleeEvent(_, _) =>
+      println("TARGET FLEE FIGHTER")
       person ! new GroupStatusCommand
     case DisarmAssistantEvent(_, _, _) =>
       person ! new SimpleCommand("взять чудс")

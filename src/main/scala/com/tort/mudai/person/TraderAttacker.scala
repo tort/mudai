@@ -70,7 +70,7 @@ class Caster(spell: String @@ SpellName, person: ActorRef) extends Actor {
   }
 
   private def successTracker: Receive = {
-    case SpellSucceededEvent(_, s) if s === spell =>
+    case SpellSucceededEvent(t, s) if s === spell =>
       context.become(rec)
   }
 }
