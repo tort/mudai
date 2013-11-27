@@ -138,7 +138,7 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
         direction,
         persister.loadLocation(locationId("2c9b5a58-c87a-4443-846c-fa3847d6d953")))
     case r@TriggeredMoveRequest("На полянке", direction, "Опушка в лесу") if direction == "trigger_cursed_village_nk_forester" =>
-      sender ! new SimpleCommand(s"дать ${level * 2} кун стар")
+      sender ! new SimpleCommand(s"дать ${(remorts + 1) * level} кун стар")
       person ! MoveEvent(
         persister.locationByTitle(r.from).headOption,
         direction,

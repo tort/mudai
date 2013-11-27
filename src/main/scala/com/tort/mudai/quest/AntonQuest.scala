@@ -78,7 +78,10 @@ class AntonQuest(val mapper: ActorRef, val persister: LocationPersister, val pat
   private def waitReward: Receive = {
     case RawRead(text) if text.matches("(?ms).*Сельский староста дал вам мешок мелких монет..*") =>
       extractCoins
-      giveIronToForger()
+
+      goAndDo(forgery, person, (l) => {
+        giveIronToForger()
+      })
   }
 
 
@@ -88,17 +91,14 @@ class AntonQuest(val mapper: ActorRef, val persister: LocationPersister, val pat
   }
 
   private def giveIronToForger(time: Int = 0) {
-    if (time > 2)
+    if (time > 2) {
       goAndDo(lynxMaidLocation, person, (l) => {
         person ! new SimpleCommand("дать чеснок девуш")
         become(waitLynxMaidReward)
       })
-    else {
-      goAndDo(forgery, person, (l) => {
-        person ! new SimpleCommand("дать желез кузн")
-        become(waitForgerResponse)
-        giveIronToForger(time + 1)
-      })
+    } else {
+      person ! new SimpleCommand("дать желез кузн")
+      become(waitForgerResponse(time))
     }
   }
 
@@ -108,7 +108,10 @@ class AntonQuest(val mapper: ActorRef, val persister: LocationPersister, val pat
       finishQuest(person)
   }
 
-  private def waitForgerResponse: Receive = {
+  private def waitForgerResponse(times: Int): Receive = {
     case RawRead(text) if text.matches("(?ms).*Сельский кузнец сказал : 'Эх не вышло.'.*") =>
+      giveIronToForger(times + 1)
+    case RawRead(text) if text.matches("(?ms).*Сельский кузнец сказал : 'Вот, держи. Тебе это пригодится!'.*") =>
+      giveIronToForger(times + 1)
   }
 }

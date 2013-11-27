@@ -50,9 +50,11 @@ class TraderFighter(person: ActorRef, persister: LocationPersister, mapper: Acto
     case e@GroupStatusEvent(name, health, _, status) =>
       healOnStatus(name, health)
       attacker ! e
+    case TargetFleeEvent(_, _) =>
+      person ! new GroupStatusCommand
     case DisarmAssistantEvent(_, _, _) =>
       person ! new SimpleCommand("взять чудс")
-      person ! new SimpleCommand("дать чудс дружи")
+      person ! new SimpleCommand("дать чудс гриден")
       person ! new SimpleCommand("прик все вооруж чудс")
     case RequestPulses => person ! RequestPulses
     case YieldPulses => person ! YieldPulses

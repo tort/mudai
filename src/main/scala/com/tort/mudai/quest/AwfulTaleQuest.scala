@@ -62,7 +62,7 @@ class AwfulTaleQuest(val mapper: ActorRef, val persister: LocationPersister, val
   }
 
   private def waitKillSorcerer: Receive = {
-    case KillEvent(shortName, _, _, _) if shortName === evilSorcerer.shortName.get =>
+    case RoamingFinished =>
       goAndDo(questerLocation, person, (l) => {
         finishQuest(person)
         become(quest)

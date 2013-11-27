@@ -200,7 +200,8 @@ class MudMapper @Inject()(pathHelper: PathHelper, locationPersister: LocationPer
     " стоит здесь.",
     " сидит здесь.",
     " отдыхает здесь.",
-    " лежит здесь, без сознания."
+    " лежит здесь, без сознания.",
+    " летает здесь."
   )
 
   private def tryRecognizeByShortname(mobString: String, zone: Option[Zone]): Option[Mob] = {
