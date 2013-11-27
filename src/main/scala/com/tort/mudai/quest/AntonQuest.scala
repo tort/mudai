@@ -1,6 +1,6 @@
 package com.tort.mudai.quest
 
-import akka.actor.ActorRef
+import akka.actor.{Cancellable, ActorRef}
 import com.tort.mudai.mapper._
 import com.tort.mudai.person._
 import akka.util.Timeout
@@ -94,7 +94,8 @@ class AntonQuest(val mapper: ActorRef, val persister: LocationPersister, val pat
     if (time > 2) {
       goAndDo(lynxMaidLocation, person, (l) => {
         person ! new SimpleCommand("дать чеснок девуш")
-        become(waitLynxMaidReward)
+        val future = system.scheduler.scheduleOnce(5 seconds, self, TimeOut)
+        become(waitLynxMaidReward(future))
       })
     } else {
       person ! new SimpleCommand("дать желез кузн")
@@ -102,9 +103,12 @@ class AntonQuest(val mapper: ActorRef, val persister: LocationPersister, val pat
     }
   }
 
-  private def waitLynxMaidReward: Receive = {
+  private def waitLynxMaidReward(future: Cancellable): Receive = {
     case RawRead(text) if text.matches("(?ms).*Странная девушка сказала : 'А теперь прощайте! Мне надо идти..'.*") =>
+      future.cancel()
       extractCoins
+      finishQuest(person)
+    case TimeOut =>
       finishQuest(person)
   }
 
