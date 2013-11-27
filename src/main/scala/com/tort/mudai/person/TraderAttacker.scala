@@ -63,6 +63,8 @@ class Caster(spell: String @@ SpellName, person: ActorRef) extends Actor {
   def failureTracker(target: Mob): Receive = {
     case SpellFailedEvent(spell) =>
       castLongHold(target)
+    case KillEvent(_, _, _, _) =>
+      context.become(rec)
   }
 
   private def castLongHold(target: Mob) {
