@@ -48,7 +48,8 @@ class TravelTo(pathHelper: PathHelper, mapper: ActorRef, locationPersister: Loca
 
   def pfWaitMove(path: Option[Seq[String @@ Direction]], current: Location, target: Location): Receive = {
     case DiscoverObstacleEvent(obstacle) =>
-      person ! new SimpleCommand("открыть %s %s".format(obstacle, path.head.head))
+      val obstacleWords = obstacle.split(" ")
+      obstacleWords.foreach(w => person ! new SimpleCommand("открыть %s %s".format(w, path.head.head)))
       person ! RequestWalkCommand(path.head.head) //TODO fix
   }
 
