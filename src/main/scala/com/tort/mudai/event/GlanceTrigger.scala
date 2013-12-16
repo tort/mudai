@@ -48,7 +48,7 @@ class GlanceTrigger extends EventTrigger[GlanceEvent] {
       case MultiplePattern(obj, number) => ItemAndNumber(Item.fullName(obj), number.toInt)
       case s => ItemAndNumber(Item.fullName(s), 1)
     })
-    val mobs = filterMobGroup(mobsGroup).getOrElse(Nil).dropRight(1)
+    val mobs = filterMobGroup(mobsGroup).getOrElse(Nil)
 
     val roomSnapshot = new RoomSnapshot(
       locationTitle,

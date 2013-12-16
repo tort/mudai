@@ -206,6 +206,26 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
             persister.loadLocation(locationId("b4ff7362-8411-4139-949b-54793f0f8870")))
           context.unbecome()
       }
+    case r@TriggeredMoveRequest("Тупик", direction, "В конце рва") if direction == "trigger_fortress_logjam_north" =>
+      person ! new SimpleCommand("перелезть завал")
+      context.become {
+        case RawRead(text) if text.matches("(?ms).*Вы благополучно его преодолели..*") =>
+          person ! MoveEvent(
+            persister.loadLocation(locationId("45343fff-36bb-40a3-80cb-6d6b2da2e8df")).some,
+            direction,
+            persister.loadLocation(locationId("93d0c61a-e915-49ad-9176-27dc8c5e8159")))
+          context.unbecome()
+      }
+    case r@TriggeredMoveRequest("В конце рва", direction, "Тупик") if direction == "trigger_fortress_logjam_south" =>
+      person ! new SimpleCommand("перелезть завал")
+      context.become {
+        case RawRead(text) if text.matches("(?ms).*Вы благополучно его преодолели..*") =>
+          person ! MoveEvent(
+            persister.loadLocation(locationId("93d0c61a-e915-49ad-9176-27dc8c5e8159")).some,
+            direction,
+            persister.loadLocation(locationId("45343fff-36bb-40a3-80cb-6d6b2da2e8df")))
+          context.unbecome()
+      }
   }
 
   private def enterPentagram {
