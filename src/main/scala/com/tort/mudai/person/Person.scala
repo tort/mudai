@@ -13,7 +13,6 @@ import com.tort.mudai.quest._
 import scala.Some
 import com.tort.mudai.mapper.NameZone
 import akka.actor.Terminated
-import com.tort.mudai.event.StatusLineEvent
 import com.tort.mudai.mapper.MoveEvent
 import com.tort.mudai.mapper.Mob.Alias
 
@@ -103,19 +102,6 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
     case e => tasks.filter(_ != sender).foreach(_ ! e)
   }
 }
-
-class StatusTranslator extends Actor {
-  def receive = rec
-
-  val maxStamina = 135.0
-
-  def rec: Receive = {
-    case StatusLineEvent(health, stamina, exp, mem, level, gold) =>
-      sender ! StaminaChange(stamina * 100 / maxStamina)
-  }
-}
-
-case class StaminaChange(stamina: Double)
 
 case object Feed
 
