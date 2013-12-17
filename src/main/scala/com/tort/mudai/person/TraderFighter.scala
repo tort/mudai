@@ -18,7 +18,7 @@ class TraderFighter(person: ActorRef, persister: LocationPersister, mapper: Acto
   import context._
 
   val antiBasher = actorOf(Props(classOf[AntiBasher]))
-  val fleeker = actorOf(Props(classOf[Fleeker], mapper, persister))
+  val fleeker = actorOf(Props(classOf[ThreshholdedFleeker], mapper, persister))
   val attacker = actorOf(Props(classOf[TraderAttacker], person))
 
   def receive = rec(false)

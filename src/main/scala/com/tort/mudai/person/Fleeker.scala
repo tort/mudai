@@ -10,6 +10,7 @@ import com.tort.mudai.event.{PeaceStatusEvent, FleeEvent, FightRoundEvent}
 import com.tort.mudai.command.{RenderableCommand, SimpleCommand}
 import com.tort.mudai.quest.TimeOut
 import com.tort.mudai.mapper.Mob.ShortName
+import com.tort.mudai.person.ThreshholdedFleeker.PeriodExpired
 
 class Fleeker(mapper: ActorRef, persister: LocationPersister) extends Actor {
 
@@ -62,4 +63,23 @@ case object Assist
 
 case class FleeCommand(direction: String @@ Direction) extends RenderableCommand {
   def render = s"беж ${direction}"
+}
+
+class ThreshholdedFleeker(mapper: ActorRef, persister: LocationPersister) extends Actor {
+  private val fleeker = context.actorOf(Props(classOf[Fleeker], mapper, persister))
+
+  def receive = rec
+
+  private def rec: Receive = {
+    case e@FightRoundEvent(_, _, _) =>
+      context.become {
+        case PeriodExpired =>
+          context.unbecome()
+      }
+      fleeker forward e
+  }
+}
+
+object ThreshholdedFleeker {
+  case object PeriodExpired
 }
