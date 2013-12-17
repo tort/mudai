@@ -40,6 +40,7 @@ class Fleeker(mapper: ActorRef, persister: LocationPersister) extends Actor {
 
   def waitFlee(direction: String @@ Direction, target: String @@ ShortName): Receive = {
     case FleeEvent() =>
+
       become(waitMoveEvent(target))
       sender ! new SimpleCommand(s"$direction")
     case PeaceStatusEvent() =>
