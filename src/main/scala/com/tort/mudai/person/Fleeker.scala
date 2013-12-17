@@ -11,6 +11,8 @@ import com.tort.mudai.command.{RenderableCommand, SimpleCommand}
 import com.tort.mudai.quest.TimeOut
 import com.tort.mudai.mapper.Mob.ShortName
 import com.tort.mudai.person.ThreshholdedFleeker.PeriodExpired
+import com.tort.mudai.person.StatusTranslator.HealthChange
+import StatusTranslator.MaxHealth
 
 class Fleeker(mapper: ActorRef, persister: LocationPersister) extends Actor {
 
@@ -30,7 +32,7 @@ class Fleeker(mapper: ActorRef, persister: LocationPersister) extends Actor {
         dirOpt <- (mapper ? LastDirection).mapTo[Option[String @@ Direction]]
       } yield {
         flee(dirOpt.get, s)
-        become(waitFlee(dirOpt.get, target))
+        become(waitFlee(dirOpt.get, target, MaxHealth))
       }
   }
 
@@ -38,15 +40,29 @@ class Fleeker(mapper: ActorRef, persister: LocationPersister) extends Actor {
     s ! FleeCommand(oppositeDirection(direction))
   }
 
-  def waitFlee(direction: String @@ Direction, target: String @@ ShortName): Receive = {
+  def waitFlee(direction: String @@ Direction, target: String @@ ShortName, health: Int): Receive = {
     case FleeEvent() =>
-
-      become(waitMoveEvent(target))
-      sender ! new SimpleCommand(s"$direction")
+      if (health < 90) {
+        sender ! new SimpleCommand("кол !к и!")
+      } else {
+        moveBack(target, direction)
+      }
     case PeaceStatusEvent() =>
       system.scheduler.scheduleOnce(2 seconds, self, TimeOut)
     case TimeOut =>
       become(rec)
+    case HealthChange(health) =>
+      if (health < 90) {
+        become(waitFlee(direction, target, health))
+      } else {
+        moveBack(target, direction)
+      }
+  }
+
+
+  private def moveBack(target: String @@ ShortName, direction: String @@ Direction) {
+    become(waitMoveEvent(target))
+    sender ! new SimpleCommand(s"$direction")
   }
 
   private def waitMoveEvent(target: String @@ ShortName): Receive = {
@@ -67,6 +83,7 @@ case class FleeCommand(direction: String @@ Direction) extends RenderableCommand
 }
 
 class ThreshholdedFleeker(mapper: ActorRef, persister: LocationPersister) extends Actor {
+
   import context._
 
   private val fleeker = actorOf(Props(classOf[Fleeker], mapper, persister))
@@ -85,5 +102,7 @@ class ThreshholdedFleeker(mapper: ActorRef, persister: LocationPersister) extend
 }
 
 object ThreshholdedFleeker {
+
   case object PeriodExpired
+
 }
