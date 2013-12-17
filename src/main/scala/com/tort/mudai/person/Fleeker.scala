@@ -42,23 +42,27 @@ class Fleeker(mapper: ActorRef, persister: LocationPersister) extends Actor {
 
   def waitFlee(direction: String @@ Direction, target: String @@ ShortName, health: Int): Receive = {
     case FleeEvent() =>
-      if (health < 90) {
-        sender ! new SimpleCommand("кол !к и!")
-      } else {
+      if (healthyEnough(health)) {
         moveBack(target, direction)
+      } else {
+        sender ! new SimpleCommand("кол !к и!")
       }
     case PeaceStatusEvent() =>
       system.scheduler.scheduleOnce(2 seconds, self, TimeOut)
     case TimeOut =>
       become(rec)
     case HealthChange(health) =>
-      if (health < 90) {
-        become(waitFlee(direction, target, health))
-      } else {
+      if (healthyEnough(health)) {
         moveBack(target, direction)
+      } else {
+        become(waitFlee(direction, target, health))
       }
   }
 
+
+  def healthyEnough(health: Int): Boolean = {
+    health > 90
+  }
 
   private def moveBack(target: String @@ ShortName, direction: String @@ Direction) {
     become(waitMoveEvent(target))
