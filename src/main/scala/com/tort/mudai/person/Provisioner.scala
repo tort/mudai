@@ -94,7 +94,8 @@ class Feeder extends Actor {
       sender ! RequestPulses
       become {
         case Pulse =>
-          sender ! new SimpleCommand("кол !насыщ!")
+//          sender ! new SimpleCommand("кол !насыщ!")
+          sender ! new SimpleCommand("пить син")
           unbecome()
           sender ! YieldPulses
       }
