@@ -4,6 +4,7 @@ import akka.actor.{Cancellable, Props, ActorRef, Actor}
 import com.tort.mudai.command.SimpleCommand
 import com.tort.mudai.event.LightDimmedEvent
 import scala.concurrent.duration._
+import com.tort.mudai.person.StatusTranslator.StaminaChange
 
 class Provisioner extends Actor {
 
