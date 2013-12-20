@@ -54,7 +54,7 @@ class QuestScheduler(val person: ActorRef, val console: MudConsole, val mapper: 
 
   private def waitGlance: Receive = {
     case GlanceEvent(_, None) =>
-      roam(Seq("Деревенский колодец", "Пустырь", "Птичий лес", "Болото"))
+      roam(Seq("Малиновый сад", "Болото", "Птичий лес", "Деревенский колодец", "Пустырь"))
   }
 
   def roam(zones: Seq[String]) = {
