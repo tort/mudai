@@ -90,7 +90,7 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
 
   private def waitTarget(searcher: ActorRef, specificWaitTarget: (ActorRef, Boolean) => Receive, isFinished: Boolean): Receive = {
     case NoTargetsFound =>
-      if(isFinished)
+      if (isFinished)
         finishRoaming()
     case MobFound(targets, visibles) =>
       if (!moreThanTwoSameAssistsPresent(visibles)) {
@@ -106,6 +106,13 @@ class Roamer(val mapper: ActorRef, val pathHelper: PathHelper, val persister: Lo
                 targets.headOption.foreach(attack(_, searcher, specificWaitTarget))
             }
         }
+      }
+    case InterruptRoaming =>
+      watch(searcher)
+      searcher ! PoisonPill
+      become {
+        case Terminated(ref) if ref == searcher =>
+          finishRoaming()
       }
     case e => searcher ! e
   }

@@ -60,9 +60,7 @@ class Fleeker(mapper: ActorRef, persister: LocationPersister) extends Actor {
   }
 
 
-  def healthyEnough(health: Int): Boolean = {
-    health > 90
-  }
+  def healthyEnough(health: Int): Boolean = health > 90
 
   private def moveBack(target: String @@ ShortName, direction: String @@ Direction) {
     become(waitMoveEvent(target))
