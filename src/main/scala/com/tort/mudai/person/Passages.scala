@@ -9,7 +9,7 @@ import com.tort.mudai.event.StatusLineEvent
 import Location._
 
 class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
-  val remorts = 3
+  val remorts = 4
 
   def receive = rec(0)
 
@@ -144,7 +144,7 @@ class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
         direction,
         persister.locationByTitle(r.to).head)
     case r@TriggeredMoveRequest("Опушка в лесу", direction, "На полянке") if direction == "trigger_nk_forester_cursed_village" =>
-      sender ! new SimpleCommand(s"дать ${level} кун стар")
+      sender ! new SimpleCommand(s"дать ${(remorts + 1) * level} кун стар")
       person ! MoveEvent(
         persister.locationByTitle(r.from).headOption,
         direction,
