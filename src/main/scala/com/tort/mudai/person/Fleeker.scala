@@ -84,22 +84,33 @@ case class FleeCommand(direction: String @@ Direction) extends RenderableCommand
   def render = s"беж ${direction}"
 }
 
-class ThreshholdedFleeker(mapper: ActorRef, persister: LocationPersister) extends Actor {
+class ThreshholdedFleeker(mapper: ActorRef, persister: LocationPersister, parent: ActorRef) extends Actor {
 
   import context._
 
   private val fleeker = actorOf(Props(classOf[Fleeker], mapper, persister))
 
-  def receive = rec
+  def receive = pass
 
-  private def rec: Receive = {
+  private def pass: Receive = passFightRoundEvent orElse common
+  
+  private def passFightRoundEvent: Receive = {
     case e@FightRoundEvent(_, _, _) =>
-      become {
-        case PeriodExpired =>
-          unbecome()
-      }
       system.scheduler.scheduleOnce(1 second, self, PeriodExpired)
       fleeker forward e
+      become(block)
+  }
+
+  private def block: Receive = blockFightRoundEvent orElse common
+
+  private def blockFightRoundEvent: Receive = {
+    case e@FightRoundEvent(_, _, _) =>
+    case PeriodExpired =>
+      become(pass)
+  }
+
+  private def common: Receive = {
+    case e => fleeker forward e
   }
 }
 

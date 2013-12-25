@@ -10,7 +10,6 @@ class TargetFleeTrigger extends EventTrigger[TargetFleeEvent] {
   def matches(text: String) = Pattern.findFirstIn(text).isDefined
 
   def fireEvent(text: String) = {
-    println("FIRE TARGET FLEE")
     val Pattern(mobShortName, direction) = text
 
     TargetFleeEvent(shortName(mobShortName), Direction(direction))

@@ -18,7 +18,7 @@ class TraderFighter(person: ActorRef, persister: LocationPersister, mapper: Acto
   import context._
 
   val antiBasher = actorOf(Props(classOf[AntiBasher]))
-  val fleeker = actorOf(Props(classOf[ThreshholdedFleeker], mapper, persister))
+  val fleeker = actorOf(Props(classOf[ThreshholdedFleeker], mapper, persister, self))
   val attacker = actorOf(Props(classOf[TraderAttacker], person))
 
   def receive = rec(false)
@@ -51,7 +51,6 @@ class TraderFighter(person: ActorRef, persister: LocationPersister, mapper: Acto
       healOnStatus(name, health)
       attacker ! e
     case TargetFleeEvent(_, _) =>
-      println("TARGET FLEE FIGHTER")
       person ! new GroupStatusCommand
     case DisarmAssistantEvent(_, _, _) =>
       person ! new SimpleCommand("взять ржав")
@@ -59,9 +58,7 @@ class TraderFighter(person: ActorRef, persister: LocationPersister, mapper: Acto
       person ! new SimpleCommand("прик все вооруж ржав")
     case RequestPulses => person ! RequestPulses
     case YieldPulses => person ! YieldPulses
-    case c: RenderableCommand if sender == antiBasher => person ! c
-    case c: RenderableCommand if sender == fleeker => person ! c
-    case c: RenderableCommand if sender == attacker => person ! c
+    case c: RenderableCommand => person ! c
     case e =>
       antiBasher ! e
       fleeker ! e
