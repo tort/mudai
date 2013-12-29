@@ -53,9 +53,9 @@ class TraderFighter(person: ActorRef, persister: LocationPersister, mapper: Acto
     case TargetFleeEvent(_, _) =>
       person ! new GroupStatusCommand
     case DisarmAssistantEvent(_, _, _) =>
-      person ! new SimpleCommand("взять ржав")
-      person ! new SimpleCommand("дать ржав друж")
-      person ! new SimpleCommand("прик все вооруж ржав")
+      person ! new SimpleCommand("взять прусс")
+      person ! new SimpleCommand("дать прусс гриден")
+      person ! new SimpleCommand("прик все вооруж прусс")
     case RequestPulses => person ! RequestPulses
     case YieldPulses => person ! YieldPulses
     case c: RenderableCommand => person ! c

@@ -1,14 +1,10 @@
 package com.tort.mudai
 
-import akka.actor.{Actor, ActorRef, Props, ActorSystem}
+import akka.actor.{ActorRef, Props, ActorSystem}
 import com.tort.mudai.person._
 import com.tort.mudai.mapper._
-import com.tort.mudai.event.GlanceEvent
-import com.tort.mudai.person.StartQuest
-import com.tort.mudai.person.Snoop
 import com.tort.mudai.command.SimpleCommand
 import com.tort.mudai.event.GlanceEvent
-import com.tort.mudai.person.StartQuest
 import com.tort.mudai.person.Snoop
 import com.tort.mudai.task.TravelToTerminated
 
