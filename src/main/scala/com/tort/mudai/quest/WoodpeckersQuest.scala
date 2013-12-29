@@ -1,6 +1,6 @@
 package com.tort.mudai.quest
 
-import akka.actor.{Cancellable, ActorRef}
+import akka.actor.{Actor, Cancellable, ActorRef}
 import com.tort.mudai.mapper._
 import com.tort.mudai.person._
 import akka.util.Timeout

@@ -33,6 +33,8 @@ class GlanceTrigger extends EventTrigger[GlanceEvent] {
 
   private val MultiplePattern = """(.*) \[(\d+)\]""".r
 
+  private val YellowAura = " ..желтая аура!"
+
   override def fireEvent(text: String) = {
     val direction = extractDirection(text)
     val GlancePattern(locationTitle, locationDesc, availableExits, objectsGroup, mobsGroup) = text
@@ -44,10 +46,17 @@ class GlanceTrigger extends EventTrigger[GlanceEvent] {
       case alias =>
         Exit(aliasToDirection(alias.toString), isBorder = alias.head.isUpper)
     }.toSet
-    val objects = Option(objectsGroup).map(x => x.filterNot(c => c == '\r')).map(_.split('\n')).getOrElse(Array[String]()).map(x => x match {
-      case MultiplePattern(obj, number) => ItemAndNumber(Item.fullName(obj), number.toInt)
-      case s => ItemAndNumber(Item.fullName(s), 1)
-    })
+    val objects =
+      Option(objectsGroup)
+        .map(x => x.filterNot(c => c == '\r'))
+        .map(_.split('\n'))
+        .getOrElse(Array[String]())
+        .collect {
+        case item if (item.endsWith(YellowAura)) => item.dropRight(YellowAura.length)
+      }.map(x => x match {
+        case MultiplePattern(obj, number) => ItemAndNumber(Item.fullName(obj), number.toInt)
+        case s => ItemAndNumber(Item.fullName(s), 1)
+      })
     val mobs = filterMobGroup(mobsGroup).getOrElse(Nil)
 
     val roomSnapshot = new RoomSnapshot(
@@ -62,15 +71,16 @@ class GlanceTrigger extends EventTrigger[GlanceEvent] {
   }
 
   private def filterMobGroup(mobsGroup: String): Option[Seq[String]] = {
-    Option(mobsGroup.filterNot(c => c == '\r')).map(_.split("""\u001B\[0;31m""")(0).split("\n").toSeq |> filterFakes)
+    Option(mobsGroup.filterNot(c => c == '\r')).map(_.split( """\u001B\[0;31m""")(0).split("\n").toSeq |> filterFakes)
   }
 
   val StandupPattern = "(.*) вскочил[аои]? на ноги.".r
   val FightPattern = "(.*) (?:сокрушил|резанул|ударил|подстрелил|ободрал|оцарапал|рубанул|укусил)[аои]? вас.".r
   val PetMovePattern = "(.*) приш(?:ел|ла|ло|ли) (?:c )?(?:востока|запада|севера|юга|сверху|снизу).".r
+
   private def filterFakes(mobStrings: Seq[String]): Seq[String] = mobStrings
-      .filterNot(StandupPattern.findFirstIn(_).isDefined)
-      .filterNot(FightPattern.findFirstIn(_).isDefined)
-      .filterNot(PetMovePattern.findFirstIn(_).isDefined)
-      .filterNot(_.startsWith("*"))
+    .filterNot(StandupPattern.findFirstIn(_).isDefined)
+    .filterNot(FightPattern.findFirstIn(_).isDefined)
+    .filterNot(PetMovePattern.findFirstIn(_).isDefined)
+    .filterNot(_.startsWith("*"))
 }

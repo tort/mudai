@@ -37,6 +37,7 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
   val awfulTaleQuest = actorOf(Props(classOf[AwfulTaleQuest], mapper, persister, pathHelper, self))
   val polovtsianCampQuest = actorOf(Props(classOf[PolovtsianCampQuest], mapper, persister, pathHelper, self))
   val antonQuest = actorOf(Props(classOf[AntonQuest], mapper, persister, pathHelper, self))
+  val prospection = actorOf(Props(classOf[Prospection], mapper, persister, pathHelper, self))
   val alchemy = actorOf(Props(classOf[Alchemy], self, persister))
   val quests = Map[String, ActorRef](
     "белый паук" -> whiteSpiderQuest,
