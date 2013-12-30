@@ -34,6 +34,7 @@ class GlanceTrigger extends EventTrigger[GlanceEvent] {
   private val MultiplePattern = """(.*) \[(\d+)\]""".r
 
   private val YellowAura = " ..желтая аура!"
+  private val AirAura = " \n ..воздушная аура!"
 
   override def fireEvent(text: String) = {
     val direction = extractDirection(text)

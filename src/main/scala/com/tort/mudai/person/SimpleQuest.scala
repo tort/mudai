@@ -38,7 +38,7 @@ class SimpleQuest(val mapper: ActorRef, val persister: LocationPersister, val pa
   }
 
   private def hirePart(location: Location) {
-    val searcher = context.actorOf(Props(classOf[Searcher], mapper, persister, pathHelper, person))
+    val searcher = context.actorOf(Props(classOf[MobSearcher], mapper, persister, pathHelper, person))
     val mob: Mob = persister.mobByFullName(fullName("Батрак работает здесь.")).get
     searcher ! FindMobs(Set(mob), persister.locationByMob(mob.fullName)) //TODO refactor
     become(waitMobFound(searcher, location))
@@ -66,7 +66,7 @@ class SimpleQuest(val mapper: ActorRef, val persister: LocationPersister, val pa
       "Волк готовится к нападению здесь."
     ).map(fullName)
 
-    val searcher = context.actorOf(Props(classOf[Searcher], mapper, persister, pathHelper, person))
+    val searcher = context.actorOf(Props(classOf[MobSearcher], mapper, persister, pathHelper, person))
     val area: Set[Location] = persister.loadLocations(persister.loadZoneByName(Zone.name("Лесная дорога")).get)
     searcher ! FindMobs(mobs.map(n => persister.mobByFullName(n).get), area)
 

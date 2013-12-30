@@ -9,7 +9,7 @@ import com.tort.mudai.event.StatusLineEvent
 import Location._
 
 class Passages(persister: LocationPersister, person: ActorRef) extends Actor {
-  val remorts = 4
+  val remorts = 5
 
   def receive = rec(0)
 

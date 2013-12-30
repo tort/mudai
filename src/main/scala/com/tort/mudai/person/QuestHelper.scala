@@ -24,7 +24,7 @@ trait QuestHelper extends Actor {
   }
 
   def search(mobs: Set[Mob], area: Set[Location])(onEvent: (ActorRef, Boolean) => Receive) = {
-    val searcher = context.actorOf(Props(classOf[Searcher], mapper, persister, pathHelper, person))
+    val searcher = context.actorOf(Props(classOf[MobSearcher], mapper, persister, pathHelper, person))
     searcher ! FindMobs(mobs, area)
     context.become(onEvent(searcher, false).orElse(passEvents(searcher)))
   }
