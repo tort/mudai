@@ -54,6 +54,7 @@ class GlanceTrigger extends EventTrigger[GlanceEvent] {
         .getOrElse(Array[String]())
         .collect {
         case item if (item.endsWith(YellowAura)) => item.dropRight(YellowAura.length)
+        case x => x
       }.map(x => x match {
         case MultiplePattern(obj, number) => ItemAndNumber(Item.fullName(obj), number.toInt)
         case s => ItemAndNumber(Item.fullName(s), 1)
