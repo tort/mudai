@@ -50,7 +50,8 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
     "дятлы" -> woodpeckersQuest,
     "страшная сказка" -> awfulTaleQuest,
     "половцы" -> polovtsianCampQuest,
-    "антон" -> antonQuest)
+    "антон" -> antonQuest,
+    "копка" -> prospection)
   val passages = actorOf(Props(classOf[Passages], persister, self))
   val coreTasks = Seq(mapper, fighter, statusTranslator, provisioner, roamer, passages, alchemy) ++ quests.values
 

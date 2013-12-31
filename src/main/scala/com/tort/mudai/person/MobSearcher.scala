@@ -12,11 +12,11 @@ class MobSearcher(val mapper: ActorRef, val persister: LocationPersister, val pa
       findMobs(mobs, area, sender, () => onAllVisited(sender))
   }
 
-  private def onAllVisited(caller: ActorRef) {
+  protected override def onAllVisited(caller: ActorRef) {
     caller ! SearchFinished
   }
 
-  private def findMobs(mobs: Set[Mob], area: Set[Location], caller: ActorRef, onAllVisited: () => Unit) {
+  protected def findMobs(mobs: Set[Mob], area: Set[Location], caller: ActorRef, onAllVisited: () => Unit) {
     area |> visitAll(onAllVisited, lookForMob(mobs, caller))
   }
 

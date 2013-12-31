@@ -41,7 +41,8 @@ class MudConsole {
     "дятлы",
     "страшная сказка",
     "половцы",
-    "антон")
+    "антон",
+    "копка")
 
   @tailrec
   final def userInputLoop(person: ActorRef, menuMap: Map[Int, Location]) {
