@@ -66,11 +66,11 @@ class StaminaControl extends Actor {
 
   def receive = {
     case StaminaChange(stamina) =>
-      if (stamina < 30) {
+      if (stamina < 10) {
         sender ! RequestPulses
         become {
           case Pulse =>
-            sender ! new SimpleCommand("отд")
+            sender ! new SimpleCommand("кол !груп восст!")
             become {
               case StaminaChange(stamina) =>
                 if (stamina > 70) {
@@ -94,7 +94,7 @@ class Feeder extends Actor {
       sender ! RequestPulses
       become {
         case Pulse =>
-          sender ! new SimpleCommand("пить син")
+          sender ! new SimpleCommand("кол !насыщ!")
           unbecome()
           sender ! YieldPulses
       }
