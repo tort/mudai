@@ -91,6 +91,7 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
       findAnotherDiggable(path, times)
     case RawRead(text) if text.matches("(?ms).*Вы выкопали (?:.*)!.*") =>
       val MobFoundPattern(mob) = text
+      person ! new SimpleCommand("смотр")
       person ! new SimpleCommand("прик все убить " + mob.dropRight(2))
   }
 }
