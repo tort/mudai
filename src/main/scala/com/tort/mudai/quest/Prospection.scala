@@ -54,7 +54,7 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
   private def dig(path: List[String @@ Direction], times: Int) = {
       if (times > 70) {
         person ! new SimpleCommand("кол !почин! кирка")
-        become(waitDig(path, times))
+        become(waitDig(path, 0))
         system.scheduler.scheduleOnce(2500 millisecond, self, Dig)
       } else {
         become(waitDig(path, times + 1))
