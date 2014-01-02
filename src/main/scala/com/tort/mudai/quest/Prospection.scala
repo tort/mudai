@@ -11,6 +11,7 @@ import com.tort.mudai.person.StartQuest
 import com.tort.mudai.command.RequestWalkCommand
 import com.tort.mudai.mapper.MoveEvent
 import scala.concurrent.duration._
+import Mob._
 
 class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pathHelper: PathHelper, val person: ActorRef) extends QuestHelper {
 
@@ -90,9 +91,14 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
     case RawRead(text) if text.matches("(?ms).*Тут и так все перекопано..*") =>
       findAnotherDiggable(path, times)
     case RawRead(text) if text.matches("(?ms).*Вы выкопали (?:.*)!.*") =>
-      val MobFoundPattern(mob) = text
+      val MobFoundPattern(mobGenitif) = text
       person ! new SimpleCommand("смотр")
-      person ! new SimpleCommand("прик все убить " + mob.dropRight(2))
+      persister.mobByGenitive(genitive(mobGenitif)) match {
+        case None =>
+          mobGenitif.split(" ").foreach(x => person ! new SimpleCommand("прик все убить " + x.dropRight(2)) )
+        case Some(mob) =>
+          person ! KillMobRequest(mob)
+      }
   }
 }
 
