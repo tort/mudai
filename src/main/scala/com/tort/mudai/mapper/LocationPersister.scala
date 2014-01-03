@@ -59,6 +59,8 @@ trait LocationPersister {
 
   def mobByGenitive(genitive: String @@ Genitive): Option[Mob]
 
+  def mobByAccusative(genitive: String @@ Accusative): Option[Mob]
+
   def killableMobsBy(zone: Zone): Set[Mob]
 
   def updateLocation(zone: String)(location: String @@ LocationId)
@@ -105,19 +107,19 @@ trait TransitionPersister {
 class SQLLocationPersister extends LocationPersister with TransitionPersister {
   implicit val getLocationResult = GetResult(l => new Location(Location.locationId(l.<<), title(l.<<), zone = loadZone(l.<<)))
   implicit val getMobResult = GetResult(l => new Mob(
-    l.<<,
-    fullName(l.<<),
-    Option(Mob.shortName(l.<<)),
-    Option(alias(l.<<)),
-    l.<<,
-    Option(l.<<),
+    id = l.<<,
+    fullName = fullName(l.<<),
+    shortName = Option(Mob.shortName(l.<<)),
+    alias = Option(alias(l.<<)),
+    killable = l.<<,
+    genitive = Option(Mob.genitive(l.<<)),
     isAssisting = l.<<,
     canFlee = l.<<,
     isAgressive = l.<<,
     priority = l.<<,
     isFragging = l.<<,
     summoner = l.<<,
-    accusative = l.<<
+    accusative = Option(Mob.accusative(l.<<))
   ))
   implicit val getItemResult = GetResult(l => new Item(l.<<, l.<<, Option(l.<<), Option(l.<<), Option(l.<<)))
   implicit val getZoneResult = GetResult(z => new Zone(z.<<, Zone.name(z.<<)))
@@ -352,11 +354,11 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def mobByGenitive(genitive: String @@ Genitive) = DB.db withSession {
-    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative from mob m where m.genitive = $genitive".as[Mob].firstOption
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative from mob m where m.genitive = $genitive".as[Mob].firstOption
   }
   
   def mobByAccusative(accusative: String @@ Accusative) = DB.db withSession {
-    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative from mob m where m.accusative = $accusative".as[Mob].firstOption
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative from mob m where m.accusative = $accusative".as[Mob].firstOption
   }
 
   def markAsAssisting(mob: Mob) = DB.db withSession {

@@ -93,7 +93,7 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
     case RawRead(text) if text.matches("(?ms).*Вы выкопали (?:.*)!.*") =>
       val MobFoundPattern(mobAccusatif) = text
       person ! new SimpleCommand("смотр")
-      persister.mobByGenitive(genitive(mobAccusatif)) match {
+      persister.mobByAccusative(accusative(mobAccusatif)) match {
         case None =>
           mobAccusatif.split(" ").foreach(x => person ! new SimpleCommand("прик все убить " + x.dropRight(2)) )
         case Some(mob) =>
