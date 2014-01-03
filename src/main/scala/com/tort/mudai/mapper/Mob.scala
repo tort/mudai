@@ -2,20 +2,21 @@ package com.tort.mudai.mapper
 
 import scalaz._
 import Scalaz._
-import com.tort.mudai.mapper.Mob.{FullName, Alias, ShortName}
+import com.tort.mudai.mapper.Mob._
 
 class Mob(val id: String,
                val fullName: String @@ FullName,
                val shortName: Option[String @@ ShortName],
                val alias: Option[String @@ Alias],
                val killable: Boolean,
-               val genitive: Option[String],
+               val genitive: Option[String @@ Genitive],
                val isAssisting: Boolean,
                val canFlee: Boolean,
                val isAgressive: Boolean,
                val priority: Int,
                val isFragging: Boolean,
-               val summoner: Boolean) {
+               val summoner: Boolean,
+               val accusative: Option[String @@ Accusative]) {
 
   override def equals(obj: scala.Any) = obj match {
     case mob: Mob => this.id === mob.id
@@ -31,6 +32,7 @@ object Mob {
 
   trait ShortName
   trait Genitive
+  trait Accusative
   trait FullName
   trait Alias
 
@@ -39,6 +41,8 @@ object Mob {
   def shortName(shortName: String): String @@ ShortName = Tag(shortName)
 
   def genitive(genitive: String): String @@ Genitive = Tag(genitive)
+
+  def accusative(accusative: String): String @@ Accusative = Tag(accusative)
 
   def alias(a: String): String @@ Alias = Tag(a)
 }
