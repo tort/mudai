@@ -347,7 +347,7 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def killableMobsBy(zone: Zone): Set[Mob] = DB.db withSession {
-    sql"select distinct m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative from mob m join habitation h on h.mob = m.id join location l on h.location = l.id join zone z on l.zone = z.id where z.id = ${zone.id} and m.iskillable = 1".as[Mob].list.toSet
+    sql"select distinct m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative, m.globalTarget from mob m join habitation h on h.mob = m.id join location l on h.location = l.id join zone z on l.zone = z.id where z.id = ${zone.id} and m.iskillable = 1".as[Mob].list.toSet
   }
 
   def updateGenitive(mob: Mob, genitive: String @@ Genitive) = DB.db withSession {
