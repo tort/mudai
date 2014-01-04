@@ -26,21 +26,23 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
       visitProspectableArea
   }
 
+  private val from: Location = persister.loadLocation(locationId("f080eeef-84ba-43f8-b440-0ed9610bfab1"))
+  private val to: Location = persister.loadLocation(locationId("0a96b963-9f2d-448f-8f71-44ba014c8782"))
+  private val path = pathHelper.pathTo(from.some, to)
+
   private def visitProspectableArea = {
-    val from: Location = persister.loadLocation(locationId("f080eeef-84ba-43f8-b440-0ed9610bfab1"))
-    val to: Location = persister.loadLocation(locationId("0a96b963-9f2d-448f-8f71-44ba014c8782"))
-    val path = pathHelper.pathTo(from.some, to)
 
     goAndDo(from, person, (l) => {
       dig(path, 0)
     })
   }
 
-  private def findAnotherDiggable(path: List[String @@ Direction], times: Int) = {
-    path match {
+  private def findAnotherDiggable(restOfPath: List[String @@ Direction], times: Int) = {
+    restOfPath match {
       case Nil =>
-        become(waitStartCommand)
-        finishQuest(person)
+        goAndDo(from, person, (l) => {
+          dig(path, times)
+        })
       case x :: xs =>
         person ! RequestWalkCommand(x)
         become(waitMove(xs, times))
@@ -53,14 +55,14 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
   }
 
   private def dig(path: List[String @@ Direction], times: Int) = {
-      if (times > 70) {
-        person ! new SimpleCommand("кол !почин! кирка")
-        become(waitDig(path, 0))
-        system.scheduler.scheduleOnce(2500 millisecond, self, Dig)
-      } else {
-        become(waitDig(path, times + 1))
-        system.scheduler.scheduleOnce(2500 millisecond, self, Dig)
-      }
+    if (times > 70) {
+      person ! new SimpleCommand("кол !почин! кирка")
+      become(waitDig(path, 0))
+      system.scheduler.scheduleOnce(3 second, self, Dig)
+    } else {
+      become(waitDig(path, times + 1))
+      system.scheduler.scheduleOnce(3 second, self, Dig)
+    }
   }
 
   private case object Dig
@@ -95,7 +97,7 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
       person ! new SimpleCommand("смотр")
       persister.mobByAccusative(accusative(mobAccusatif)) match {
         case None =>
-          mobAccusatif.split(" ").foreach(x => person ! new SimpleCommand("прик все убить " + x.dropRight(2)) )
+          mobAccusatif.split(" ").foreach(x => person ! new SimpleCommand("прик все убить " + x.dropRight(2)))
         case Some(mob) =>
           person ! Attack(mob)
           dig(path, times)
