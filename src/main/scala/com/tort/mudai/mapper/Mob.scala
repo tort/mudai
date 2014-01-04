@@ -16,7 +16,8 @@ class Mob(val id: String,
                val priority: Int,
                val isFragging: Boolean,
                val summoner: Boolean,
-               val accusative: Option[String @@ Accusative]) {
+               val accusative: Option[String @@ Accusative],
+               val globalTarget: Boolean) {
 
   override def equals(obj: scala.Any) = obj match {
     case mob: Mob => this.id === mob.id

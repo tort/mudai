@@ -97,7 +97,8 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
         case None =>
           mobAccusatif.split(" ").foreach(x => person ! new SimpleCommand("прик все убить " + x.dropRight(2)) )
         case Some(mob) =>
-          person ! KillMobRequest(mob)
+          person ! Attack(mob)
+          dig(path, times)
       }
   }
 }

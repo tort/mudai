@@ -119,7 +119,8 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
     priority = l.<<,
     isFragging = l.<<,
     summoner = l.<<,
-    accusative = Option(Mob.accusative(l.<<))
+    accusative = Option(Mob.accusative(l.<<)),
+    globalTarget = l.<<
   ))
   implicit val getItemResult = GetResult(l => new Item(l.<<, l.<<, Option(l.<<), Option(l.<<), Option(l.<<)))
   implicit val getZoneResult = GetResult(z => new Zone(z.<<, Zone.name(z.<<)))
@@ -229,29 +230,29 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
 
   def mobByShortNameSubstring(shortName: String @@ ShortName) = DB.db withSession {
     println(shortName)
-    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative from mob m where left(m.shortName, 20) = $shortName".as[Mob].firstOption
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative, m.globalTarget from mob m where left(m.shortName, 20) = $shortName".as[Mob].firstOption
   }
 
   def mobByShortName(shortName: String @@ ShortName) = DB.db withSession {
-    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative from mob m where m.shortName = $shortName".as[Mob].firstOption
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative, m.globalTarget from mob m where m.shortName = $shortName".as[Mob].firstOption
   }
 
   def allMobsByShortName(shortName: String @@ ShortName, zone: Zone) = DB.db withSession {
-    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative from mob m join habitation h on h.mob = m.id join location l on h.location = l.id where l.zone = ${zone.id} and m.shortName = $shortName".as[Mob].firstOption
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative, m.globalTarget from mob m join habitation h on h.mob = m.id join location l on h.location = l.id where l.zone = ${zone.id} and m.shortName = $shortName".as[Mob].firstOption
   }
 
   def allMobsByShortName(shortName: String @@ ShortName) = DB.db withSession {
-    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative from mob m where m.shortName = $shortName".as[Mob].list
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative, m.globalTarget from mob m where m.shortName = $shortName".as[Mob].list
   }
 
   def mobByFullName(name: String @@ FullName): Option[Mob] = DB.db withSession {
-    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative from mob m where m.fullName = $name".as[Mob].firstOption
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative, m.globalTarget from mob m where m.fullName = $name".as[Mob].firstOption
   }
 
   def persistMob(fullName: String @@ FullName) = DB.db withSession {
     val id = generateId()
     sqlu"insert into mob(id, fullName) values($id, $fullName)".first
-    new Mob(id, fullName, shortName = None, alias = None, killable = false, genitive = None, isAssisting = false, canFlee = false, isAgressive = false, priority = 0, isFragging = false, summoner = false, accusative = None)
+    new Mob(id, fullName, shortName = None, alias = None, killable = false, genitive = None, isAssisting = false, canFlee = false, isAgressive = false, priority = 0, isFragging = false, summoner = false, accusative = None, globalTarget = false)
   }
 
   def itemByFullName(name: String @@ Item.FullName): Item = DB.db withSession {
@@ -354,11 +355,11 @@ class SQLLocationPersister extends LocationPersister with TransitionPersister {
   }
 
   def mobByGenitive(genitive: String @@ Genitive) = DB.db withSession {
-    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative from mob m where m.genitive = $genitive".as[Mob].firstOption
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative, m.globalTarget from mob m where m.genitive = $genitive".as[Mob].firstOption
   }
   
   def mobByAccusative(accusative: String @@ Accusative) = DB.db withSession {
-    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative from mob m where m.accusative = $accusative".as[Mob].firstOption
+    sql"select m.id, m.fullname, m.shortname, m.alias, m.iskillable, m.genitive, m.isassisting, m.canflee, m.isagressive, m.priority, m.isfragging, m.summoner, m.accusative, m.globalTarget from mob m where m.accusative = $accusative".as[Mob].firstOption
   }
 
   def markAsAssisting(mob: Mob) = DB.db withSession {

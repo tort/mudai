@@ -56,6 +56,8 @@ class TraderFighter(person: ActorRef, persister: LocationPersister, mapper: Acto
       person ! new SimpleCommand("взять прусс")
       person ! new SimpleCommand("дать прусс гриден")
       person ! new SimpleCommand("прик все вооруж прусс")
+    case MobViewEvent(mobs) =>
+      mobs.find(m => m.globalTarget).foreach(m => person ! Attack(m))
     case RequestPulses => person ! RequestPulses
     case YieldPulses => person ! YieldPulses
     case c: RenderableCommand => person ! c
