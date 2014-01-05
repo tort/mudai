@@ -33,7 +33,11 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
   private val to: Location = persister.loadLocation(locationId("0a96b963-9f2d-448f-8f71-44ba014c8782"))
   private val path = pathHelper.pathTo(from.some, to)
 
-  private val BagIsOutOfSpace = "Переметная сума : ярко-красный камушек не помещается туда."
+  private val Stone = "камушек"
+  private val Storage = "сундук"
+  private val GlassContainer = "сума.снег"
+  private val GemContainer = "призр"
+  private val FoundGemsContainer = "перемет"
 
   private def visitProspectableArea = {
     goAndDo(from, person, (l) => {
@@ -98,35 +102,34 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
 
   private def storeYellowGems(onFinish: () => Unit) {
     takeGemsFromBag {
-      () => sortYellowGems {
+      () => sortGems {
         () => moveYellowGemsToStorage(onFinish)
       }
     }
   }
 
   private def moveYellowGemsToStorage(onFinish: () => Unit) {
-    person ! new SimpleCommand("вз все.желт призр")
-    person ! new SimpleCommand("полож все.желт 2.сунд")
+    person ! new SimpleCommand(s"вз все.желт $GemContainer")
+    person ! new SimpleCommand(s"полож все.желт $Storage")
     onFinish()
   }
 
   private def takeGemsFromBag(onFinish: () => Unit) {
-    person ! new SimpleCommand("взять 10 камуш перемет")
-    become(waitTakeGems(() => sortYellowGems(() => takeGemsFromBag(onFinish)), onFinish))
+    person ! new SimpleCommand(s"взять 10 $Stone $FoundGemsContainer")
+    become(waitTakeGems(() => sortGems(() => takeGemsFromBag(onFinish)), onFinish))
   }
 
-  private val Stone = "камушек"
-  private def sortYellowGems(onFinish: () => Unit) {
-    person ! new SimpleCommand(s"осм ${Stone}")
+  private def sortGems(onFinish: () => Unit) {
+    person ! new SimpleCommand(s"осм $Stone")
     become(waitGlanceGem(onFinish))
   }
 
   def waitGlanceGem(onFinish: () => Unit): Receive = {
     case RawRead(text) if text.matches("(?ms).*ДРАГ.КАМЕНЬ.*") =>
-      person ! new SimpleCommand(s"полож ${Stone} призрач")
+      person ! new SimpleCommand(s"полож $Stone $GemContainer")
       become(waitPutGemToBag(onFinish))
     case RawRead(text) if text.matches("(?ms).*СТЕКЛО.*") =>
-      person ! new SimpleCommand(s"полож ${Stone} сундук")
+      person ! new SimpleCommand(s"полож $Stone $GlassContainer")
       become(waitPutGemToBag(onFinish))
     case RawRead(text) if text.matches("(?ms).*Похоже, этого здесь нет!.*") =>
       onFinish()
@@ -134,7 +137,7 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
 
   def waitPutGemToBag(onFinish: () => Unit): Receive = {
     case RawRead(text) if text.matches("(?ms).*Вы положили .* камушек в .*") =>
-      sortYellowGems(onFinish)
+      sortGems(onFinish)
   }
 
   private def sellOtherGems(onFinish: () => Unit) {
@@ -144,29 +147,32 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
   }
 
   private def sellGlass(onFinish: () => Unit) {
-    person ! new SimpleCommand("вз 10 камуш сунд")
+    person ! new SimpleCommand(s"вз $Stone $GlassContainer")
+    person ! new SimpleCommand(s"прод $Stone")
     become(waitTakeGems(() => sellGlass(onFinish), onFinish))
   }
 
   private def waitTakeGems(onTake: () => Unit, onFinish: () => Unit): Receive = {
-    case RawRead(text) if text.matches("(?ms).*Вы взяли .* камушек из .*") =>
+    case RawRead(text) if text.matches(s"(?ms).*Вы взяли .* $Stone из .*") =>
       onTake()
-    case RawRead(text) if text.matches("(?ms).*Вы не видите 'камуш' в .*") =>
+    case RawRead(text) if text.matches(s"(?ms).*Вы не видите '$Stone' в .*") =>
       onFinish()
   }
 
   private def continueDigging(times: Int) {
-    dig(path, times)
+    goAndDo(from, person, (l) => {
+      dig(path, times)
+    })
   }
 
   private val MobFoundPattern = "(?ms).*Вы выкопали (.*)!.*".r
 
   private def waitDigResult(path: List[String @@ Direction], times: Int): Receive = {
     case RawRead(text) if text.matches("(?ms).*Вы нашли (?:[^\n]*) камушек!.*") =>
-      person ! new SimpleCommand("полож кам перемет")
+      person ! new SimpleCommand(s"полож кам $FoundGemsContainer")
       dig(path, times)
     case RawRead(text) if text.matches("(?ms).*Вы нашли старую кирку!.*") =>
-      person ! new SimpleCommand("полож кирк призр")
+      person ! new SimpleCommand(s"полож кирк $GemContainer")
       dig(path, times)
     case RawRead(text) if text.matches("(?ms).*Вы нашли (?:[^\n]*)!.*") =>
       dig(path, times)
