@@ -182,6 +182,8 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
     case RawRead(text) if text.matches("(?ms).*Вы нашли старую кирку!.*") =>
       person ! new SimpleCommand(s"полож кирк $GemContainer")
       dig(path, times)
+    case RawRead(text) if text.matches("(?ms).*Вы нашли могилку кладоискателя!.*") =>
+      person ! new SimpleCommand("брос могил")
     case RawRead(text) if text.matches("(?ms).*Вы нашли (?:[^\n]*)!.*") =>
       dig(path, times)
     case RawRead(text) if text.matches("(?ms).*Тут и так все перекопано..*") =>
