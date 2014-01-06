@@ -42,7 +42,8 @@ class Adapter extends Actor {
     new FleeTrigger,
     new OrderFailedTrigger,
     new LongHoldSucceededTrigger,
-    new NetSucceededTrigger
+    new NetSucceededTrigger,
+    new TellTrigger
   )
 
   private def parse(text: String) =
