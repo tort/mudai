@@ -35,8 +35,10 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
   private val Stone = "камушек"
   private val Storage = "сундучок"
   private val GlassContainer = "сума.снег"
-  private val GemContainer = "призр"
+  private val MainContainer = "призр"
   private val FoundGemsContainer = "перемет"
+  private val Tool = "кирка"
+  private val ToolAccusative = "старой киркой"
   
   private val digForYellowGems = true
 
@@ -65,7 +67,7 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
 
   private def dig(path: List[String @@ Direction], times: Int) = {
     if (times > 70) {
-      person ! new SimpleCommand("кол !почин! кирка")
+      person ! new SimpleCommand(s"кол !почин! $Tool")
       become(waitDig(path, 0))
       system.scheduler.scheduleOnce(3 second, self, Dig)
     } else {
@@ -110,7 +112,7 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
   }
 
   private def moveYellowGemsToStorage(onFinish: () => Unit) {
-    person ! new SimpleCommand(s"вз все.желт $GemContainer")
+    person ! new SimpleCommand(s"вз все.желт $MainContainer")
     person ! new SimpleCommand(s"полож все.желт $Storage")
     onFinish()
   }
@@ -127,7 +129,7 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
 
   def waitGlanceGem(onFinish: () => Unit): Receive = {
     case RawRead(text) if text.matches("(?ms).*ДРАГ.КАМЕНЬ.*") =>
-      person ! new SimpleCommand(s"полож $Stone $GemContainer")
+      person ! new SimpleCommand(s"полож $Stone $MainContainer")
       become(waitPutGemToBag(onFinish))
     case RawRead(text) if text.matches("(?ms).*СТЕКЛО.*") =>
       person ! new SimpleCommand(s"полож $Stone $GlassContainer")
@@ -143,7 +145,7 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
 
   private def sellTrashGems(onFinish: () => Unit) {
     val nextAction = digForYellowGems match {
-      case true => () => sellGems(GemContainer)(onFinish)
+      case true => () => sellGems(MainContainer)(onFinish)
       case false => onFinish
     }
 
@@ -176,11 +178,22 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
   private val MobFoundPattern = "(?ms).*Вы выкопали (.*)!.*".r
 
   private def waitDigResult(path: List[String @@ Direction], times: Int): Receive = {
+    case RawRead(text) if text.matches("(?ms).*Вам бы лопату взять в руки... Или кирку....*") =>
+      person ! new SimpleCommand(s"вз $Tool $MainContainer")
+      person ! new SimpleCommand(s"воор $Tool")
+    case RawRead(text) if text.matches(s"(?ms).*Вы не видите '$Tool' в призрачной суме..*") =>
+      goAndDo(forgery, person, (l) => {
+        person ! new SimpleCommand(s"купить $Tool")
+        person ! new SimpleCommand(s"полож $Tool $MainContainer")
+        dig(path, times)
+      })
+    case RawRead(text) if text.matches(s"(?ms).*Вы вооружились $ToolAccusative..*") =>
+      dig(path, 0)
     case RawRead(text) if text.matches("(?ms).*Вы нашли (?:[^\n]*) камушек!.*") =>
       person ! new SimpleCommand(s"полож кам $FoundGemsContainer")
       dig(path, times)
     case RawRead(text) if text.matches("(?ms).*Вы нашли старую кирку!.*") =>
-      person ! new SimpleCommand(s"полож кирк $GemContainer")
+      person ! new SimpleCommand(s"полож $Tool $MainContainer")
       dig(path, times)
     case RawRead(text) if text.matches("(?ms).*Вы нашли могилку кладоискателя!.*") =>
       person ! new SimpleCommand("брос могил")

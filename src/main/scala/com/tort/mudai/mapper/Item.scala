@@ -3,6 +3,7 @@ package com.tort.mudai.mapper
 import scala.Option
 import scalaz._
 import Scalaz._
+import Item._
 
 class Item( val id: String,
             val fullName: String,
@@ -16,6 +17,8 @@ object Item {
 
   trait FullName
   trait ShortName
+  trait Accusative
 
   def fullName(fn: String): String @@ FullName = Tag(fn)
+  def accusative(accusative: String): String @@ Accusative = Tag(accusative)
 }
