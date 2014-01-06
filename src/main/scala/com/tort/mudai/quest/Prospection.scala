@@ -34,10 +34,12 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
   private val path = pathHelper.pathTo(from.some, to)
 
   private val Stone = "камушек"
-  private val Storage = "сундук"
+  private val Storage = "сундучок"
   private val GlassContainer = "сума.снег"
   private val GemContainer = "призр"
   private val FoundGemsContainer = "перемет"
+  
+  private val digForYellowGems = true
 
   private def visitProspectableArea = {
     goAndDo(from, person, (l) => {
@@ -93,7 +95,7 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
   private def emptyContainer(times: Int) {
     goAndDo(bank, person, (l) => {
       storeYellowGems {
-        () => sellOtherGems {
+        () => sellTrashGems {
           () => continueDigging(times)
         }
       }
@@ -140,16 +142,23 @@ class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pa
       sortGems(onFinish)
   }
 
-  private def sellOtherGems(onFinish: () => Unit) {
+  private def sellTrashGems(onFinish: () => Unit) {
+    val nextAction = digForYellowGems match {
+      case true => () => sellGems(GemContainer)(onFinish)
+      case false => onFinish
+    }
+
     goAndDo(forgery, person, (l) => {
-      sellGlass(onFinish)
+      sellGems(GlassContainer) {
+        nextAction
+      }
     })
   }
 
-  private def sellGlass(onFinish: () => Unit) {
-    person ! new SimpleCommand(s"вз $Stone $GlassContainer")
+  private def sellGems(container: String)(onFinish: () => Unit) {
+    person ! new SimpleCommand(s"вз $Stone $container")
     person ! new SimpleCommand(s"прод $Stone")
-    become(waitTakeGems(() => sellGlass(onFinish), onFinish))
+    become(waitTakeGems(() => sellGems(container)(onFinish), onFinish))
   }
 
   private def waitTakeGems(onTake: () => Unit, onFinish: () => Unit): Receive = {
