@@ -39,6 +39,7 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
   val antonQuest = actorOf(Props(classOf[AntonQuest], mapper, persister, pathHelper, self))
   val prospection = actorOf(Props(classOf[Prospection], mapper, persister, pathHelper, self))
   val alchemy = actorOf(Props(classOf[Alchemy], self, persister))
+  val beeper = actorOf(Props(classOf[Beeper], self, persister))
   val quests = Map[String, ActorRef](
     "белый паук" -> whiteSpiderQuest,
     "рысь" -> simpleQuest,
@@ -53,7 +54,7 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
     "антон" -> antonQuest,
     "копка" -> prospection)
   val passages = actorOf(Props(classOf[Passages], persister, self))
-  val coreTasks = Seq(mapper, fighter, statusTranslator, provisioner, roamer, passages, alchemy) ++ quests.values
+  val coreTasks = Seq(mapper, fighter, statusTranslator, provisioner, roamer, passages, alchemy, beeper) ++ quests.values
 
   system.scheduler.schedule(0 millis, 500 millis, self, Pulse)
 
