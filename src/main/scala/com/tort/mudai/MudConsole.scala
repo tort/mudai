@@ -19,7 +19,6 @@ import com.tort.mudai.person.GoTo
 import com.tort.mudai.person.RawWrite
 import com.tort.mudai.person.RoamZone
 import com.tort.mudai.mapper.NameZone
-import com.tort.mudai.person.Attack
 import Mob._
 
 class MudConsole {
@@ -28,21 +27,6 @@ class MudConsole {
   def writer(text: String) = println(text)
 
   implicit val timeout = Timeout(5 seconds)
-
-  val quests = Set(
-    "бобры",
-    "белый паук",
-    "рысь",
-    "глава",
-    "угодья",
-    "хозяин леса",
-    "лагерь разбойников",
-    "инструмент кузнеца",
-    "дятлы",
-    "страшная сказка",
-    "половцы",
-    "антон",
-    "копка")
 
   @tailrec
   final def userInputLoop(person: ActorRef, menuMap: Map[Int, Location]) {
@@ -91,11 +75,14 @@ class MudConsole {
         person ! AttackByAlias(alias(targetName))
         userInputLoop(person, Map())
       case "квест" :: name =>
-        val questName: String = name.mkString(" ")
-        if (!quests(questName))
-          quests.foreach(println)
-        else
-          person ! StartQuest(questName)
+        (person ? Quests).mapTo[Set[String]].onSuccess {
+          case availableQuests =>
+            availableQuests.find(quest => name.startsWith(quest.split(" ").toList)) match {
+              case None => println("### QUEST NOT FOUND")
+              case Some(quest) =>
+                person ! StartQuest(quest)
+            }
+        }
         userInputLoop(person, Map())
       case "проверка" :: Nil =>
         person ! CheckUnreachable

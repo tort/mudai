@@ -82,6 +82,8 @@ class Person(login: String, password: String, mapper: ActorRef, pathHelper: Path
       become(rec(travelTask +: tasks, travelTask +: pulseSubscribers))
       watch(travelTask)
       travelTask ! e
+    case Quests =>
+      sender ! quests.keySet
     case StartQuest(quest) =>
       quests(quest) ! StartQuest
       provisioner ! StartQuest(quest)
@@ -124,6 +126,8 @@ case class GoTo(loc: Location)
 case object Pulse
 
 case object RequestPulses
+
+case object Quests
 
 case object YieldPulses
 

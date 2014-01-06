@@ -14,7 +14,6 @@ import scala.concurrent.duration._
 import Mob._
 
 class Prospection(val mapper: ActorRef, val persister: LocationPersister, val pathHelper: PathHelper, val person: ActorRef) extends QuestHelper {
-
   import Location._
   import context._
 
